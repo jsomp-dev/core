@@ -6,7 +6,15 @@ export {setup, jsomp, context} from './setup';
 export {JsompService} from './impl/JsompService';
 export {AtomRegistry} from './impl/core/AtomRegistry';
 export {JsompAtom} from './impl/core/JsompAtom';
-export {ComponentRegistry} from './impl/registry/ComponentRegistry';
+export {ComponentRegistry} from './impl/provider/ComponentRegistry';
+
+// State Management Implementations (Registries & Adapters)
+export {
+  StateDispatcherRegistry,
+  ExternalStateRegistry,
+  ZustandAdapter,
+  ObjectAdapter
+} from './impl/state';
 
 // Re-export core types explicitly for convenience
 export type {
@@ -18,6 +26,8 @@ export type {
   IComponentRegistry,
   IJsompNode,
   IJsompRenderContext,
+  IStateAdapter,
+  IStateDispatcherRegistry,
   JsompConfig,
   JsompLogger,
   JsompFlattener,

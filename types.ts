@@ -65,6 +65,10 @@ export interface IAtomRegistry {
   set(key: string, value: IJsompAtom | IAtomValue | undefined): void;
   batchSet(updates: Record<string, IJsompAtom | IAtomValue | undefined>): void;
   subscribe(key: string, callback: () => void): () => void;
+
+  // --- Dispatcher Extensions ---
+  mount?(namespace: string, registry: IAtomRegistry): void;
+  use?(registry: IAtomRegistry): void;
 }
 
 /**
@@ -105,18 +109,34 @@ export interface IComponentRegistry {
 }
 
 /**
- * JSOMP service interface
+ * Dispatcher Registry Interface
+ * Extends AtomRegistry with multi-store orchestration capabilities.
+ */
+export interface IStateDispatcherRegistry extends IAtomRegistry {
+  /**
+   * Mount a registry to a specific namespace (Plan A)
+   */
+  mount(namespace: string, registry: IAtomRegistry): this;
+
+  /**
+   * Register an ambient fallback registry (Plan B)
+   */
+  use(registry: IAtomRegistry): this;
+}
+
+/**
+ * JSOMP Plugin/Module Interface
  */
 export interface IJsompService {
   /**
-   * Component registration center
+   * Component registry (Public for plugins to register presets)
    */
-  componentRegistry: IComponentRegistry;
+  readonly componentRegistry: IComponentRegistry;
 
   /**
-   * Global state registry (single instance, shared across containers)
+   * Global state registry
    */
-  globalRegistry: IAtomRegistry;
+  readonly globalRegistry: IAtomRegistry;
 
   /**
    * Restore flat entity Map to JSOMP Tree
@@ -132,6 +152,20 @@ export interface IJsompService {
    * Create a local state scope with parent association
    */
   createScope(): IAtomRegistry;
+
+  /**
+   * Create a dispatcher registry for mixing multiple state sources.
+   * Supports Namespace mapping and Ambient fallback.
+   */
+  createStateDispatcher(defaultRegistry?: IAtomRegistry): IStateDispatcherRegistry;
+
+  /**
+   * State adapter factories (for external state synergy)
+   */
+  adapters: {
+    zustand(store: any): IAtomRegistry;
+    object(store: any): IAtomRegistry;
+  };
 }
 
 /**
@@ -208,4 +242,28 @@ export interface JsompConfig {
   logger?: JsompLogger;
   flattener?: JsompFlattener;
   eventBus?: JsompEventBus;
+}
+
+/**
+ * State adapter interface
+ * Used to shield differences between various state libraries
+ */
+export interface IStateAdapter {
+  /** 
+   * Path-based value acquisition
+   * Support lodash.get style depth path analysis 
+   */
+  getValue(path: string): any;
+
+  /** 
+   * [Optional] Perform status update
+   * If Store is read-only, this method can be not implemented
+   */
+  setValue?(path: string, val: any): void;
+
+  /** 
+   * Path-based subscription logic
+   * Ensure only the target Path or its sub-path change triggers callback
+   */
+  subscribe(path: string, callback: () => void): () => void;
 }
