@@ -1,0 +1,36 @@
+{
+  "name": "@jsomp/core",
+  "version": "1.0.0",
+  "description": "JSOMP Core Runtime Container - A stateless, tree-shakable, and injectable JSON-to-Component engine.",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "jsomp",
+    "reactive",
+    "renderer",
+    "json-to-component",
+    "tree-shaking",
+    "ioc"
+  ],
+  "author": "WiseTheWizard",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit"
+  },
+  "sideEffects": false
+}
