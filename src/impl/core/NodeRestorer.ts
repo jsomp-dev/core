@@ -1,6 +1,6 @@
 import {IAtomRegistry, IJsompNode} from '../../types';
 import {JsompAtom} from './JsompAtom';
-import {context} from "../../setup";
+import {internalContext as context} from "../../context";
 
 /**
  * Node Restorer

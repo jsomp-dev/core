@@ -1,5 +1,5 @@
 import {IJsompNode, JsompFlattener} from "../types";
-import {context} from "../setup";
+import {internalContext as context} from "../context";
 
 /**
  * Object flattening/reconstruction tool (pure functional implementation)

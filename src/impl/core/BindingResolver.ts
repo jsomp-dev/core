@@ -2,7 +2,7 @@ const BINDING_REGEX = /\{\{(.+?)\}\}/g;
 const PURE_BINDING_REGEX = /^\{\{(.+?)\}\}$/;
 
 import {IAtomRegistry, IJsompAtom} from '../../types';
-import {context} from '../../setup';
+import {internalContext as context} from '../../context';
 
 function isAtom(obj: any): obj is IJsompAtom {
   return obj && typeof obj.subscribe === 'function' && 'value' in obj;

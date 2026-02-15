@@ -1,5 +1,5 @@
 import {IAtomRegistry, IAtomValue, IJsompAtom} from '../../types';
-import {context} from '../../setup';
+import {internalContext as context} from '../../context';
 
 function isAtom(obj: any): obj is IJsompAtom {
   return obj && typeof obj.subscribe === 'function' && 'value' in obj;

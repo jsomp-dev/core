@@ -4,7 +4,7 @@ import {StyleResolver} from './StyleResolver';
 import {InjectionRegistry} from '../core/InjectionRegistry';
 import {BindingResolver} from '../core/BindingResolver';
 import {useAtom, useMustache} from '../../hook';
-import {context as internalContext} from '../../setup';
+import {internalContext} from '../../context';
 
 /**
  * JsompElement: Implements reactive rendering for a single node.
