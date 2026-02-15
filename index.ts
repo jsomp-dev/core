@@ -6,6 +6,7 @@ export {setup, jsomp, context} from './setup';
 export {JsompService} from './impl/JsompService';
 export {AtomRegistry} from './impl/core/AtomRegistry';
 export {JsompAtom} from './impl/core/JsompAtom';
+export {JsompStream} from './impl/core/JsompStream';
 export {ComponentRegistry} from './impl/provider/ComponentRegistry';
 
 // State Management Implementations (Registries & Adapters)
@@ -32,6 +33,9 @@ export type {
   JsompLogger,
   JsompFlattener,
   JsompEventBus,
+  IJsompStream,
+  IStreamTransformer,
+  StreamOptions,
 } from './types';
 
 // Export JsompPage Component

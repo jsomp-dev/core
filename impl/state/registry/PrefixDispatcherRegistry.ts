@@ -56,4 +56,16 @@ export class PrefixDispatcherRegistry implements IAtomRegistry {
     const {registry, targetKey} = this.resolve(key);
     return registry.subscribe(targetKey, callback);
   }
+
+  /**
+   * Subscribe to all changes from all managed registries
+   */
+  subscribeAll(callback: (key: string, value: any) => void): () => void {
+    const unsubs: (() => void)[] = [];
+    unsubs.push(this.defaultRegistry.subscribeAll(callback));
+    for (const registry of this.registries.values()) {
+      unsubs.push(registry.subscribeAll(callback));
+    }
+    return () => unsubs.forEach(unsub => unsub());
+  }
 }

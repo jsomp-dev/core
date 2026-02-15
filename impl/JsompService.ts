@@ -1,8 +1,10 @@
 import {
-  IJsompService, IJsompNode, IAtomRegistry, IComponentRegistry, IStateDispatcherRegistry
+  IJsompService, IJsompNode, IAtomRegistry, IComponentRegistry, IStateDispatcherRegistry,
+  IJsompStream, StreamOptions
 } from '../types';
 import {NodeRestorer} from './core/NodeRestorer';
 import {AtomRegistry} from './core/AtomRegistry';
+import {JsompStream} from './core/JsompStream';
 import {ComponentRegistry} from './provider/ComponentRegistry';
 import {ExternalStateRegistry, ObjectAdapter, StateDispatcherRegistry, ZustandAdapter} from './state';
 
@@ -58,5 +60,15 @@ export class JsompService implements IJsompService {
    */
   public flattenTree(nodes: IJsompNode[]): Map<string, any> {
     return NodeRestorer.flatten(nodes);
+  }
+
+  /**
+   * Create a stream controller for handling AI streaming output
+   */
+  public createStream(options: StreamOptions = {}): IJsompStream {
+    return new JsompStream({
+      atomRegistry: this.globalRegistry, // Use global by default
+      ...options
+    });
   }
 }

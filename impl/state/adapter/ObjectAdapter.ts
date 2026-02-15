@@ -8,6 +8,7 @@ import {pathUtils} from '../../../utils/path';
  */
 export class ObjectAdapter implements IStateAdapter {
   private listeners = new Map<string, Set<() => void>>();
+  private allListeners = new Set<(path: string, value: any) => void>();
 
   constructor(private store: any) { }
 
@@ -20,7 +21,7 @@ export class ObjectAdapter implements IStateAdapter {
     if (prev === val) return;
 
     pathUtils.set(this.store, path, val);
-    this.notify(path);
+    this.notify(path, val);
   }
 
   subscribe(path: string, callback: () => void): () => void {
@@ -35,13 +36,22 @@ export class ObjectAdapter implements IStateAdapter {
     };
   }
 
-  private notify(path: string) {
+  subscribeAll(callback: (path: string, value: any) => void): () => void {
+    this.allListeners.add(callback);
+    return () => {
+      this.allListeners.delete(callback);
+    };
+  }
+
+  private notify(path: string, value: any) {
+    // 0. Notify global listeners
+    this.allListeners.forEach(cb => cb(path, value));
+
     // 1. Notify exact path listeners
     this.listeners.get(path)?.forEach(cb => cb());
 
     // 2. Notify parent paths (bubbling)
     // If a.b.c changed, a.b and a also "changed" technically
-    const parts = path.split('.');
     let currentPath = path;
     while (currentPath.includes('.')) {
       currentPath = currentPath.substring(0, currentPath.lastIndexOf('.'));

@@ -44,14 +44,49 @@ export const JsompPage: React.FC<JsompPageProps> = ({
     return externalScope || jsomp?.createScope();
   }, [externalScope, jsomp]);
 
-  // 2. Handle data conversion automatically
+  // 2. Local state for dynamic nodes added at runtime (e.g., via streaming)
+  const [dynamicNodes, setDynamicNodes] = React.useState<Map<string, IJsompNode>>(new Map());
+
+  // 3. Listen for global changes to discover and update structural nodes
+  useEffect(() => {
+    if (!atomRegistry || !jsomp) return;
+
+    return atomRegistry.subscribeAll((key: string, value: any) => {
+      // Discovery & Structure Update Logic: 
+      // If the value has structural fields, we track it in dynamicNodes to ensure tree rebuilds
+      if (value && typeof value === 'object' && value.type && value.parent) {
+        setDynamicNodes(prev => {
+          // Check if the structure actually changed or if it's a new discovery
+          const existing = prev.get(key);
+          if (existing && existing.type === value.type && existing.parent === value.parent) {
+            return prev;
+          }
+
+          // Check against initial entities
+          const isInitial = (entities instanceof Map)
+            ? entities.has(key)
+            : Array.isArray(entities)
+              ? entities.some(e => e.id === key)
+              : Object.prototype.hasOwnProperty.call(entities, key);
+
+          if (!isInitial) {
+            const newNode = {id: key, ...value};
+            return new Map(prev).set(key, newNode);
+          }
+          return prev;
+        });
+      }
+    });
+  }, [atomRegistry, jsomp, entities]);
+
+  // 4. Handle data conversion automatically
   const nodes = useMemo(() => {
     if (!jsomp || !atomRegistry) return [] as IJsompNode[];
 
     // Supports Map, Array, or Plain Object inputs
     let entityMap: Map<string, any>;
     if (entities instanceof Map) {
-      entityMap = entities;
+      entityMap = new Map(entities);
     } else if (Array.isArray(entities)) {
       entityMap = new Map();
       entities.forEach((e: any) => {
@@ -63,8 +98,25 @@ export const JsompPage: React.FC<JsompPageProps> = ({
       entityMap = new Map(Object.entries(entities));
     }
 
+    // Merge in dynamic nodes discovered at runtime
+    dynamicNodes.forEach((node, id) => {
+      if (!entityMap.has(id)) {
+        entityMap.set(id, node);
+      }
+    });
+
+    // For all nodes in the map, ensure we use the LATEST structure from registry
+    // This solves the issue where discovery might have been partial or structure changed
+    entityMap.forEach((v, k) => {
+      const regVal = atomRegistry.get(k);
+      if (regVal && typeof regVal === 'object') {
+        if (regVal.type) v.type = regVal.type;
+        if (regVal.parent) v.parent = regVal.parent;
+      }
+    });
+
     return jsomp.restoreTree(entityMap, rootId, atomRegistry);
-  }, [entities, rootId, jsomp, atomRegistry]);
+  }, [entities, dynamicNodes, rootId, jsomp, atomRegistry]);
 
   // 3. Mount notification
   useEffect(() => {

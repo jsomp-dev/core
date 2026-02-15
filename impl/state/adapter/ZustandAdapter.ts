@@ -57,4 +57,22 @@ export class ZustandAdapter implements IStateAdapter {
       }
     });
   }
+
+  /**
+   * Subscribe to all changes in the Zustand store.
+   * Note: This detects changes in top-level keys to support JSOMP node discovery.
+   */
+  subscribeAll(callback: (key: string, value: any) => void): () => void {
+    let lastState = this.store.getState();
+
+    return this.store.subscribe((state: any) => {
+      // Basic Diff for top-level keys
+      Object.keys(state).forEach(key => {
+        if (state[key] !== lastState[key]) {
+          callback(key, state[key]);
+        }
+      });
+      lastState = state;
+    });
+  }
 }

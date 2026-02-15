@@ -14,6 +14,7 @@ function isAtom(obj: any): obj is IJsompAtom {
 export class AtomRegistry implements IAtomRegistry {
   private atoms = new Map<string, IJsompAtom | IAtomValue>();
   private listeners = new Map<string, Set<() => void>>();
+  private globalListeners = new Set<(key: string, value: any) => void>();
 
   constructor(private parent?: IAtomRegistry) { }
 
@@ -59,11 +60,18 @@ export class AtomRegistry implements IAtomRegistry {
       }
     }
     this.notify(key);
+    this.notifyGlobal(key, value);
   }
 
   /** Batch set */
   batchSet(updates: Record<string, IJsompAtom | IAtomValue | undefined>) {
     Object.entries(updates).forEach(([k, v]) => this.set(k, v));
+  }
+
+  /** Subscribe to all changes */
+  subscribeAll(callback: (key: string, value: any) => void): () => void {
+    this.globalListeners.add(callback);
+    return () => this.globalListeners.delete(callback);
   }
 
   /** Subscribe (supports hierarchical bubbling) */
@@ -90,5 +98,9 @@ export class AtomRegistry implements IAtomRegistry {
 
   private notify(key: string) {
     this.listeners.get(key)?.forEach(cb => cb());
+  }
+
+  private notifyGlobal(key: string, value: any) {
+    this.globalListeners.forEach(cb => cb(key, value));
   }
 }

@@ -128,4 +128,21 @@ export class StateDispatcherRegistry implements IStateDispatcherRegistry {
 
     return () => unsubs.forEach(unsub => unsub());
   }
+
+  /**
+   * Subscribe to all mounted registries
+   */
+  subscribeAll(callback: (key: string, value: any) => void): () => void {
+    const unsubs: (() => void)[] = [];
+    unsubs.push(this.defaultRegistry.subscribeAll(callback));
+
+    for (const registry of this.namespaces.values()) {
+      unsubs.push(registry.subscribeAll(callback));
+    }
+    for (const registry of this.ambients) {
+      unsubs.push(registry.subscribeAll(callback));
+    }
+
+    return () => unsubs.forEach(unsub => unsub());
+  }
 }

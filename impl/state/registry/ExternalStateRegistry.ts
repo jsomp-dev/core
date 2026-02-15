@@ -89,4 +89,17 @@ export class ExternalStateRegistry implements IAtomRegistry {
   subscribe(key: string, callback: () => void): () => void {
     return this.adapter.subscribe(key, callback);
   }
+
+  /**
+   * Subscribe to all changes in the external store.
+   * This is crucial for dynamic node discovery in JsompPage.
+   */
+  subscribeAll(callback: (key: string, value: any) => void): () => void {
+    if (this.adapter.subscribeAll) {
+      return this.adapter.subscribeAll(callback);
+    }
+    // Fallback: If the adapter doesn't support global subscription,
+    // we return a no-op to maintain interface compatibility.
+    return () => { };
+  }
 }
