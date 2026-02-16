@@ -9,6 +9,7 @@ import {ExternalStateRegistry, ObjectAdapter, StateDispatcherRegistry, ZustandAd
 import {JsompCompiler, CompilerOptions} from './compiler/JsompCompiler';
 import {PipelineRegistry} from './compiler/PipelineRegistry';
 import {JsompDecompiler} from './compiler/JsompDecompiler';
+import {SchemaRegistry} from './core/SchemaRegistry';
 
 /**
  * JSOMP Service Implementation
@@ -26,6 +27,11 @@ export class JsompService implements IJsompService {
    * Business layers should inject long-term shared state here.
    */
   public readonly globalRegistry: IAtomRegistry = new AtomRegistry();
+
+  /**
+   * Schema Registry for typed atoms
+   */
+  public readonly schemas = SchemaRegistry.global;
 
   /**
    * Global compiler pipeline registry

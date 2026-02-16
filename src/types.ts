@@ -1,3 +1,4 @@
+import type {ZodType} from 'zod';
 
 /**
  * JSOMP Node definition (Atomic structure)
@@ -44,8 +45,11 @@ export type IInjectionMap = Record<string, Partial<IJsompNode> | {onEvent?: Reco
  */
 export interface IJsompAtom<T = any> {
   value: T;
+  schema?: ZodType | any; // Storage for Zod or other validators
   subscribe(callback: () => void): () => void;
   set(newValue: T): void;
+  /** Execute manual validation and return result */
+  validate?(value: any): {success: boolean; error?: any};
 }
 
 /**
@@ -135,6 +139,20 @@ export interface IPipelineRegistry {
 }
 
 /**
+ * Global Schema Registry for Atoms
+ */
+export interface ISchemaRegistry {
+  /** Global validation toggle */
+  enabled: boolean;
+  /** Register a schema for a specific ID or Type */
+  register(key: string, schema: ZodType | any): void;
+  /** Get a schema by ID or Type */
+  get(key: string): ZodType | any | undefined;
+  /** Export all registered schemas metadata */
+  getManifest(): Record<string, any>;
+}
+
+/**
  * JSOMP Plugin/Module Interface
  */
 export interface IJsompService {
@@ -152,6 +170,11 @@ export interface IJsompService {
    * Global compiler pipeline registry
    */
   readonly pipeline: IPipelineRegistry;
+
+  /**
+   * Schema Registry for typed atoms
+   */
+  readonly schemas: ISchemaRegistry;
 
   /**
    * Restore flat entity Map to JSOMP Tree

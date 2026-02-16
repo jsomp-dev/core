@@ -6,6 +6,7 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "source": "./src/index.ts",
   "scripts": {
     "dev": "tsup src/index.ts --format cjs,esm --watch --dts --splitting",
     "build": "tsup src/index.ts --format cjs,esm --clean --dts --splitting",
@@ -13,11 +14,13 @@
   },
   "exports": {
     ".": {
+      "development": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
     "./plugins": {
+      "development": "./src/impl/compiler/plugins/index.ts",
       "types": "./dist/impl/compiler/plugins/index.d.ts",
       "import": "./dist/impl/compiler/plugins/index.js"
     }
@@ -47,5 +50,8 @@
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
 }
