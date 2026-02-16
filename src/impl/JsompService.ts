@@ -1,6 +1,6 @@
 import {
   IJsompService, IJsompNode, IAtomRegistry, IComponentRegistry, IStateDispatcherRegistry,
-  IJsompStream, StreamOptions
+  IJsompStream, StreamOptions, IJsompLayoutManager
 } from '../types';
 import {AtomRegistry} from './core/AtomRegistry';
 import {JsompStream} from './core/JsompStream';
@@ -11,12 +11,14 @@ import {PipelineRegistry} from './compiler/PipelineRegistry';
 import {JsompDecompiler} from './compiler/JsompDecompiler';
 import {SchemaRegistry} from './core/SchemaRegistry';
 import {ActionRegistry} from './provider/ActionRegistry';
+import {JsompLayoutManager} from './core/JsompLayoutManager';
 
 /**
  * JSOMP Service Implementation
  */
 export class JsompService implements IJsompService {
   private _compiler: JsompCompiler | null = null;
+  private _layoutMap: WeakMap<IJsompNode[], IJsompLayoutManager> = new WeakMap();
 
   /**
    * Component registry
@@ -120,5 +122,18 @@ export class JsompService implements IJsompService {
       atomRegistry: this.globalRegistry, // Use global by default
       ...options
     });
+  }
+
+  /**
+   * Get layout manager for a given set of entities.
+   * Uses WeakMap for caching.
+   */
+  public getLayout(entities: IJsompNode[]): IJsompLayoutManager {
+    if (this._layoutMap.has(entities)) {
+      return this._layoutMap.get(entities)!;
+    }
+    const manager = new JsompLayoutManager(entities);
+    this._layoutMap.set(entities, manager);
+    return manager;
   }
 }

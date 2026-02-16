@@ -9,6 +9,7 @@ export {JsompAtom} from './impl/core/JsompAtom';
 export {JsompStream} from './impl/core/JsompStream';
 export {BindingResolver} from './impl/core/BindingResolver';
 export {ComponentRegistry} from './impl/provider/ComponentRegistry';
+export {JsompLayoutManager, createLayoutManager} from './impl/core/JsompLayoutManager';
 export * from './impl/compiler/types';
 export * from './impl/compiler/JsompCompiler';
 export * from './impl/compiler/JsompDecompiler';
@@ -42,6 +43,9 @@ export type {
   StreamOptions,
   IActionDef,
   IActionRegistry,
+  IJsompLayoutManager,
+  JsompHierarchyNode,
+  PathProxy
 } from './types';
 
 // Export JsompPage Component

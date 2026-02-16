@@ -1,8 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import {setup, JsompPage, jsomp, HtmlRegistry} from '@jsomp/core';
+import {LayoutTest} from './LayoutTest';
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
+  const [currentTab, setCurrentTab] = useState<'basic' | 'layout'>('basic');
   const [entities] = useState<any[]>([
     {
       id: 'app_root',
@@ -156,21 +158,78 @@ const App: React.FC = () => {
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
       background: '#0f172a',
       color: 'white',
       padding: '1rem',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      overflow: 'auto'
     }}>
-      <JsompPage entities={entities} rootId='app_root' />
+      {/* Navigation Switcher */}
+      <nav style={{
+        display: 'flex',
+        gap: '1rem',
+        marginBottom: '2rem',
+        justifyContent: 'center',
+        padding: '0.5rem',
+        background: 'rgba(255,255,255,0.05)',
+        borderRadius: '0.75rem',
+        width: 'fit-content',
+        margin: '0 auto 2rem'
+      }}>
+        <button
+          onClick={() => setCurrentTab('basic')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.5rem',
+            background: currentTab === 'basic' ? '#3b82f6' : 'transparent',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'all 0.2s'
+          }}
+        >
+          Basic Lab
+        </button>
+        <button
+          onClick={() => setCurrentTab('layout')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.5rem',
+            background: currentTab === 'layout' ? '#3b82f6' : 'transparent',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'all 0.2s'
+          }}
+        >
+          Path Management
+        </button>
+      </nav>
+
+      {/* Main View Container */}
+      <main style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: currentTab === 'basic' ? 'center' : 'flex-start'
+      }}>
+        {currentTab === 'basic' ? (
+          <JsompPage entities={entities} rootId='app_root' />
+        ) : (
+          <LayoutTest />
+        )}
+      </main>
 
       <div style={{
         marginTop: '1.5rem',
         textAlign: 'center',
         color: '#475569',
         fontSize: '0.75rem',
-        opacity: 0.8
+        opacity: 0.8,
+        paddingBottom: '1rem'
       }}>
         Running on <strong>Vite</strong> Playground (Isolated)
       </div>

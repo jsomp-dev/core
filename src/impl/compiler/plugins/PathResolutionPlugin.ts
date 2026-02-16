@@ -41,7 +41,7 @@ export const pathResolutionPlugin = {
         }
       }
 
-      const path = (parentId && parentId !== 'root' && ctx.entities.has(parentId))
+      const path = (parentId && ctx.entities.has(parentId))
         ? `${getCalculatedPath(parentId)}.${targetId}`
         : targetId;
 

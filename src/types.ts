@@ -18,8 +18,8 @@ export interface IJsompNode {
    * Style descriptor (Visual Props)
    * Supports combined prefabs, Tailwind arrays and inline CSS
    */
-  style_presets?: string[];  // e.g. ["btn-base", "btn-primary"]
-  style_tw?: string[];       // e.g. ["p-4", "bg-red-500"]
+  style_presets?: readonly string[];  // e.g. ["btn-base", "btn-primary"]
+  style_tw?: readonly string[];       // e.g. ["p-4", "bg-red-500"]
   style_css?: Record<string, string | number>; // Inline CSS
 
   /** Points to the id of the parent container */
@@ -286,6 +286,12 @@ export interface IJsompService {
    * Force refresh the internal compiler (e.g. after dynamic plugin registration)
    */
   refreshCompiler(): void;
+
+  /**
+   * Get layout manager for a given set of entities.
+   * Internal implementation should use WeakMap for caching.
+   */
+  getLayout(entities: IJsompNode[]): IJsompLayoutManager;
 }
 
 /**
@@ -315,6 +321,11 @@ export interface IJsompRenderContext {
   stylePresets?: Record<string, string[]>;
   /** Path prefix (automatically maintained during recursion) */
   pathStack?: string[];
+  /** 
+   * [NEW] Layout Manager
+   * Allows components to resolve full paths and hierarchy
+   */
+  layout?: IJsompLayoutManager;
 }
 
 // --- New Refactoring Types ---
@@ -432,4 +443,52 @@ export interface IJsompStream {
   end(): void;
   /** Explicitly reset the stream state */
   reset(): void;
+}
+
+/**
+ * JSOMP Hierarchy Node (Topology map for AI)
+ */
+export interface JsompHierarchyNode {
+  id: string;
+  type: string;
+  path: string;
+  slot?: string;
+  children?: JsompHierarchyNode[];
+}
+
+/** @internal Helper to force TS to resolve/prettify mapped types for IDE IntelliSense */
+type _ResolvePath<T> = {[K in keyof T]: T[K]} & {};
+
+/** @internal Internal recursive node for PathProxy */
+type _RecursivePathNode<Nodes extends readonly IJsompNode[], Node extends IJsompNode> = {
+  /** Returns the final dot-joined path string */
+  $: string;
+} & {
+  [K in Nodes[number]as K extends {parent: Node['id']} ? K['id'] : never]: _RecursivePathNode<Nodes, K>;
+};
+
+/**
+ * Type-safe path chain proxy
+ * Supports recursive inference from 'as const' layout arrays.
+ */
+export type PathProxy<T> = T extends readonly IJsompNode[]
+  ? _ResolvePath<{
+    [K in T[number]as K extends {parent: string} ? never : K['id']]: _RecursivePathNode<T, K>;
+  }>
+  : any;
+
+/**
+ * LayoutManager interface
+ */
+export interface IJsompLayoutManager<TId extends string = string, TLayout extends readonly IJsompNode[] = any> {
+  /** Get all nodes matching the ID, each with its calculated _fullPath */
+  getNodes(id: TId): Array<IJsompNode & {_fullPath: string}>;
+  /** Calculates the full path of a specific node */
+  getNodePath(node: IJsompNode): string;
+  /** Get all valid full paths in the layout */
+  getAllPaths(): string[];
+  /** Get the topological hierarchy tree */
+  getHierarchy(): JsompHierarchyNode;
+  /** Type-safe path chain proxy */
+  readonly path: PathProxy<TLayout>;
 }

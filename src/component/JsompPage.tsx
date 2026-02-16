@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo} from 'react';
 import {IAtomRegistry, IJsompNode} from '../types';
 import {ReactRenderer} from '../impl/provider/ReactRenderer';
-import {jsomp as defaultJsomp} from '../setup';
+import {jsomp as defaultJsomp, context as internalContext} from '../setup';
 
 export interface JsompPageProps {
   /** Entity Map (usually from data reconciliation) */
@@ -118,7 +118,29 @@ export const JsompPage: React.FC<JsompPageProps> = ({
     return jsomp.restoreTree(entityMap, rootId, atomRegistry);
   }, [entities, dynamicNodes, rootId, jsomp, atomRegistry]);
 
-  // 3. Mount notification
+  /**
+   * 5. Create Layout Manager for the current nodes
+   */
+  const layout = useMemo(() => {
+    if (!jsomp || !nodes || nodes.length === 0) return undefined;
+    return jsomp.getLayout(nodes);
+  }, [jsomp, nodes]);
+
+  /**
+   * 6. Emit render event for system integration (e.g. AI Context)
+   */
+  useEffect(() => {
+    if (nodes && nodes.length > 0 && layout) {
+      internalContext.eventBus?.emit('did-render', {
+        rootId,
+        nodeCount: nodes.length,
+        nodes,
+        layout
+      });
+    }
+  }, [nodes, layout, rootId]);
+
+  // 7. Mount notification
   useEffect(() => {
     if (atomRegistry) {
       onMounted?.(atomRegistry);
@@ -134,7 +156,8 @@ export const JsompPage: React.FC<JsompPageProps> = ({
         atomRegistry,
         components,
         componentRegistry: jsomp.componentRegistry,
-        stylePresets
+        stylePresets,
+        layout
       }}
     />
   );

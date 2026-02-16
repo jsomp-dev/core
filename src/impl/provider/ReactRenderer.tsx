@@ -22,8 +22,16 @@ const JsompElement = memo(({
 
   // 1. Path construction
   const fullPath = useMemo(() => {
+    // Priority: Use the centralized layout manager for path resolution if available
+    if (context.layout && !currentPathStr.includes('[prop]')) {
+      try {
+        return context.layout.getNodePath(node);
+      } catch (e) {
+        // Fallback to legacy string concatenation if layout manager fails
+      }
+    }
     return currentPathStr ? `${currentPathStr}.${node.id}` : node.id;
-  }, [currentPathStr, node.id]);
+  }, [currentPathStr, node.id, context.layout, node]);
 
   // 2. Subscribe to Injection (Both Global ID and Full Path)
   const pathInjection = useAtom(atomRegistry, fullPath);

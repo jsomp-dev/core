@@ -1,3 +1,5 @@
+import {IJsompNode, IJsompLayoutManager} from './types';
+
 /**
  * Base JSOMP Event
  */
@@ -40,6 +42,7 @@ export interface NavigateEvent {
   url: string;
 }
 
+
 /**
  * Render Event Payload
  * Occurs when the renderer completes building the view.
@@ -49,6 +52,10 @@ export interface RenderEvent {
   rootId: string;
   /** Number of successfully rendered nodes in this snapshot */
   nodeCount: number;
+  /** [NEW] The fully calculated nodes array */
+  nodes: IJsompNode[];
+  /** [NEW] The layout manager for this rendering cycle */
+  layout: IJsompLayoutManager;
 }
 
 /**
