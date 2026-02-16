@@ -20,7 +20,7 @@ export class JsompCompiler {
     // Merge global plugins with local overrides
     this.localRegistry = PipelineRegistry.global.clone();
     if (options.plugins) {
-      options.plugins.forEach(p => this.localRegistry.register(p.id, p.stage, p.handler, p.name));
+      options.plugins.forEach(p => this.localRegistry.register(p.id, p.stage, p, p.name));
     }
   }
 

@@ -17,14 +17,21 @@ export const setup = async (config: JsompConfig = {}): Promise<void> => {
   // 1. Register user provided plugins (if any)
   if (config.plugins) {
     config.plugins.forEach(p => {
-      if (p.id && p.stage && p.handler) {
-        globalPipeline.register(p.id, p.stage, p.handler, p.name);
+      if (p.id && p.stage && (p.handler || p.onNode)) {
+        globalPipeline.register(p.id, p.stage, p, p.name);
       }
     });
   }
 
   // 2. Smart Bootstrapping: Only load standard plugins if they are not already overridden
   // This enables tree-shaking while keeping the runtime API synchronous.
+
+  // Register inherit plugin first to make sure the entities have all handled. 
+  if (!globalPipeline.getPlugins(PipelineStage.PreProcess).some((p: any) => p.id === 'standard-inherit')) {
+    const {inheritPlugin} = await import('./impl/compiler/plugins/InheritPlugin');
+    globalPipeline.register('standard-inherit', PipelineStage.PreProcess, inheritPlugin, 'StandardInherit');
+  }
+
   if (!globalPipeline.getPlugins(PipelineStage.PreProcess).some((p: any) => p.id === 'standard-state')) {
     const {stateHydrationPlugin} = await import('./impl/compiler/plugins/StateHydrationPlugin');
     globalPipeline.register('standard-state', PipelineStage.PreProcess, stateHydrationPlugin, 'StandardStateHydration');
