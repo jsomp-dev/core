@@ -65,13 +65,17 @@ export class BindingResolver {
       if (pureMatch) {
         const k = pureMatch[1].trim();
         const atom = registry.get(k);
-        return isAtom(atom) ? atom.value : (atom?.value ?? atom ?? value);
+        if (isAtom(atom)) return atom.value;
+        if (atom && typeof atom === 'object' && 'value' in atom) return atom.value;
+        return atom ?? value;
       }
 
       // Interpolation "text-{{color}}"
       return value.replace(BINDING_REGEX, (_, k) => {
-        const val = registry.get(k.trim());
-        return isAtom(val) ? val.value : (val?.value ?? val ?? '');
+        const atom = registry.get(k.trim());
+        if (isAtom(atom)) return atom.value;
+        if (atom && typeof atom === 'object' && 'value' in atom) return atom.value;
+        return atom ?? '';
       });
     }
 

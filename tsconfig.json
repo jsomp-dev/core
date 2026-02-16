@@ -27,7 +27,8 @@
   },
   "include": [
     "src/**/*",
-    "playground/**/*"
+    "playground/**/*",
+    "test/**/*"
   ],
   "exclude": [
     "node_modules",

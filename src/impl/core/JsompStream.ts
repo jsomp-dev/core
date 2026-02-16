@@ -36,12 +36,13 @@ export class JsompStream implements IJsompStream {
 
   private process(isFinal: boolean = false): void {
     let currentBuffer = this.buffer.trim();
-    if (!currentBuffer) return;
+    if (!currentBuffer && !isFinal) return;
 
     let lastValidIndex = 0;
     let stackCount = 0;
     let inString = false;
     let escaped = false;
+    let startIndex = -1;
 
     for (let i = 0; i < currentBuffer.length; i++) {
       const char = currentBuffer[i];
@@ -53,24 +54,31 @@ export class JsompStream implements IJsompStream {
       }
 
       if (char === '"') inString = true;
-      else if (char === '{' || char === '[') stackCount++;
+      else if (char === '{' || char === '[') {
+        if (stackCount === 0) startIndex = i;
+        stackCount++;
+      }
       else if (char === '}' || char === ']') {
         stackCount--;
-        if (stackCount === 0) {
-          const objectStr = currentBuffer.substring(lastValidIndex, i + 1).trim();
-          const cleanStr = objectStr.startsWith(',') ? objectStr.slice(1) : objectStr;
-
-          const trimmed = cleanStr.trim();
-          if (trimmed.startsWith('[')) {
-            this.parseArrayStream(trimmed);
-          } else if (trimmed.startsWith('{')) {
-            this.parseObjectStream(trimmed);
+        if (stackCount < 0) {
+          stackCount = 0;
+          lastValidIndex = i + 1;
+        } else if (stackCount === 0) {
+          if (startIndex !== -1) {
+            const objectStr = currentBuffer.substring(startIndex, i + 1);
+            const trimmed = objectStr.trim();
+            if (trimmed.startsWith('[')) {
+              this.parseArrayStream(trimmed);
+            } else if (trimmed.startsWith('{')) {
+              this.parseObjectStream(trimmed);
+            }
           }
           lastValidIndex = i + 1;
         }
       }
     }
 
+    // Update buffer with remaining fragment
     this.buffer = currentBuffer.substring(lastValidIndex);
     let remainingFragment = this.buffer.trim();
     let partialData: any = null;
@@ -87,8 +95,8 @@ export class JsompStream implements IJsompStream {
         const result = this.repairJson(toRepair);
         try {
           partialData = JSON.parse(result.json);
-          if (!isFinal && partialData && typeof partialData === 'object') {
-            // Dispatch partials
+          // Only dispatch if it's a non-empty object/array
+          if (!isFinal && partialData && typeof partialData === 'object' && Object.keys(partialData).length > 0) {
             this.dispatchFormattedPatch(partialData);
           }
         } catch (e) { }
@@ -132,6 +140,7 @@ export class JsompStream implements IJsompStream {
       });
     } else {
       Object.entries(data).forEach(([id, patch]) => {
+        if (id === '_fixed') return;
         this.dispatchSingleNode(id, patch as any);
       });
     }
@@ -146,7 +155,7 @@ export class JsompStream implements IJsompStream {
   }
 
   private repairJson(str: string): {json: string; isPartial: boolean} {
-    let stack: string[] = [];
+    const stack: {char: string, hasColon: boolean}[] = [];
     let inString = false;
     let escaped = false;
 
@@ -155,25 +164,55 @@ export class JsompStream implements IJsompStream {
       if (inString) {
         if (escaped) escaped = false;
         else if (char === '\\') escaped = true;
-        else if (char === '"') {inString = false; stack.pop();}
+        else if (char === '"') inString = false;
         continue;
       }
-      if (char === '"') {inString = true; stack.push('"');}
-      else if (char === '{') stack.push('{');
-      else if (char === '[') stack.push('[');
-      else if (char === '}') {if (stack[stack.length - 1] === '{') stack.pop();}
-      else if (char === ']') {if (stack[stack.length - 1] === '[') stack.pop();}
+
+      if (char === '"') {
+        inString = true;
+      } else if (char === '{') {
+        stack.push({char: '{', hasColon: false});
+      } else if (char === '[') {
+        stack.push({char: '[', hasColon: false});
+      } else if (char === '}') {
+        if (stack.length && stack[stack.length - 1].char === '{') stack.pop();
+      } else if (char === ']') {
+        if (stack.length && stack[stack.length - 1].char === '[') stack.pop();
+      } else if (char === ':') {
+        if (stack.length && stack[stack.length - 1].char === '{') {
+          stack[stack.length - 1].hasColon = true;
+        }
+      } else if (char === ',') {
+        if (stack.length) {
+          stack[stack.length - 1].hasColon = false;
+        }
+      }
     }
 
     let repair = '';
     for (let i = stack.length - 1; i >= 0; i--) {
-      const s = stack[i];
-      if (s === '"') repair += '"';
-      else if (s === '{') {
-        if (str.trim().endsWith(':')) repair += 'null';
+      const ctx = stack[i];
+      if (ctx.char === '{') {
+        const currentTotal = (str + repair).trim();
+        if (currentTotal.endsWith(':')) {
+          repair += 'null';
+        } else if (currentTotal.endsWith(',')) {
+          repair += '"_fixed":null';
+        } else {
+          if (!ctx.hasColon) {
+            if (currentTotal.endsWith('"')) {
+              repair += ':null';
+            }
+          }
+        }
         repair += '}';
+      } else if (ctx.char === '[') {
+        const currentTotal = (str + repair).trim();
+        if (currentTotal.endsWith(',')) {
+          repair += 'null';
+        }
+        repair += ']';
       }
-      else if (s === '[') repair += ']';
     }
     return {json: str + repair, isPartial: stack.length > 0};
   }

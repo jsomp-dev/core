@@ -7,6 +7,7 @@ export {JsompService} from './impl/JsompService';
 export {AtomRegistry} from './impl/core/AtomRegistry';
 export {JsompAtom} from './impl/core/JsompAtom';
 export {JsompStream} from './impl/core/JsompStream';
+export {BindingResolver} from './impl/core/BindingResolver';
 export {ComponentRegistry} from './impl/provider/ComponentRegistry';
 export * from './impl/compiler/types';
 export * from './impl/compiler/JsompCompiler';
