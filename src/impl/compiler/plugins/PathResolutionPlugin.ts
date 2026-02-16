@@ -28,16 +28,27 @@ export const pathResolutionPlugin = {
       if (!targetEntity) return targetId;
 
       const parentVal = targetEntity.parent;
+      const explicitSlot = targetEntity.slot;
+
       // Resolve basic parent ID from string or slot notation
       let parentId: string | undefined;
 
       if (typeof parentVal === 'string') {
-        if (parentVal.includes('.')) {
-          parentId = parentVal.startsWith('[slot]')
-            ? parentVal.split('.').slice(0, -1).join('.').split('.').pop()!
-            : parentVal.split('.').pop()!;
+        if (explicitSlot) {
+          // Rule 1: Explicit slot attribute, parent is the physical parent
+          parentId = parentVal.includes('.') ? parentVal.split('.').pop()! : parentVal;
+        } else if (parentVal.startsWith('[slot]')) {
+          // Rule 2: Legacy slot notation [slot]path.to.parent.slotName
+          const cleanPath = parentVal.slice(6);
+          const segments = cleanPath.split('.');
+          if (segments.length > 1) {
+            parentId = segments[segments.length - 2];
+          } else {
+            parentId = undefined;
+          }
         } else {
-          parentId = parentVal;
+          // Rule 3: Standard parent reference
+          parentId = parentVal.includes('.') ? parentVal.split('.').pop()! : parentVal;
         }
       }
 
@@ -64,18 +75,30 @@ export const pathResolutionPlugin = {
 
     // 4. Resolve Parent/Slot references
     const parentVal = node.parent;
-    if (typeof parentVal === 'string') {
+    const explicitSlot = (entity as any).slot;
+
+    if (explicitSlot) {
+      // Priority 1: Use explicit slot attribute
+      node.slot = explicitSlot;
+      (node as any).__jsomp_slot = explicitSlot;
+      if (typeof parentVal === 'string' && parentVal.includes('.')) {
+        node.parent = pathToIdMap.get(parentVal) || parentVal.split('.').pop();
+      }
+    } else if (typeof parentVal === 'string') {
       if (parentVal.startsWith('[slot]')) {
+        // Priority 2: Legacy mode
         const content = parentVal.slice(6);
         const segments = content.split('.');
-        const slotName = segments.pop()!;
-        const parentPath = segments.join('.');
-
-        // Ensure parent path is also calculated
-        const pId = pathToIdMap.get(parentPath) || segments[segments.length - 1];
-        node.parent = pId;
-        (node as any).__jsomp_slot = slotName;
+        if (segments.length > 1) {
+          const slotName = segments.pop()!;
+          const parentPath = segments.join('.');
+          const pId = pathToIdMap.get(parentPath) || segments[segments.length - 1];
+          node.parent = pId;
+          node.slot = slotName;
+          (node as any).__jsomp_slot = slotName;
+        }
       } else if (parentVal.includes('.')) {
+        // Priority 3: Path notation but not slot
         const pId = pathToIdMap.get(parentVal) || parentVal.split('.').pop();
         node.parent = pId;
       }

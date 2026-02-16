@@ -27,6 +27,7 @@ export class InjectionRegistry {
 
     const mergedNode: IJsompNode = {
       ...node,
+      slot: (inj as any).slot || node.slot,
       props: {...(node.props || {}), ...injProps},
       style_presets: [...(node.style_presets || []), ...injPresets],
       style_tw: [...(node.style_tw || []), ...injTw],

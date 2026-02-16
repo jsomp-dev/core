@@ -47,8 +47,9 @@ export class JsompDecompiler {
         node.children = node.children || [];
         if (!node.children.includes(sn)) node.children.push(sn);
 
-        // Reverse conversion: inject the legacy parent addressing string
-        sn.parent = `[slot]${currentPath}.${key}`;
+        // Reverse conversion: use standard parent and slot attributes
+        sn.parent = currentPath;
+        sn.slot = key;
 
         if (Array.isArray(val)) {
           props[key] = val.filter((v: any) => v !== sn);

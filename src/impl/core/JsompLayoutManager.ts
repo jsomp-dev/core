@@ -37,6 +37,26 @@ export class JsompLayoutManager<TId extends string = string, TLayout extends rea
   }
 
   /**
+   * Helper to resolve parent ID, supporting legacy slot notation
+   */
+  private _getParentId(node: IJsompNode): string | null {
+    const parentVal = node.parent;
+    if (!parentVal) return null;
+
+    if (parentVal.startsWith('[slot]')) {
+      const content = parentVal.slice(6);
+      const segments = content.split('.');
+      return segments.length > 1 ? segments[segments.length - 2] : segments[0];
+    }
+
+    if (parentVal.includes('.')) {
+      return parentVal.split('.').pop()!;
+    }
+
+    return parentVal;
+  }
+
+  /**
    * Calculates the full path of a node recursively
    */
   public getNodePath(node: IJsompNode): string {
@@ -49,14 +69,13 @@ export class JsompLayoutManager<TId extends string = string, TLayout extends rea
     const visited = new Set<IJsompNode>([node]);
 
     // Trace back to root
-    while (current.parent) {
-      const parentNodes = this._idMap.get(current.parent);
+    while (true) {
+      const parentId = this._getParentId(current);
+      if (!parentId) break;
+
+      const parentNodes = this._idMap.get(parentId);
       if (!parentNodes || parentNodes.length === 0) break;
 
-      // Use the first parent found. 
-      // Note: In case of non-unique IDs, this may lead to incorrect paths 
-      // if child nodes are not correctly associated with their specific parent instance.
-      // However, JSOMP usually expects unique IDs or locally unique within a parent.
       const parent = parentNodes[0];
 
       if (visited.has(parent)) {
@@ -90,7 +109,7 @@ export class JsompLayoutManager<TId extends string = string, TLayout extends rea
     // Group nodes by parent ID for tree construction
     const childrenMap = new Map<string | null, IJsompNode[]>();
     for (const node of this.nodes) {
-      const parentId = node.parent || null;
+      const parentId = this._getParentId(node);
       const children = childrenMap.get(parentId) || [];
       children.push(node);
       childrenMap.set(parentId, children);
