@@ -17,11 +17,15 @@ export class PipelineRegistry {
    * Register a plugin at a specific stage.
    * If a plugin with the same ID already exists, it will be replaced.
    */
-  public register(id: string, stage: PipelineStage, handler: any, name?: string): void {
+  public register(id: string, stage: PipelineStage, plugin: any, name?: string): void {
     const list = this.plugins.get(stage);
     if (list) {
       const existingIdx = list.findIndex(p => p.id === id);
-      const pluginDef = {id, stage, handler, name: name || id};
+
+      // Handle both legacy function-based and new object-based registration
+      const pluginDef: IJsompPluginDef = typeof plugin === 'function'
+        ? {id, stage, handler: plugin, name: name || id}
+        : {id, stage, ...plugin, name: name || id};
 
       if (existingIdx > -1) {
         list[existingIdx] = pluginDef;

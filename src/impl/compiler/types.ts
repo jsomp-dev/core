@@ -1,4 +1,4 @@
-import {IAtomRegistry, IJsompNode} from '../../types';
+import {IAtomRegistry, IJsompNode, JsompLogger} from '../../types';
 
 /**
  * JSOMP Compiler Pipeline Stages
@@ -47,6 +47,9 @@ export interface ICompilerContext {
 
   /** The final assembled tree (if applicable) */
   result?: IJsompNode[];
+
+  /** Logger instance for debugging and error reporting */
+  logger: JsompLogger;
 }
 
 /**
@@ -61,6 +64,17 @@ export interface IJsompPluginDef {
   /** Unique identifier for the plugin (allows replacement) */
   id: string;
   stage: PipelineStage;
-  handler: JsompPlugin;
   name?: string;
+
+  /** 
+   * [Atom Track] Batch hook (New)
+   * Triggered in the Compiler's main loop. Do not perform extra iterations inside.
+   */
+  onNode?: (id: string, entity: any, ctx: ICompilerContext) => void;
+
+  /** 
+   * [Global Track] Independent processor (Retained)
+   * For plugins that need to perceive full data or execute complex logic like recursion.
+   */
+  handler?: JsompPlugin;
 }

@@ -36,7 +36,8 @@ export class JsompCompiler {
       nodes: new Map(),
       rootId: options.rootId,
       atomRegistry: options.atomRegistry,
-      options: {}
+      options: {},
+      logger: context.logger // Use the global context logger as default
     };
 
     // Execute stages sequentially
@@ -58,11 +59,30 @@ export class JsompCompiler {
 
   private runStage(stage: PipelineStage, ctx: ICompilerContext): void {
     const plugins = this.localRegistry.getPlugins(stage);
-    for (const plugin of plugins) {
+
+    // 1. Classification: batch (with onNode) versus global (with handler)
+    const batchPlugins = plugins.filter(p => !!p.onNode);
+    const globalPlugins = plugins.filter(p => !!p.handler);
+
+    // 2. Batch execution: One pass for N plugins
+    if (batchPlugins.length > 0) {
+      ctx.entities.forEach((entity, id) => {
+        for (const plugin of batchPlugins) {
+          try {
+            plugin.onNode!(id, entity, ctx);
+          } catch (err: any) {
+            ctx.logger.error(`[Compiler][${stage}][Batch] Plugin ${plugin.name || 'anonymous'} failed on node ${id}: ${err.message}`, err);
+          }
+        }
+      });
+    }
+
+    // 3. Global execution: Traditional sequential execution
+    for (const plugin of globalPlugins) {
       try {
-        plugin.handler(ctx);
+        plugin.handler!(ctx);
       } catch (err: any) {
-        context.logger.error(`[Compiler][${stage}] Plugin ${plugin.name || 'anonymous'} failed: ${err.message}`, err);
+        ctx.logger.error(`[Compiler][${stage}][Global] Plugin ${plugin.name || 'anonymous'} failed: ${err.message}`, err);
         throw err;
       }
     }

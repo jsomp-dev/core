@@ -4,65 +4,83 @@ import {ICompilerContext} from '../types';
  * Resolves physical paths and handles parent-child relationships,
  * including support for deep paths and legacy slot notation.
  */
-export const pathResolutionPlugin = (ctx: ICompilerContext) => {
-  const uiEntitiesMap = new Map<string, any>();
+export const pathResolutionPlugin = {
+  onNode: (id: string, entity: any, ctx: ICompilerContext) => {
+    // 1. Skip non-UI entities
+    if (entity.type === 'State') return;
 
-  // Clone entities for processing and filter out non-UI entities (like State)
-  ctx.entities.forEach((v, k) => {
-    if (v.type !== 'State') {
-      uiEntitiesMap.set(k, {
-        ...v,
-        id: v.id || k,
-        props: v.props ? {...v.props} : {},
-        children: v.children ? [...v.children] : []
-      });
+    // 2. Initialize path cache and maps in context if not exists
+    if (!ctx.options.__pathCache) {
+      ctx.options.__pathCache = new Map<string, string>();
+      ctx.options.__pathToId = new Map<string, string>();
     }
-  });
 
-  const idToPath = new Map<string, string>();
-  const getCalculatedPath = (id: string): string => {
-    if (idToPath.has(id)) return idToPath.get(id)!;
-    const entity = uiEntitiesMap.get(id);
-    if (!entity) return id;
+    const pathCache = ctx.options.__pathCache as Map<string, string>;
+    const pathToIdMap = ctx.options.__pathToId as Map<string, string>;
 
-    const parentVal = entity.parent;
-    const parentId = (typeof parentVal === 'string' && parentVal.includes('.'))
-      ? (parentVal.startsWith('[slot]') ? parentVal.split('.').slice(0, -1).join('.').split('.').pop()! : parentVal.split('.').pop()!)
-      : parentVal;
+    /**
+     * Recursive path calculator (Memoized)
+     */
+    const getCalculatedPath = (targetId: string): string => {
+      if (pathCache.has(targetId)) return pathCache.get(targetId)!;
 
-    const path = (parentId && parentId !== 'root' && uiEntitiesMap.has(parentId))
-      ? `${getCalculatedPath(parentId)}.${id}`
-      : id;
+      const targetEntity = ctx.entities.get(targetId);
+      if (!targetEntity) return targetId;
 
-    idToPath.set(id, path);
-    return path;
-  };
+      const parentVal = targetEntity.parent;
+      // Resolve basic parent ID from string or slot notation
+      let parentId: string | undefined;
 
-  const pathToId = new Map<string, string>();
-  uiEntitiesMap.forEach((_, id) => {
-    pathToId.set(getCalculatedPath(id), id);
-  });
+      if (typeof parentVal === 'string') {
+        if (parentVal.includes('.')) {
+          parentId = parentVal.startsWith('[slot]')
+            ? parentVal.split('.').slice(0, -1).join('.').split('.').pop()!
+            : parentVal.split('.').pop()!;
+        } else {
+          parentId = parentVal;
+        }
+      }
 
-  // Resolve Parent references
-  uiEntitiesMap.forEach((node) => {
+      const path = (parentId && parentId !== 'root' && ctx.entities.has(parentId))
+        ? `${getCalculatedPath(parentId)}.${targetId}`
+        : targetId;
+
+      pathCache.set(targetId, path);
+      pathToIdMap.set(path, targetId);
+      return path;
+    };
+
+    // calculate current node's path
+    const path = getCalculatedPath(id);
+
+    // 3. Create node instance
+    const node = {
+      ...entity,
+      id: entity.id || id,
+      props: entity.props ? {...entity.props} : {},
+      children: entity.children ? [...entity.children] : [],
+      _fullPath: path
+    };
+
+    // 4. Resolve Parent/Slot references
     const parentVal = node.parent;
-    if (typeof parentVal !== 'string') return;
+    if (typeof parentVal === 'string') {
+      if (parentVal.startsWith('[slot]')) {
+        const content = parentVal.slice(6);
+        const segments = content.split('.');
+        const slotName = segments.pop()!;
+        const parentPath = segments.join('.');
 
-    if (parentVal.startsWith('[slot]')) {
-      const content = parentVal.slice(6);
-      const segments = content.split('.');
-      const slotName = segments.pop()!;
-      const parentPath = segments.join('.');
-
-      node.parent = pathToId.get(parentPath) || segments[segments.length - 1];
-      (node as any).__jsomp_slot = slotName;
-    } else if (parentVal.includes('.')) {
-      node.parent = pathToId.get(parentVal) || parentVal.split('.').pop();
+        // Ensure parent path is also calculated
+        const pId = pathToIdMap.get(parentPath) || segments[segments.length - 1];
+        node.parent = pId;
+        (node as any).__jsomp_slot = slotName;
+      } else if (parentVal.includes('.')) {
+        const pId = pathToIdMap.get(parentVal) || parentVal.split('.').pop();
+        node.parent = pId;
+      }
     }
-  });
 
-  // Populate context nodes for the next stage
-  uiEntitiesMap.forEach((node, id) => {
     ctx.nodes.set(id, node);
-  });
+  }
 };
