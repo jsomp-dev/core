@@ -1,4 +1,4 @@
-import {IJsompLayoutManager, IJsompNode, JsompHierarchyNode} from '../../types';
+import {IJsompLayoutManager, IJsompNode, JsompHierarchyNode, JsompHierarchyOptions} from '../../types';
 
 /**
  * LayoutManager Implementation
@@ -7,7 +7,7 @@ import {IJsompLayoutManager, IJsompNode, JsompHierarchyNode} from '../../types';
 export class JsompLayoutManager<TId extends string = string, TLayout extends readonly IJsompNode[] = any> implements IJsompLayoutManager<TId, TLayout> {
   private _pathCache: Map<IJsompNode, string> = new Map();
   private _idMap: Map<string, IJsompNode[]> = new Map();
-  private _hierarchy?: JsompHierarchyNode;
+  private _hierarchyCache: Map<string, JsompHierarchyNode> = new Map();
 
   constructor(private readonly nodes: readonly IJsompNode[]) {
     this._buildIndex();
@@ -101,10 +101,27 @@ export class JsompLayoutManager<TId extends string = string, TLayout extends rea
   }
 
   /**
+   * Helper to resolve slot name, supporting legacy slot notation
+   */
+  private _getSlot(node: IJsompNode): string | undefined {
+    if (node.slot) return node.slot;
+
+    const parentVal = node.parent;
+    if (parentVal && parentVal.startsWith('[slot]')) {
+      const content = parentVal.slice(6);
+      const segments = content.split('.');
+      return segments.length > 1 ? segments.pop() : undefined;
+    }
+
+    return undefined;
+  }
+
+  /**
    * Get the topological hierarchy tree
    */
-  public getHierarchy(): JsompHierarchyNode {
-    if (this._hierarchy) return this._hierarchy;
+  public getHierarchy(options: JsompHierarchyOptions = {}): JsompHierarchyNode {
+    const cacheKey = JSON.stringify(options);
+    if (this._hierarchyCache.has(cacheKey)) return this._hierarchyCache.get(cacheKey)!;
 
     // Group nodes by parent ID for tree construction
     const childrenMap = new Map<string | null, IJsompNode[]>();
@@ -121,11 +138,15 @@ export class JsompLayoutManager<TId extends string = string, TLayout extends rea
       const hierarchyNode: JsompHierarchyNode = {
         id: node.id,
         type: node.type,
-        path: this.getNodePath(node),
       };
 
-      if (node.slot) {
-        hierarchyNode.slot = node.slot;
+      if (options.includePath) {
+        hierarchyNode.path = this.getNodePath(node);
+      }
+
+      const slot = this._getSlot(node);
+      if (slot) {
+        hierarchyNode.slot = slot;
       }
 
       const children = childrenMap.get(node.id);
@@ -136,24 +157,32 @@ export class JsompLayoutManager<TId extends string = string, TLayout extends rea
       return hierarchyNode;
     };
 
+    let result: JsompHierarchyNode;
+
     if (roots.length === 1) {
-      this._hierarchy = buildTree(roots[0]);
+      result = buildTree(roots[0]);
     } else if (roots.length > 1) {
       // Create a virtual root for multi-root layouts
-      this._hierarchy = {
+      result = {
         id: 'root',
         type: 'View',
-        path: 'root',
         children: roots.map(buildTree),
       };
+      if (options.includePath) {
+        result.path = 'root';
+      }
     } else if (this.nodes.length > 0) {
-      // Fallback if no explicit root found (e.g. parent is set to something non-existent)
-      this._hierarchy = buildTree(this.nodes[0]);
+      // Fallback if no explicit root found
+      result = buildTree(this.nodes[0]);
     } else {
-      this._hierarchy = {id: 'empty', type: 'Empty', path: 'empty'};
+      result = {id: 'empty', type: 'Empty'};
+      if (options.includePath) {
+        result.path = 'empty';
+      }
     }
 
-    return this._hierarchy!;
+    this._hierarchyCache.set(cacheKey, result);
+    return result;
   }
 
   /**

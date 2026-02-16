@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {JsompPage, jsomp} from '@jsomp/core';
+import React, {useMemo, useState} from 'react';
+import {JsompPage, createLayoutManager} from '@jsomp/core';
 
 // 1. Define a Mock Component that uses Slots
 const CustomCard: React.FC<{
@@ -117,19 +117,25 @@ export const SlotTest: React.FC = () => {
       style_css: {color: '#94a3b8'}
     }
   ]);
+  const [includePath, setIncludePath] = useState(false);
+
+  // 1. Create a layout manager to verify hierarchy
+  const manager = useMemo(() => createLayoutManager(entities as any), [entities]);
+  const hierarchySnapshot = JSON.stringify(manager.getHierarchy({includePath}), null, 2);
 
   return (
-    <div style={{width: '100%', maxWidth: '600px'}}>
-      <JsompPage
-        entities={entities}
-        rootId='app_root'
-        components={{
-          CustomCard
-        }}
-      />
+    <div style={{width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '2rem'}}>
+      <section>
+        <JsompPage
+          entities={entities}
+          rootId='app_root'
+          components={{
+            CustomCard
+          }}
+        />
+      </section>
 
-      <div style={{
-        marginTop: '2rem',
+      <section style={{
         padding: '1rem',
         background: 'rgba(59, 130, 246, 0.1)',
         borderRadius: '0.5rem',
@@ -143,7 +149,25 @@ export const SlotTest: React.FC = () => {
           <li>Slot 2: Legacy <code>parent: "[slot]card.header"</code> notation.</li>
           <li>Both are resolved to the same internal structure.</li>
         </ul>
-      </div>
+      </section>
+
+      {/* 2. Hierarchy Viewer for Verification */}
+      <section>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-slate-400 text-xs font-bold uppercase">Topological Hierarchy (Verifying 'slot' export)</h3>
+          <label className="flex items-center gap-2 text-xs text-blue-400 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={includePath}
+              onChange={e => setIncludePath(e.target.checked)}
+            />
+            Include Path Property
+          </label>
+        </div>
+        <pre className="p-4 bg-slate-950 text-emerald-500 rounded-lg border border-slate-800 text-xs overflow-auto max-h-[400px]">
+          {hierarchySnapshot}
+        </pre>
+      </section>
     </div>
   );
 };

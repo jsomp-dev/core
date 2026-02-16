@@ -451,7 +451,7 @@ export interface IJsompStream {
 export interface JsompHierarchyNode {
   id: string;
   type: string;
-  path: string;
+  path?: string;
   slot?: string;
   children?: JsompHierarchyNode[];
 }
@@ -478,6 +478,14 @@ export type PathProxy<T> = T extends readonly IJsompNode[]
   : any;
 
 /**
+ * Options for hierarchy generation
+ */
+export interface JsompHierarchyOptions {
+  /** Whether to include the full path in the output. Defaults to false. */
+  includePath?: boolean;
+}
+
+/**
  * LayoutManager interface
  */
 export interface IJsompLayoutManager<TId extends string = string, TLayout extends readonly IJsompNode[] = any> {
@@ -488,7 +496,7 @@ export interface IJsompLayoutManager<TId extends string = string, TLayout extend
   /** Get all valid full paths in the layout */
   getAllPaths(): string[];
   /** Get the topological hierarchy tree */
-  getHierarchy(): JsompHierarchyNode;
+  getHierarchy(options?: JsompHierarchyOptions): JsompHierarchyNode;
   /** Type-safe path chain proxy */
   readonly path: PathProxy<TLayout>;
 }
