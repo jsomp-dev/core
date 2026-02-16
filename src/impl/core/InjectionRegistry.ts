@@ -23,6 +23,7 @@ export class InjectionRegistry {
     const injPresets = (inj as any).style_presets || [];
     const injTw = (inj as any).style_tw || [];
     const injCss = (inj as any).style_css || {};
+    const injOnEvent = (inj as any).onEvent || {};
 
     const mergedNode: IJsompNode = {
       ...node,
@@ -30,6 +31,8 @@ export class InjectionRegistry {
       style_presets: [...(node.style_presets || []), ...injPresets],
       style_tw: [...(node.style_tw || []), ...injTw],
       style_css: {...(node.style_css || {}), ...injCss},
+      onEvent: {...(node.onEvent || {}), ...injOnEvent},
+      actions: {...(node.actions || {}), ...(inj as any).actions || {}},
       _fullPath: fullPath
     };
 

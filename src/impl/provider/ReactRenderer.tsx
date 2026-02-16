@@ -120,6 +120,7 @@ const JsompElement = memo(({
       'data-jsomp-partial': (resolvedNode as any).__is_partial || undefined,
       className,
       style,
+      ...(resolvedNode.onEvent || {}),
       ...((finalInjection as any).onEvent || {})
     });
 
@@ -133,10 +134,12 @@ const JsompElement = memo(({
       const valueKey = BindingResolver.getBindingKey(originalProps?.value);
       if (valueKey) {
         const syncEvent = eventNames.find(e => e === 'onChange' || e === 'onValueChange');
-        if (syncEvent && !props[syncEvent]) {
+        if (syncEvent) {
+          const existingHandler = props[syncEvent];
           props[syncEvent] = (val: any) => {
             const actualValue = (val && typeof val === 'object' && 'target' in val) ? (val.target as any).value : val;
             atomRegistry.set(valueKey, {value: actualValue});
+            if (existingHandler) existingHandler(val);
           };
         }
       }
@@ -145,10 +148,12 @@ const JsompElement = memo(({
       const checkedKey = BindingResolver.getBindingKey(originalProps?.checked);
       if (checkedKey) {
         const syncEvent = eventNames.find(e => e === 'onCheckedChange');
-        if (syncEvent && !props[syncEvent]) {
+        if (syncEvent) {
+          const existingHandler = props[syncEvent];
           props[syncEvent] = (val: any) => {
             const actualChecked = typeof val === 'boolean' ? val : !!(val?.target?.checked);
             atomRegistry.set(checkedKey, {value: actualChecked});
+            if (existingHandler) existingHandler(val);
           };
         }
       }

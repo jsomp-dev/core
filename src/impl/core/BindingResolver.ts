@@ -26,6 +26,9 @@ export class BindingResolver {
       } else if (Array.isArray(val)) {
         val.forEach(scan);
       } else if (typeof val === 'object' && !isAtom(val)) {
+        // Special protection: do not recurse for React or complex objects
+        if (val.$$typeof || val._isAMomentObject) return;
+
         // Safely traverse object properties, filtering out private or specific properties
         try {
           Object.values(val).forEach(scan);

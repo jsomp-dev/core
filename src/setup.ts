@@ -46,6 +46,11 @@ export const setup = async (config: JsompConfig = {}): Promise<void> => {
     const {treeAssemblyPlugin} = await import('./impl/compiler/plugins/TreeAssemblyPlugin');
     globalPipeline.register('standard-tree', PipelineStage.Hydrate, treeAssemblyPlugin, 'StandardTreeAssembly');
   }
+
+  if (!globalPipeline.getPlugins(PipelineStage.Hydrate).some((p: any) => p.id === 'standard-actions')) {
+    const {actionTagsPlugin} = await import('./impl/compiler/plugins/ActionTagsPlugin');
+    globalPipeline.register('standard-actions', PipelineStage.Hydrate, actionTagsPlugin, 'StandardActionTags');
+  }
 };
 
 // Export the context for internal use (should be treated as read-only by business logic)

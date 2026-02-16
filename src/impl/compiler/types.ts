@@ -21,7 +21,7 @@ export enum PipelineStage {
   /**
    * Phase 3: Hydrate
    * Responsibility: Transform nodes into final renderable instances and assemble the tree.
-   * Typical tasks: Action binding, State atom initialization, Tree splicing.
+   * Typical tasks: Action binding (ActionTags), State atom initialization, Tree splicing.
    */
   Hydrate = 'Hydrate',
 }
@@ -50,6 +50,9 @@ export interface ICompilerContext {
 
   /** Logger instance for debugging and error reporting */
   logger: JsompLogger;
+
+  /** Action Registry for semantic interaction resolving */
+  actionRegistry?: any; // Use any to avoid circular dependency
 }
 
 /**

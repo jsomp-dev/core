@@ -39,6 +39,8 @@ export type {
   IJsompStream,
   IStreamTransformer,
   StreamOptions,
+  IActionDef,
+  IActionRegistry,
 } from './types';
 
 // Export JsompPage Component

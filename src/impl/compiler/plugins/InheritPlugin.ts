@@ -54,6 +54,19 @@ export const inheritPlugin: IJsompPluginDef = {
         merged.style_tw = Array.from(tw);
       }
 
+      // 6. actions: Deep merge (Map tag to union of events)
+      if (parent.actions || child.actions) {
+        const actions = {...(parent.actions || {})};
+        Object.entries(child.actions || {}).forEach(([tag, events]) => {
+          const combinedEvents = new Set([
+            ...(actions[tag] || []),
+            ...(events as string[] || [])
+          ]);
+          actions[tag] = Array.from(combinedEvents);
+        });
+        merged.actions = actions;
+      }
+
       return merged;
     };
 

@@ -10,6 +10,7 @@ import {JsompCompiler, CompilerOptions} from './compiler/JsompCompiler';
 import {PipelineRegistry} from './compiler/PipelineRegistry';
 import {JsompDecompiler} from './compiler/JsompDecompiler';
 import {SchemaRegistry} from './core/SchemaRegistry';
+import {ActionRegistry} from './provider/ActionRegistry';
 
 /**
  * JSOMP Service Implementation
@@ -32,6 +33,11 @@ export class JsompService implements IJsompService {
    * Schema Registry for typed atoms
    */
   public readonly schemas = SchemaRegistry.global;
+
+  /**
+   * Action Registry for semantic interaction
+   */
+  public readonly actions = new ActionRegistry();
 
   /**
    * Global compiler pipeline registry
@@ -72,7 +78,7 @@ export class JsompService implements IJsompService {
       // Clones the global registry which was populated by setup()
       this._compiler = this.createCompiler();
     }
-    return this._compiler.compile(entities, {rootId, atomRegistry});
+    return this._compiler.compile(entities, {rootId, atomRegistry, actionRegistry: this.actions});
   }
 
   /**
@@ -93,7 +99,10 @@ export class JsompService implements IJsompService {
    * Create a new compiler instance
    */
   public createCompiler(options?: CompilerOptions): JsompCompiler {
-    return new JsompCompiler(options);
+    return new JsompCompiler({
+      actionRegistry: this.actions,
+      ...options
+    });
   }
 
   /**

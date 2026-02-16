@@ -7,6 +7,7 @@ export interface CompilerOptions {
   plugins?: IJsompPluginDef[];
   rootId?: string;
   atomRegistry?: IAtomRegistry;
+  actionRegistry?: any;
 }
 
 /**
@@ -36,6 +37,7 @@ export class JsompCompiler {
       nodes: new Map(),
       rootId: options.rootId,
       atomRegistry: options.atomRegistry,
+      actionRegistry: options.actionRegistry,
       options: {},
       logger: context.logger // Use the global context logger as default
     };
