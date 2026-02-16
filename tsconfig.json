@@ -19,11 +19,15 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@jsomp/core": [
+        "./src/index.ts"
       ]
     }
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "playground/**/*"
   ],
   "exclude": [
     "node_modules",
