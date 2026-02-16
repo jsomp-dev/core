@@ -126,6 +126,15 @@ export interface IStateDispatcherRegistry extends IAtomRegistry {
 }
 
 /**
+ * Pipeline Registry Interface
+ */
+export interface IPipelineRegistry {
+  register(id: string, stage: any, handler: any, name?: string): void;
+  unregister(id: string): void;
+  getPlugins(stage: any): any[];
+}
+
+/**
  * JSOMP Plugin/Module Interface
  */
 export interface IJsompService {
@@ -138,6 +147,11 @@ export interface IJsompService {
    * Global state registry
    */
   readonly globalRegistry: IAtomRegistry;
+
+  /**
+   * Global compiler pipeline registry
+   */
+  readonly pipeline: IPipelineRegistry;
 
   /**
    * Restore flat entity Map to JSOMP Tree
@@ -172,6 +186,21 @@ export interface IJsompService {
    * Create a stream controller for handling AI streaming output
    */
   createStream(options?: StreamOptions): IJsompStream;
+
+  /**
+   * Create a new compiler instance
+   */
+  createCompiler(options?: any): any;
+
+  /**
+   * Use a specific compiler instance as the default engine
+   */
+  useCompiler(compiler: any): void;
+
+  /**
+   * Force refresh the internal compiler (e.g. after dynamic plugin registration)
+   */
+  refreshCompiler(): void;
 }
 
 /**
@@ -248,6 +277,8 @@ export interface JsompConfig {
   logger?: JsompLogger;
   flattener?: JsompFlattener;
   eventBus?: JsompEventBus;
+  /** Custom compiler plugins for the global pipeline */
+  plugins?: any[]; // Using any[] for now to avoid circular dependency in types.ts
 }
 
 /**

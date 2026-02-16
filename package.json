@@ -7,8 +7,8 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "tsup src/index.ts --format cjs,esm --watch --dts",
-    "build": "tsup src/index.ts --format cjs,esm --clean --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --watch --dts --splitting",
+    "build": "tsup src/index.ts --format cjs,esm --clean --dts --splitting",
     "lint": "tsc --noEmit"
   },
   "exports": {
@@ -16,6 +16,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./plugins": {
+      "types": "./dist/impl/compiler/plugins/index.d.ts",
+      "import": "./dist/impl/compiler/plugins/index.js"
     }
   },
   "files": [

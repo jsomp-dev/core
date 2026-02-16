@@ -8,6 +8,9 @@ export {AtomRegistry} from './impl/core/AtomRegistry';
 export {JsompAtom} from './impl/core/JsompAtom';
 export {JsompStream} from './impl/core/JsompStream';
 export {ComponentRegistry} from './impl/provider/ComponentRegistry';
+export * from './impl/compiler/types';
+export * from './impl/compiler/JsompCompiler';
+export * from './impl/compiler/JsompDecompiler';
 
 // State Management Implementations (Registries & Adapters)
 export {

@@ -2,16 +2,19 @@ import {
   IJsompService, IJsompNode, IAtomRegistry, IComponentRegistry, IStateDispatcherRegistry,
   IJsompStream, StreamOptions
 } from '../types';
-import {NodeRestorer} from './core/NodeRestorer';
 import {AtomRegistry} from './core/AtomRegistry';
 import {JsompStream} from './core/JsompStream';
 import {ComponentRegistry} from './provider/ComponentRegistry';
 import {ExternalStateRegistry, ObjectAdapter, StateDispatcherRegistry, ZustandAdapter} from './state';
+import {JsompCompiler, CompilerOptions} from './compiler/JsompCompiler';
+import {PipelineRegistry} from './compiler/PipelineRegistry';
+import {JsompDecompiler} from './compiler/JsompDecompiler';
 
 /**
  * JSOMP Service Implementation
  */
 export class JsompService implements IJsompService {
+  private _compiler: JsompCompiler | null = null;
 
   /**
    * Component registry
@@ -23,6 +26,13 @@ export class JsompService implements IJsompService {
    * Business layers should inject long-term shared state here.
    */
   public readonly globalRegistry: IAtomRegistry = new AtomRegistry();
+
+  /**
+   * Global compiler pipeline registry
+   */
+  public get pipeline() {
+    return PipelineRegistry.global;
+  }
 
   /**
    * State adapter factories
@@ -52,14 +62,39 @@ export class JsompService implements IJsompService {
    * Restore tree structure from flat Map
    */
   public restoreTree(entities: Map<string, any>, rootId?: string, atomRegistry?: IAtomRegistry): IJsompNode[] {
-    return NodeRestorer.restore(entities, rootId, atomRegistry);
+    if (!this._compiler) {
+      // Clones the global registry which was populated by setup()
+      this._compiler = this.createCompiler();
+    }
+    return this._compiler.compile(entities, {rootId, atomRegistry});
   }
 
   /**
    * Flatten tree structure into flat Map
    */
   public flattenTree(nodes: IJsompNode[]): Map<string, any> {
-    return NodeRestorer.flatten(nodes);
+    return JsompDecompiler.flatten(nodes);
+  }
+
+  /**
+   * Force refresh the internal compiler (e.g. after dynamic plugin registration)
+   */
+  public refreshCompiler(): void {
+    this._compiler = null;
+  }
+
+  /**
+   * Create a new compiler instance
+   */
+  public createCompiler(options?: CompilerOptions): JsompCompiler {
+    return new JsompCompiler(options);
+  }
+
+  /**
+   * Use a specific compiler instance as the default engine
+   */
+  public useCompiler(compiler: JsompCompiler): void {
+    this._compiler = compiler;
   }
 
   /**
