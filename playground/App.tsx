@@ -96,6 +96,30 @@ const App: React.FC = () => {
         children: 'Trigger Test Action',
         onClick: () => alert('JSOMP Interaction Success!')
       }
+    },
+    {
+      id: 'tailwind_test',
+      type: 'div',
+      parent: 'app_root',
+      style_tw: [
+        'mt-6',
+        'p-4',
+        'rounded-lg',
+        'bg-linear-to-r',
+        'from-pink-500',
+        'to-orange-400',
+        'text-white',
+        'font-bold',
+        'text-center',
+        'shadow-lg',
+        'hover:scale-105',
+        'transition-transform',
+        'cursor-pointer'
+      ],
+      props: {
+        children: 'Tailwind V4 Active! (Click me)',
+        onClick: () => alert('Tailwind-styled element clicked!')
+      }
     }
   ]);
 
