@@ -547,3 +547,50 @@ export interface IJsompLayoutManager<TId extends string = string, TLayout extend
   /** Type-safe path chain proxy */
   readonly path: PathProxy<TLayout>;
 }
+
+// --- Renderer Trait Pipeline ---
+
+/**
+ * Visual Trait: Represents the visual expression of a node (CSS/Classes)
+ */
+export interface IVisualTrait {
+  className: string;
+  style: Record<string, any>;
+}
+
+/**
+ * Interaction Trait: Represents the interactive expression of a node (Events/Actions)
+ */
+export interface IInteractionTrait {
+  /** Combined event handlers (Action Registry + Injection + Static) */
+  events: Record<string, Function>;
+}
+
+/**
+ * State Trait: Represents the reactive state expression of a node (Mustache/Injection)
+ */
+export interface IStateTrait {
+  /** The final node after injection and mustache resolution */
+  resolvedNode: IJsompNode;
+  /** Normalized path of the node */
+  path: string;
+  /** Original raw injection applied to this node */
+  injection: any;
+}
+
+/**
+ * Assembly Trait: Represents the final unified props ready for the component.
+ */
+export interface IAssemblyTrait {
+  /** The final assembled props object */
+  props: any;
+}
+
+/**
+ * Content Trait: Represents the final resolved children of the node.
+ */
+export interface IContentTrait {
+  /** The final React children nodes */
+  children: any;
+}
+

@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo} from 'react';
 import {IAtomRegistry, IJsompNode, IJsompService} from '../types';
-import {ReactRenderer} from '../impl/provider/ReactRenderer';
+import {ReactRenderer} from '../impl/renderer/ReactRenderer';
+
 import {requireJsomp} from "../setup";
 
 export interface JsompPageProps {
