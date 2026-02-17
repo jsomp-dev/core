@@ -1,10 +1,11 @@
 import {describe, it, expect, beforeEach} from 'vitest';
-import {setup, jsomp} from '@jsomp/core';
+import {setupJsomp} from '@jsomp/core';
+import {requireJsomp} from "../../src/setup";
 
 describe('JSOMP Core - restoreTree', () => {
   beforeEach(async () => {
     // Ensure standard plugins are registered
-    await setup();
+    await setupJsomp();
   });
 
   it('should restore a simple tree from a flat map', () => {
@@ -12,7 +13,7 @@ describe('JSOMP Core - restoreTree', () => {
     entities.set('root', {id: 'root', type: 'div'});
     entities.set('child', {id: 'child', type: 'span', parent: 'root'});
 
-    const tree = jsomp.restoreTree(entities, 'root');
+    const tree = requireJsomp().restoreTree(entities, 'root');
 
     expect(tree).toHaveLength(1);
     expect(tree[0].id).toBe('root');
@@ -26,7 +27,7 @@ describe('JSOMP Core - restoreTree', () => {
     entities.set('b', {id: 'b', type: 'div', parent: 'a'});
     entities.set('c', {id: 'c', type: 'span', parent: 'b'});
 
-    const tree = jsomp.restoreTree(entities, 'a');
+    const tree = requireJsomp().restoreTree(entities, 'a');
 
     const nodeA = tree[0];
     const nodeB = (nodeA as any).children[0];
@@ -43,7 +44,7 @@ describe('JSOMP Core - restoreTree', () => {
     entities.set('orphan', {id: 'orphan', type: 'div'}); // No parent
 
     // If rootId is NOT specified, all nodes without valid parents should be returned as roots
-    const tree = jsomp.restoreTree(entities);
+    const tree = requireJsomp().restoreTree(entities);
 
     expect(tree.some((n: any) => n.id === 'root')).toBe(true);
     expect(tree.some((n: any) => n.id === 'orphan')).toBe(true);
@@ -55,7 +56,7 @@ describe('JSOMP Core - restoreTree', () => {
     entities.set('root', {id: 'root', type: 'div'});
     entities.set('orphan', {id: 'orphan', type: 'div'});
 
-    const tree = jsomp.restoreTree(entities, 'root');
+    const tree = requireJsomp().restoreTree(entities, 'root');
 
     expect(tree).toHaveLength(1);
     expect(tree[0].id).toBe('root');

@@ -1,8 +1,10 @@
 export * from './types';
 export * from './events';
-export {setup, jsomp, context} from './setup';
+export {setupJsomp} from './setup';
 
-// Export common implementation classes for advanced usage
+// Export environment and core service
+export {JsompEnv} from './JsompEnv';
+
 export {JsompService} from './impl/JsompService';
 export {AtomRegistry} from './impl/core/AtomRegistry';
 export {JsompAtom} from './impl/core/JsompAtom';

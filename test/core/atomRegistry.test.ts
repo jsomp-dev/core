@@ -1,5 +1,5 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {AtomRegistry, setup} from '@jsomp/core';
+import {AtomRegistry, setupJsomp} from '@jsomp/core';
 
 // Mock IJsompAtom for testing
 class MockAtom {
@@ -25,7 +25,7 @@ describe('AtomRegistry', () => {
   let registry: AtomRegistry;
 
   beforeEach(async () => {
-    await setup();
+    await setupJsomp();
     registry = new AtomRegistry();
   });
 

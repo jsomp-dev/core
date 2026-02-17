@@ -214,6 +214,11 @@ export interface IActionRegistry {
  */
 export interface IJsompService {
   /**
+   * Runtime environment (Logger, EventBus, etc.)
+   */
+  readonly env: IJsompEnv;
+
+  /**
    * Component registry (Public for plugins to register presets)
    */
   readonly componentRegistry: IComponentRegistry;
@@ -237,6 +242,11 @@ export interface IJsompService {
    * Action Registry for semantic interaction
    */
   readonly actions: IActionRegistry;
+
+  /**
+   * Create a new atomic state managed by this service
+   */
+  createAtom<T>(initialValue: T, schema?: any): IJsompAtom<T>;
 
   /**
    * Restore flat entity Map to JSOMP Tree
@@ -322,11 +332,12 @@ export interface IJsompRenderContext {
   /** Path prefix (automatically maintained during recursion) */
   pathStack?: string[];
   /** 
-   * [NEW] Layout Manager
+   * Layout Manager
    * Allows components to resolve full paths and hierarchy
    */
   layout?: IJsompLayoutManager;
 }
+
 
 // --- New Refactoring Types ---
 
@@ -367,14 +378,28 @@ export interface JsompEventBus {
 }
 
 /**
+ * JSOMP Runtime Environment
+ * Holds the core dependencies and configuration
+ */
+export interface IJsompEnv {
+  readonly logger: JsompLogger;
+  readonly flattener: JsompFlattener;
+  readonly eventBus?: JsompEventBus;
+  /** Initialize the environment with explicit config (async) */
+  init(config: JsompConfig): Promise<void>;
+}
+
+/**
  * JSOMP Configuration
  */
 export interface JsompConfig {
+  /** Optional custom service instance to use/initialize */
+  service?: IJsompService;
   logger?: JsompLogger;
   flattener?: JsompFlattener;
   eventBus?: JsompEventBus;
-  /** Custom compiler plugins for the global pipeline */
-  plugins?: any[]; // Using any[] for now to avoid circular dependency in types.ts
+  /** Custom compiler plugins */
+  plugins?: any[];
 }
 
 /**

@@ -1,62 +1,72 @@
-import {JsompConfig} from './types';
-import {internalContext} from './context';
+import {JsompConfig, IJsompService} from './types';
 import {JsompService} from './impl/JsompService';
+import {jsompEnv} from './JsompEnv';
 
 /**
- * Initialize JSOMP with optional configuration
- * This is the only place where cross-module side effects should occur.
+ * Initialize JSOMP with optional configuration.
+ * 
+ * @param config Configuration options. 
+ *               - If 'service' is provided, it registers that instance.
+ *               - Otherwise, creates and registers a default JsompService.
+ * @returns The configured service instance.
  */
-export const setup = async (config: JsompConfig = {}): Promise<void> => {
-  await internalContext.init(config);
+export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompService> => {
+  // 1. Initialize tools in the global registry (Logger, Flattener, etc.)
+  await jsompEnv.init(config);
+
+  // 2. Ensure service instance is available in the registry
+  if (!jsompEnv.service) {
+    jsompEnv.setService(new JsompService());
+  }
 
   const {PipelineRegistry} = await import('./impl/compiler/PipelineRegistry');
   const {PipelineStage} = await import('./impl/compiler/types');
 
-  const globalPipeline = PipelineRegistry.global;
+  const pipeline = jsompEnv.service!.pipeline;
 
-  // 1. Register user provided plugins (if any)
+  // 3. Register user provided plugins (if any)
   if (config.plugins) {
     config.plugins.forEach(p => {
       if (p.id && p.stage && (p.handler || p.onNode)) {
-        globalPipeline.register(p.id, p.stage, p, p.name);
+        pipeline.register(p.id, p.stage, p, p.name);
       }
     });
   }
 
-  // 2. Smart Bootstrapping: Only load standard plugins if they are not already overridden
-  // This enables tree-shaking while keeping the runtime API synchronous.
-
-  // Register inherit plugin first to make sure the entities have all handled. 
-  if (!globalPipeline.getPlugins(PipelineStage.PreProcess).some((p: any) => p.id === 'standard-inherit')) {
+  // 4. Smart Bootstrapping: Load standard plugins if not registered
+  if (!pipeline.getPlugins(PipelineStage.PreProcess).some((p: any) => p.id === 'standard-inherit')) {
     const {inheritPlugin} = await import('./impl/compiler/plugins/InheritPlugin');
-    globalPipeline.register('standard-inherit', PipelineStage.PreProcess, inheritPlugin, 'StandardInherit');
+    pipeline.register('standard-inherit', PipelineStage.PreProcess, inheritPlugin, 'StandardInherit');
   }
 
-  if (!globalPipeline.getPlugins(PipelineStage.PreProcess).some((p: any) => p.id === 'standard-state')) {
+  if (!pipeline.getPlugins(PipelineStage.PreProcess).some((p: any) => p.id === 'standard-state')) {
     const {stateHydrationPlugin} = await import('./impl/compiler/plugins/StateHydrationPlugin');
-    globalPipeline.register('standard-state', PipelineStage.PreProcess, stateHydrationPlugin, 'StandardStateHydration');
+    pipeline.register('standard-state', PipelineStage.PreProcess, stateHydrationPlugin, 'StandardStateHydration');
   }
 
-  if (!globalPipeline.getPlugins(PipelineStage.ReStructure).some((p: any) => p.id === 'standard-path')) {
+  if (!pipeline.getPlugins(PipelineStage.ReStructure).some((p: any) => p.id === 'standard-path')) {
     const {pathResolutionPlugin} = await import('./impl/compiler/plugins/PathResolutionPlugin');
-    globalPipeline.register('standard-path', PipelineStage.ReStructure, pathResolutionPlugin, 'StandardPathResolution');
+    pipeline.register('standard-path', PipelineStage.ReStructure, pathResolutionPlugin, 'StandardPathResolution');
   }
 
-  if (!globalPipeline.getPlugins(PipelineStage.Hydrate).some((p: any) => p.id === 'standard-tree')) {
+  if (!pipeline.getPlugins(PipelineStage.Hydrate).some((p: any) => p.id === 'standard-tree')) {
     const {treeAssemblyPlugin} = await import('./impl/compiler/plugins/TreeAssemblyPlugin');
-    globalPipeline.register('standard-tree', PipelineStage.Hydrate, treeAssemblyPlugin, 'StandardTreeAssembly');
+    pipeline.register('standard-tree', PipelineStage.Hydrate, treeAssemblyPlugin, 'StandardTreeAssembly');
   }
 
-  if (!globalPipeline.getPlugins(PipelineStage.Hydrate).some((p: any) => p.id === 'standard-actions')) {
+  if (!pipeline.getPlugins(PipelineStage.Hydrate).some((p: any) => p.id === 'standard-actions')) {
     const {actionTagsPlugin} = await import('./impl/compiler/plugins/ActionTagsPlugin');
-    globalPipeline.register('standard-actions', PipelineStage.Hydrate, actionTagsPlugin, 'StandardActionTags');
+    pipeline.register('standard-actions', PipelineStage.Hydrate, actionTagsPlugin, 'StandardActionTags');
   }
+
+  jsompEnv.isSetup = true;
+
+  return jsompEnv.service!;
 };
 
-// Export the context for internal use (should be treated as read-only by business logic)
-export {internalContext as context};
-
-/**
- * Default unique service instance
- */
-export const jsomp = new JsompService();
+export function requireJsomp() {
+  if (!jsompEnv.isSetup) {
+    throw new Error(`[JSOMP] Jsomp is not setup. Please call setupJsomp() first.`);
+  }
+  return jsompEnv.service!;
+}

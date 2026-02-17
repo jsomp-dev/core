@@ -1,6 +1,4 @@
 import {IAtomRegistry, IAtomValue, IJsompAtom} from '../../types';
-import {internalContext as context} from '../../context';
-
 function isAtom(obj: any): obj is IJsompAtom {
   return obj && typeof obj.subscribe === 'function' && 'value' in obj;
 }
@@ -32,7 +30,8 @@ export class AtomRegistry implements IAtomRegistry {
 
   /** Set/Register a state (Smart update mode) */
   set(key: string, value: IJsompAtom | IAtomValue | undefined) {
-    context.logger.debug("AtomRegistry.set", key, value);
+    // context.logger.debug("AtomRegistry.set", key, value);
+
     const prev = this.atoms.get(key);
 
     // --- [Smart Update Protection] ---

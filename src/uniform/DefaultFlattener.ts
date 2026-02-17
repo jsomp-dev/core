@@ -1,5 +1,5 @@
 import {IJsompNode, JsompFlattener} from "../types";
-import {internalContext as context} from "../context";
+import {jsompEnv} from "../JsompEnv";
 
 /**
  * Object flattening/reconstruction tool (pure functional implementation)
@@ -17,11 +17,11 @@ export class DefaultFlattener implements JsompFlattener {
     childrenField: string = 'children'
   ): Map<string, T> {
     const result = new Map<string, T>();
-    DefaultFlattener.processNode(root, null, result, idField, childrenField);
+    this.processNode(root, null, result, idField, childrenField);
     return result;
   }
 
-  private static processNode<T extends IJsompNode>(
+  private processNode<T extends IJsompNode>(
     node: any,
     parentId: string | null,
     map: Map<string, T>,
@@ -45,7 +45,7 @@ export class DefaultFlattener implements JsompFlattener {
       // If there is no ID and it's not an empty object, maybe we need a warning or auto-generation?
       // For now: skip if no ID, to force the model to output ID
       if (!id || id === 'undefined' || id === 'null') {
-        context.logger.warn(`Skipping node without valid ID. Node type: ${node.type || 'unknown'}`);
+        jsompEnv.logger.warn(`Skipping node without valid ID. Node type: ${node.type || 'unknown'}`);
         return;
       }
 

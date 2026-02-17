@@ -1,6 +1,5 @@
 import {describe, it, expect} from 'vitest';
 import {InjectionRegistry} from '../../src/impl/core/InjectionRegistry';
-import {IJsompNode} from '../../src/types';
 
 describe('InjectionRegistry', () => {
   // Use 'any' to bypass strict IJsompNode typing for test data which includes 'children' and string-based 'onEvent'

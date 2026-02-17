@@ -1,9 +1,10 @@
 import {describe, it, expect, beforeEach} from 'vitest';
-import {setup, jsomp} from '@jsomp/core';
+import {setupJsomp} from '@jsomp/core';
+import {requireJsomp} from "../../src/setup";
 
 describe('JSOMP Core - Tree Reconstruction (1.1)', () => {
   beforeEach(async () => {
-    await setup();
+    await setupJsomp();
   });
 
   // 1.1.1 多根检测
@@ -13,7 +14,7 @@ describe('JSOMP Core - Tree Reconstruction (1.1)', () => {
     entities.set('root2', {id: 'root2', type: 'div'});
     entities.set('child1', {id: 'child1', type: 'span', parent: 'root1'});
 
-    const tree = jsomp.restoreTree(entities);
+    const tree = requireJsomp().restoreTree(entities);
 
     expect(tree).toHaveLength(2);
     expect(tree.map((n: any) => n.id)).toContain('root1');
@@ -38,7 +39,7 @@ describe('JSOMP Core - Tree Reconstruction (1.1)', () => {
       props: {children: 'Content'}
     });
 
-    const tree = jsomp.restoreTree(entities, 'parent');
+    const tree = requireJsomp().restoreTree(entities, 'parent');
     const parent = tree[0];
 
     // Check header_node is in props.header
@@ -63,7 +64,7 @@ describe('JSOMP Core - Tree Reconstruction (1.1)', () => {
     // Expecting the system to throw or handle gracefully
     // Current implementation might stack overflow in applySlots
     try {
-      jsomp.restoreTree(entities);
+      requireJsomp().restoreTree(entities);
     } catch (e) {
       expect(e).toBeDefined();
     }

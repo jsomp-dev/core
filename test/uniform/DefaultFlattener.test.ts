@@ -1,5 +1,5 @@
 import {describe, it, expect, beforeEach} from 'vitest';
-import {setup, jsomp} from '@jsomp/core';
+import {setupJsomp} from '@jsomp/core';
 import {DefaultFlattener} from '../../src/uniform/DefaultFlattener';
 
 // Define a basic Node interface for clarity and type safety
@@ -19,7 +19,7 @@ describe('DefaultFlattener - Atomic Recovery (1.1.4)', () => {
   let flattener: DefaultFlattener;
 
   beforeEach(async () => {
-    await setup();
+    await setupJsomp();
     flattener = new DefaultFlattener();
   });
 

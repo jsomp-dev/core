@@ -1,5 +1,5 @@
 import {IJsompNode} from '../../types';
-import {internalContext as context} from '../../context';
+import {jsompEnv} from "../../JsompEnv";
 
 /**
  * JsompDecompiler: Handles the reverse process of converting a JSOMP Tree back to a flat Map.
@@ -10,10 +10,7 @@ export class JsompDecompiler {
    * Flatten JSOMP Tree for storage
    */
   public static flatten(nodes: IJsompNode[] | IJsompNode): Map<string, any> {
-    const flattener = context.flattener;
-    if (!flattener) {
-      context.logger.throw('CORE_FLATTENER_MISSING', 'Flattener is not initialized.');
-    }
+    const flattener = jsompEnv.flattener;
 
     // Deep clone to avoid mutating the render tree
     const treeCopy = JSON.parse(JSON.stringify(nodes));

@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo} from 'react';
-import {IAtomRegistry, IJsompNode} from '../types';
+import {IAtomRegistry, IJsompNode, IJsompService} from '../types';
 import {ReactRenderer} from '../impl/provider/ReactRenderer';
-import {jsomp as defaultJsomp, context as internalContext} from '../setup';
+import {requireJsomp} from "../setup";
 
 export interface JsompPageProps {
   /** Entity Map (usually from data reconciliation) */
@@ -23,7 +23,7 @@ export interface JsompPageProps {
   scope?: IAtomRegistry;
 
   /** Optional JSOMP service instance (uses default if not provided) */
-  jsomp?: any;
+  jsomp?: IJsompService;
 }
 
 /**
@@ -37,7 +37,7 @@ export const JsompPage: React.FC<JsompPageProps> = ({
   stylePresets,
   onMounted,
   scope: externalScope,
-  jsomp = defaultJsomp
+  jsomp = requireJsomp()
 }) => {
   // 1. Manage scope lifecycle
   const atomRegistry = useMemo(() => {
@@ -109,11 +109,13 @@ export const JsompPage: React.FC<JsompPageProps> = ({
     // This solves the issue where discovery might have been partial or structure changed
     entityMap.forEach((v, k) => {
       const regVal = atomRegistry.get(k);
-      if (regVal && typeof regVal === 'object') {
-        if (regVal.type) v.type = regVal.type;
-        if (regVal.parent) v.parent = regVal.parent;
+      if (regVal && typeof regVal === 'object' && !('subscribe' in regVal)) {
+        const atomVal = regVal as any; // Cast to avoid complex type intersection issues in render loop
+        if (atomVal.type) v.type = atomVal.type;
+        if (atomVal.parent) v.parent = atomVal.parent;
       }
     });
+
 
     return jsomp.restoreTree(entityMap, rootId, atomRegistry);
   }, [entities, dynamicNodes, rootId, jsomp, atomRegistry]);
@@ -131,14 +133,14 @@ export const JsompPage: React.FC<JsompPageProps> = ({
    */
   useEffect(() => {
     if (nodes && nodes.length > 0 && layout) {
-      internalContext.eventBus?.emit('did-render', {
+      jsomp.env.eventBus?.emit('did-render', {
         rootId,
         nodeCount: nodes.length,
         nodes,
         layout
       });
     }
-  }, [nodes, layout, rootId]);
+  }, [nodes, layout, rootId, jsomp]);
 
   // 7. Mount notification
   useEffect(() => {
@@ -162,3 +164,4 @@ export const JsompPage: React.FC<JsompPageProps> = ({
     />
   );
 };
+

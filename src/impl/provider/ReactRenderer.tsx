@@ -4,7 +4,7 @@ import {StyleResolver} from './StyleResolver';
 import {InjectionRegistry} from '../core/InjectionRegistry';
 import {BindingResolver} from '../core/BindingResolver';
 import {useAtom, useMustache} from '../../hook';
-import {internalContext} from '../../context';
+import {jsompEnv} from "../../JsompEnv";
 
 /**
  * JsompElement: Implements reactive rendering for a single node.
@@ -80,7 +80,7 @@ const JsompElement = memo(({
     const type = resolvedNode.type || 'div';
 
     if (resolvedNode.type) {
-      internalContext.logger.warn(`Component type "${resolvedNode.type}" not found in registries. Falling back to native tag or div.`);
+      jsompEnv.logger.warn(`Component type "${resolvedNode.type}" not found in registries. Falling back to native tag or div.`);
     }
 
     // Check if it's PascalCase (starts with uppercase)
@@ -223,3 +223,4 @@ export const ReactRenderer: React.FC<{
     />
   )) as any;
 });
+

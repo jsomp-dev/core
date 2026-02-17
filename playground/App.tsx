@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {setup, JsompPage, jsomp, HtmlRegistry} from '@jsomp/core';
+import {setupJsomp, JsompPage, HtmlRegistry} from '@jsomp/core';
 import {LayoutTest} from './LayoutTest';
 import {SlotTest} from './SlotTest';
 
@@ -129,7 +129,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       // 1. Wait for core plugins to load
-      await setup();
+      const jsomp = await setupJsomp();
 
       // 2. Register native HTML elements
       HtmlRegistry.registerAll(jsomp.componentRegistry);

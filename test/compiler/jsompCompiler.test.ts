@@ -1,10 +1,11 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {JsompCompiler, PipelineStage, IJsompCompiler, ICompilerContext} from '@jsomp/core';
+import {JsompCompiler, PipelineStage, ICompilerContext, setupJsomp} from '@jsomp/core';
 
 describe('JsompCompiler', () => {
   let compiler: JsompCompiler;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await setupJsomp();
     compiler = new JsompCompiler();
   });
 

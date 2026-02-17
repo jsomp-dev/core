@@ -1,10 +1,10 @@
 import {describe, it, expect, beforeEach} from 'vitest';
 import {JsompDecompiler} from '../../src/impl/compiler/JsompDecompiler';
-import {setup} from '../../src/index';
+import {setupJsomp} from '../../src/index';
 
 describe('JsompDecompiler', () => {
   beforeEach(async () => {
-    await setup();
+    await setupJsomp();
   });
 
   it('should decompile slot nodes with standard parent and slot attribute', () => {

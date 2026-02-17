@@ -2,13 +2,13 @@ import {describe, it, expect, beforeEach} from 'vitest';
 import {renderHook, act} from '@testing-library/react';
 import {useMustache} from '../../src/hook/useMustache';
 import {AtomRegistry} from '../../src/impl/core/AtomRegistry';
-import {setup} from '../../src/setup';
+import {setupJsomp} from '../../src/setup';
 
 describe('useMustache Hook (1.2)', () => {
   let registry: AtomRegistry;
 
   beforeEach(async () => {
-    await setup();
+    await setupJsomp();
     registry = new AtomRegistry();
   });
 

@@ -1,12 +1,13 @@
 import {describe, it, expect, beforeEach} from 'vitest';
-import {JsompCompiler, PipelineStage, ICompilerContext} from '../../src/index';
+import {JsompCompiler, PipelineStage, ICompilerContext, setupJsomp} from '../../src/index';
 import {pathResolutionPlugin} from '../../src/impl/compiler/plugins/PathResolutionPlugin';
 import {InjectionRegistry} from '../../src/impl/core/InjectionRegistry';
 
 describe('PathResolutionPlugin', () => {
   let compiler: JsompCompiler;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await setupJsomp();
     compiler = new JsompCompiler();
     // Register PathResolutionPlugin manually for testing
     compiler.use('path-resolution', PipelineStage.PreProcess, pathResolutionPlugin as any);

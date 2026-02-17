@@ -1,9 +1,10 @@
 import {IAtomRegistry, IJsompNode} from '../../types';
-import {internalContext as context} from '../../context';
 import {PipelineRegistry} from './PipelineRegistry';
 import {ICompilerContext, IJsompPluginDef, PipelineStage} from './types';
+import {jsompEnv} from "../../JsompEnv";
 
 export interface CompilerOptions {
+  pipeline?: PipelineRegistry;
   plugins?: IJsompPluginDef[];
   rootId?: string;
   atomRegistry?: IAtomRegistry;
@@ -18,8 +19,15 @@ export class JsompCompiler {
   private localRegistry: PipelineRegistry;
 
   constructor(options: CompilerOptions = {}) {
-    // Merge global plugins with local overrides
-    this.localRegistry = PipelineRegistry.global.clone();
+    // 1. Priority: Use a specific pre-cloned pipeline registry from the service
+    if (options.pipeline) {
+      this.localRegistry = options.pipeline;
+    } else {
+      // Fallback: Clone global for ad-hoc compiler instances
+      this.localRegistry = PipelineRegistry.global.clone();
+    }
+
+    // 2. Local overrides for this specific compiler
     if (options.plugins) {
       options.plugins.forEach(p => this.localRegistry.register(p.id, p.stage, p, p.name));
     }
@@ -33,13 +41,13 @@ export class JsompCompiler {
     options: Partial<CompilerOptions> = {}
   ): IJsompNode[] {
     const ctx: ICompilerContext = {
-      entities: new Map(entities), // Clone to prevent side effects in plugins
+      entities: new Map(entities),
       nodes: new Map(),
       rootId: options.rootId,
       atomRegistry: options.atomRegistry,
       actionRegistry: options.actionRegistry,
       options: {},
-      logger: context.logger // Use the global context logger as default
+      logger: jsompEnv.logger
     };
 
     // Execute stages sequentially

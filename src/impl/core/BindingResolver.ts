@@ -1,8 +1,9 @@
+import {jsompEnv} from "../../JsompEnv";
+
 const BINDING_REGEX = /\{\{(.+?)\}\}/g;
 const PURE_BINDING_REGEX = /^\{\{(.+?)\}\}$/;
 
 import {IAtomRegistry, IJsompAtom} from '../../types';
-import {internalContext as context} from '../../context';
 
 function isAtom(obj: any): obj is IJsompAtom {
   return obj && typeof obj.subscribe === 'function' && 'value' in obj;
@@ -33,7 +34,7 @@ export class BindingResolver {
         try {
           Object.values(val).forEach(scan);
         } catch (e) {
-          context.logger.warn('Failed to traverse object for binding keys:', e);
+          jsompEnv.logger.warn('Failed to traverse object for binding keys:', e);
         }
       }
     };
@@ -41,6 +42,7 @@ export class BindingResolver {
     scan(value);
     return Array.from(keys);
   }
+
 
   /**
    * Resolve values (pure function)

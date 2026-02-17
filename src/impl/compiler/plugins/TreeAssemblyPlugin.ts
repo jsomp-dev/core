@@ -1,13 +1,13 @@
 import {ICompilerContext} from '../types';
-import {internalContext as context} from '../../../context';
 import {IJsompNode} from '../../../types';
+import {jsompEnv} from "../../../JsompEnv";
 
 /**
  * Assembles the flat nodes into a tree structure and handles slot distribution.
  */
 export const treeAssemblyPlugin = {
   handler: (ctx: ICompilerContext) => {
-    const flattener = context.flattener;
+    const flattener = jsompEnv.flattener;
     if (!flattener) return;
 
     // 1. Unflatten basic structure

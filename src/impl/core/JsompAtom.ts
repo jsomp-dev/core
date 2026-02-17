@@ -1,7 +1,7 @@
 import {SchemaRegistry} from './SchemaRegistry';
-import {context} from "../../setup";
 import type {ZodType} from 'zod';
 import {IJsompAtom} from '../../types';
+import {jsompEnv} from '../../JsompEnv';
 
 /**
  * Core Atomic State Class (JsompAtom)
@@ -30,7 +30,10 @@ export class JsompAtom<T = any> implements IJsompAtom<T> {
     if (SchemaRegistry.global.enabled && this.schema) {
       const result = this.validate(newValue);
       if (!result.success) {
-        context.logger.throw('[Atom] Validation failed', result.error, {value: newValue, error: JSON.stringify(result.error)});
+        jsompEnv.logger.throw('[Atom] Validation failed', result.error, {
+          value: newValue,
+          error: JSON.stringify(result.error)
+        });
       }
     }
 

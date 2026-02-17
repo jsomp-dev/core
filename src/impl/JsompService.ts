@@ -12,6 +12,10 @@ import {JsompDecompiler} from './compiler/JsompDecompiler';
 import {SchemaRegistry} from './core/SchemaRegistry';
 import {ActionRegistry} from './provider/ActionRegistry';
 import {JsompLayoutManager} from './core/JsompLayoutManager';
+import {jsompEnv} from '../JsompEnv';
+import {JsompAtom} from './core/JsompAtom';
+import {IJsompAtom} from '../types';
+
 
 /**
  * JSOMP Service Implementation
@@ -21,20 +25,27 @@ export class JsompService implements IJsompService {
   private _layoutMap: WeakMap<IJsompNode[], IJsompLayoutManager> = new WeakMap();
 
   /**
+   * Runtime environment
+   */
+  public get env() {
+    return jsompEnv;
+  }
+
+  /**
    * Component registry
    */
   public readonly componentRegistry: IComponentRegistry = new ComponentRegistry();
 
-  /** 
+  /**
    * Global state registry
    * Business layers should inject long-term shared state here.
    */
-  public readonly globalRegistry: IAtomRegistry = new AtomRegistry();
+  public readonly globalRegistry: IAtomRegistry;
 
   /**
    * Schema Registry for typed atoms
    */
-  public readonly schemas = SchemaRegistry.global;
+  public readonly schemas: SchemaRegistry;
 
   /**
    * Action Registry for semantic interaction
@@ -42,10 +53,14 @@ export class JsompService implements IJsompService {
   public readonly actions = new ActionRegistry();
 
   /**
-   * Global compiler pipeline registry
+   * Compiler pipeline registry
    */
-  public get pipeline() {
-    return PipelineRegistry.global;
+  public readonly pipeline: PipelineRegistry;
+
+  constructor() {
+    this.globalRegistry = new AtomRegistry();
+    this.pipeline = PipelineRegistry.global.clone();
+    this.schemas = SchemaRegistry.global; // TODO: Support schema cloning if needed
   }
 
   /**
@@ -65,6 +80,13 @@ export class JsompService implements IJsompService {
   }
 
   /**
+   * Create a new atomic state managed by this service
+   */
+  public createAtom<T>(initialValue: T, schema?: any): IJsompAtom<T> {
+    return new JsompAtom(initialValue, schema);
+  }
+
+  /**
    * Create a dispatcher registry for mixing multiple state sources.
    * Prefix usage example: "external://zustand/user.name"
    */
@@ -80,7 +102,11 @@ export class JsompService implements IJsompService {
       // Clones the global registry which was populated by setup()
       this._compiler = this.createCompiler();
     }
-    return this._compiler.compile(entities, {rootId, atomRegistry, actionRegistry: this.actions});
+    return this._compiler.compile(entities, {
+      rootId,
+      atomRegistry,
+      actionRegistry: this.actions
+    });
   }
 
   /**
@@ -102,6 +128,7 @@ export class JsompService implements IJsompService {
    */
   public createCompiler(options?: CompilerOptions): JsompCompiler {
     return new JsompCompiler({
+      pipeline: this.pipeline,
       actionRegistry: this.actions,
       ...options
     });
