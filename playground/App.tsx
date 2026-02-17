@@ -2,10 +2,11 @@ import React, {useEffect, useState} from 'react';
 import {setupJsomp, JsompPage, HtmlRegistry} from '@jsomp/core';
 import {LayoutTest} from './LayoutTest';
 import {SlotTest} from './SlotTest';
+import {AutoSyncTest} from './AutoSyncTest';
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'layout' | 'slot'>('basic');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'layout' | 'slot' | 'sync'>('basic');
   const [entities] = useState<any[]>([
     {
       id: 'app_root',
@@ -222,6 +223,21 @@ const App: React.FC = () => {
         >
           Slot Lab
         </button>
+        <button
+          onClick={() => setCurrentTab('sync')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.5rem',
+            background: currentTab === 'sync' ? '#3b82f6' : 'transparent',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'all 0.2s'
+          }}
+        >
+          Auto-Sync Lab
+        </button>
       </nav>
 
       {/* Main View Container */}
@@ -236,8 +252,10 @@ const App: React.FC = () => {
           <JsompPage entities={entities} rootId='app_root' />
         ) : currentTab === 'layout' ? (
           <LayoutTest />
-        ) : (
+        ) : currentTab === 'slot' ? (
           <SlotTest />
+        ) : (
+          <AutoSyncTest />
         )}
       </main>
 

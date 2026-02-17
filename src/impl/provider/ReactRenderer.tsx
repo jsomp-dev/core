@@ -132,41 +132,6 @@ const JsompElement = memo(({
       ...((finalInjection as any).onEvent || {})
     });
 
-    // --- Core Enhancement: Implement Two-way Mustache Binding (Auto-Sync) ---
-    const meta = componentRegistry?.getMeta(resolvedNode.type);
-    if (meta) {
-      const originalProps = mergedNode.props as any;
-      const eventNames = meta.events || [];
-
-      // A. value binding -> auto inject change listener
-      const valueKey = BindingResolver.getBindingKey(originalProps?.value);
-      if (valueKey) {
-        const syncEvent = eventNames.find(e => e === 'onChange' || e === 'onValueChange');
-        if (syncEvent) {
-          const existingHandler = props[syncEvent];
-          props[syncEvent] = (val: any) => {
-            const actualValue = (val && typeof val === 'object' && 'target' in val) ? (val.target as any).value : val;
-            atomRegistry.set(valueKey, {value: actualValue});
-            if (existingHandler) existingHandler(val);
-          };
-        }
-      }
-
-      // B. checked binding -> auto inject check listener
-      const checkedKey = BindingResolver.getBindingKey(originalProps?.checked);
-      if (checkedKey) {
-        const syncEvent = eventNames.find(e => e === 'onCheckedChange');
-        if (syncEvent) {
-          const existingHandler = props[syncEvent];
-          props[syncEvent] = (val: any) => {
-            const actualChecked = typeof val === 'boolean' ? val : !!(val?.target?.checked);
-            atomRegistry.set(checkedKey, {value: actualChecked});
-            if (existingHandler) existingHandler(val);
-          };
-        }
-      }
-    }
-
     return props;
   }, [resolvedNode, className, style, finalInjection, atomRegistry, componentRegistry, mergedNode, fullPath]);
 

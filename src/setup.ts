@@ -59,6 +59,11 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
     pipeline.register('standard-actions', PipelineStage.Hydrate, actionTagsPlugin, 'StandardActionTags');
   }
 
+  if (!pipeline.getPlugins(PipelineStage.Hydrate).some((p: any) => p.id === 'standard-auto-sync')) {
+    const {autoSyncPlugin} = await import('./impl/compiler/plugins/AutoSyncPlugin');
+    pipeline.register('standard-auto-sync', PipelineStage.Hydrate, autoSyncPlugin, 'StandardAutoSync');
+  }
+
   jsompEnv.isSetup = true;
 
   return jsompEnv.service!;

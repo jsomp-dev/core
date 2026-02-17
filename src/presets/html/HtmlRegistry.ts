@@ -23,9 +23,20 @@ export class HtmlRegistry {
     ];
 
     tags.forEach(tag => {
-      registry.register(tag, tag, {
+      const meta: any = {
         desc: `Native HTML <${tag}> element`
-      });
+      };
+
+      // Add synchronization traits for form elements
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+        meta.events = ['onChange', 'onInput', 'onFocus', 'onBlur', 'onKeyDown', 'onKeyUp'];
+        meta.sync = [
+          {prop: 'value', event: 'onChange', extract: 'target.value', required: true},
+          {prop: 'checked', event: 'onChange', extract: 'target.checked'}
+        ];
+      }
+
+      registry.register(tag, tag, meta);
     });
   }
 }

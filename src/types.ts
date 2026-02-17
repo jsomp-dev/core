@@ -98,6 +98,26 @@ export interface IComponentProp {
 }
 
 /**
+ * Component synchronization trait (for Auto-Sync)
+ */
+export interface ISyncTrait {
+  /** Property to bind (e.g. 'value', 'checked') */
+  prop: string;
+  /** Primary event to trigger sync (e.g. 'onChange', 'onValueChange') */
+  event: string;
+  /** 
+   * Data extraction strategy 
+   * - 'value': Use the first argument as the value
+   * - 'target.value': Use e.target.value
+   * - 'target.checked': Use e.target.checked
+   * - (args) => any: Custom function to extract value from event arguments
+   */
+  extract: 'value' | 'target.value' | 'target.checked' | ((...args: any[]) => any);
+  /** Whether the event handler is mandatory to prevent component crash */
+  required?: boolean;
+}
+
+/**
  * Component metadata
  */
 export interface IComponentMeta {
@@ -105,6 +125,8 @@ export interface IComponentMeta {
   props?: IComponentProp[];
   events?: string[];
   slots?: string[];
+  /** Auto-Sync configuration */
+  sync?: ISyncTrait[];
 }
 
 /**

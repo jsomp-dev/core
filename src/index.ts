@@ -3,7 +3,7 @@ export * from './events';
 export {setupJsomp} from './setup';
 
 // Export environment and core service
-export {JsompEnv} from './JsompEnv';
+export {JsompEnv, jsompEnv} from './JsompEnv';
 
 export {JsompService} from './impl/JsompService';
 export {AtomRegistry} from './impl/core/AtomRegistry';
