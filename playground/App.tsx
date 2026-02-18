@@ -2,11 +2,12 @@ import React, {useEffect, useState} from 'react';
 import {LayoutTest} from './LayoutTest';
 import {SlotTest} from './SlotTest';
 import {AutoSyncTest} from './AutoSyncTest';
+import {PerformanceTest} from './PerformanceTest';
 import {HtmlRegistry, JsompPage, setupJsomp} from "../src";
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'layout' | 'slot' | 'sync'>('basic');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'layout' | 'slot' | 'sync' | 'perf'>('basic');
   const [entities] = useState<any[]>([
     {
       id: 'app_root',
@@ -238,6 +239,21 @@ const App: React.FC = () => {
         >
           Auto-Sync Lab
         </button>
+        <button
+          onClick={() => setCurrentTab('perf')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.5rem',
+            background: currentTab === 'perf' ? '#ec4899' : 'transparent',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'all 0.2s'
+          }}
+        >
+          Performance Lab
+        </button>
       </nav>
 
       {/* Main View Container */}
@@ -246,7 +262,7 @@ const App: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: currentTab === 'basic' ? 'center' : 'flex-start'
+        justifyContent: (currentTab === 'basic' || currentTab === 'perf') ? 'center' : 'flex-start'
       }}>
         {currentTab === 'basic' ? (
           <JsompPage entities={entities} rootId='app_root' />
@@ -254,8 +270,10 @@ const App: React.FC = () => {
           <LayoutTest />
         ) : currentTab === 'slot' ? (
           <SlotTest />
-        ) : (
+        ) : currentTab === 'sync' ? (
           <AutoSyncTest />
+        ) : (
+          <PerformanceTest />
         )}
       </main>
 
