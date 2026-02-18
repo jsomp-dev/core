@@ -1,4 +1,4 @@
-import {TopologySnapshot} from '../../headless/types';
+import {TopologySnapshot} from '../../headless';
 import {jsompEnv} from "../../JsompEnv";
 
 /**
@@ -14,12 +14,21 @@ export class PerformanceMonitor {
 
   private constructor() { }
 
+  private _lastReportedVersion = -1;
+
   /**
    * Process performance report after a render cycle
    */
   public report(snapshot: TopologySnapshot, activeNodes: number, frameFinishTime: number) {
+    // Only report once per version to avoid stale metrics from unrelated React re-renders
+    if (snapshot.version === this._lastReportedVersion) {
+      return;
+    }
+
     const metrics = snapshot.metrics;
     if (!metrics || metrics.startTime === undefined) return;
+
+    this._lastReportedVersion = snapshot.version;
 
     // t1 = metrics.startTime
     // t3 = frameFinishTime

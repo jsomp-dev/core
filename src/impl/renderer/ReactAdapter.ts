@@ -1,5 +1,4 @@
-import {JsompRuntime} from '../../headless/JsompRuntime';
-import {ISignalCenter} from '../../headless/types';
+import {ISignalCenter, JsompRuntime} from '../../headless';
 import {VisualDescriptor} from '../../types';
 
 /**
@@ -75,5 +74,12 @@ export class ReactAdapter {
    */
   public getMetrics() {
     return this._runtime.getSnapshot().metrics;
+  }
+
+  /**
+   * Get the current version of the data being rendered
+   */
+  public getVersion() {
+    return this._lastVersion;
   }
 }

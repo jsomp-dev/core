@@ -110,8 +110,9 @@ export const ReactRenderer = memo(({
   // 2. Performance Monitoring
   useLayoutEffect(() => {
     const metrics = adapter.getMetrics();
+    const version = adapter.getVersion();
     PerformanceMonitor.instance.report(
-      {metrics, version: -1} as any,
+      {metrics, version} as any,
       descriptors.length,
       performance.now()
     );
