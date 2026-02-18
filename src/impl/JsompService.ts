@@ -21,7 +21,7 @@ import {TraitPipeline} from './pipeline';
  * JSOMP Service Implementation
  */
 export class JsompService implements IJsompService {
-  private _compiler: JsompCompiler | null = null;
+
   private _layoutMap: WeakMap<IJsompNode[], IJsompLayoutManager> = new WeakMap();
 
   /**
@@ -101,58 +101,22 @@ export class JsompService implements IJsompService {
   }
 
   /**
-   * Restore tree structure from flat Map
-   */
-  public restoreTree(entities: Map<string, any>, rootId?: string, atomRegistry?: IAtomRegistry): IJsompNode[] {
-    if (!this._compiler) {
-      // Clones the global registry which was populated by setup()
-      this._compiler = this.createCompiler();
-    }
-    return this._compiler.compile(entities, {
-      rootId,
-      atomRegistry,
-      actionRegistry: this.actions
-    });
-  }
-
-  /**
-   * Flatten tree structure into flat Map
-   */
-  public flattenTree(nodes: IJsompNode[]): Map<string, any> {
-    return JsompDecompiler.flatten(nodes);
-  }
-
-  /**
-   * Force refresh the internal compiler (e.g. after dynamic plugin registration)
-   */
-  public refreshCompiler(): void {
-    this._compiler = null;
-  }
-
-  /**
-   * Create a new compiler instance
-   */
-  public createCompiler(options?: CompilerOptions): JsompCompiler {
-    return new JsompCompiler({
-      pipeline: this.pipeline,
-      actionRegistry: this.actions,
-      ...options
-    });
-  }
-
-  /**
-   * Use a specific compiler instance as the default engine
-   */
-  public useCompiler(compiler: JsompCompiler): void {
-    this._compiler = compiler;
-  }
-
-  /**
    * Create a stream controller for handling AI streaming output
    */
   public createStream(options: StreamOptions = {}): IJsompStream {
     return new JsompStream({
       atomRegistry: this.globalRegistry, // Use global by default
+      ...options
+    });
+  }
+
+  /**
+   * Create a new compiler instance with all registered plugins
+   */
+  public createCompiler(options?: CompilerOptions): JsompCompiler {
+    return new JsompCompiler({
+      pipeline: this.pipeline,
+      actionRegistry: this.actions,
       ...options
     });
   }

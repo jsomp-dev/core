@@ -282,16 +282,6 @@ export interface IJsompService {
   createAtom<T>(initialValue: T, schema?: any): IJsompAtom<T>;
 
   /**
-   * Restore flat entity Map to JSOMP Tree
-   */
-  restoreTree(entities: Map<string, any>, rootId?: string, atomRegistry?: IAtomRegistry): IJsompNode[];
-
-  /**
-   * Flatten JSOMP Tree into storage format
-   */
-  flattenTree(nodes: IJsompNode[]): Map<string, any>;
-
-  /**
    * Create a local state scope with parent association
    */
   createScope(): IAtomRegistry;
@@ -316,19 +306,9 @@ export interface IJsompService {
   createStream(options?: StreamOptions): IJsompStream;
 
   /**
-   * Create a new compiler instance
+   * Create a new compiler instance with all registered plugins
    */
   createCompiler(options?: any): any;
-
-  /**
-   * Use a specific compiler instance as the default engine
-   */
-  useCompiler(compiler: any): void;
-
-  /**
-   * Force refresh the internal compiler (e.g. after dynamic plugin registration)
-   */
-  refreshCompiler(): void;
 
   /**
    * Get layout manager for a given set of entities.
