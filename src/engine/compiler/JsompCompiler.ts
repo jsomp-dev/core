@@ -20,6 +20,13 @@ export interface CompilerOptions {
 
   /** Callback for dependency collection (V2) */
   onDependency?: (nodeId: string, atomKey: string) => void;
+
+  /** 
+   * [Stateless] External persistent node map.
+   * If provided, compiler will operate on this map (mutate).
+   * If not, a new map is created.
+   */
+  nodes?: Map<string, IJsompNode>;
 }
 
 /**
@@ -28,7 +35,6 @@ export interface CompilerOptions {
  */
 export class JsompCompiler implements IJsompCompiler {
   private localRegistry: PipelineRegistry;
-  private nodes: Map<string, IJsompNode> = new Map();
 
   constructor(options: CompilerOptions = {}) {
     // 1. Priority: Use a specific pre-cloned pipeline registry from the service
@@ -46,31 +52,27 @@ export class JsompCompiler implements IJsompCompiler {
   }
 
   /**
-   * Access the internal node store
-   */
-  public get nodesMap(): Map<string, IJsompNode> {
-    return this.nodes;
-  }
-
-  /**
    * Run the compilation pipeline on a flat entity map
    */
   public compile(
     entities: Map<string, any>,
     options: Partial<CompilerOptions> = {}
-  ): IJsompNode[] {
+  ): {roots: IJsompNode[]; nodes: Map<string, IJsompNode>} {
+    // Determine working node storage (Externally provided or Fresh)
+    const nodes = options.nodes || new Map<string, IJsompNode>();
+
     // 1. Cleanup removed nodes if not in incremental mode
     if (!options.dirtyIds) {
-      for (const id of this.nodes.keys()) {
+      for (const id of nodes.keys()) {
         if (!entities.has(id)) {
-          this.nodes.delete(id);
+          nodes.delete(id);
         }
       }
     }
 
     const ctx: ICompilerContext = {
       entities, // established memory sharing
-      nodes: this.nodes, // persistent store
+      nodes: nodes, // persistent store (passed in)
       dirtyIds: options.dirtyIds,
       rootId: options.rootId,
       atomRegistry: options.atomRegistry,
@@ -87,7 +89,10 @@ export class JsompCompiler implements IJsompCompiler {
     this.runStage(PipelineStage.PostAssemble, ctx);
 
     // Final result extraction (The last stage should have assembled the tree or populated nodes)
-    return this.extractResult(ctx);
+    return {
+      roots: this.extractResult(ctx),
+      nodes: ctx.nodes
+    };
   }
 
   /**

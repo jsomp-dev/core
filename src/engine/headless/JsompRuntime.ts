@@ -9,7 +9,6 @@ import {
   TopologySnapshot,
   PerformanceMetrics
 } from '../../types';
-import {JsompCompiler} from '../compiler';
 import {TraitPipeline, styleTrait, contentTrait, slotTrait, propsTrait, mustacheTrait} from '../trait';
 import {SignalRegistryAdapter} from './SignalRegistryAdapter';
 import {BindingResolver} from '../../state';
@@ -36,7 +35,7 @@ export class JsompRuntime implements IJsompRuntime {
   private _pendingNodes = new Set<string>(); // Stores IDs of orphan nodes
   private _dirtyIdsLastRun = new Set<string>();
 
-  constructor(compiler?: JsompCompiler) {
+  constructor(compiler?: IJsompCompiler) {
     // Inject or use shared Service compiler
     // Priority: Prop > Global Env
     this._compiler = compiler || jsompEnv.service.compiler;
@@ -171,9 +170,10 @@ export class JsompRuntime implements IJsompRuntime {
     const dirtySet = new Set(dirtyIds);
     this._dirtyIdsLastRun = dirtySet;
 
-    // 2. Call Compiler
-    // JsompCompiler.compile will update its internal this.nodes store
-    this._compiler.compile(this._entities, {
+    // 2. Call Compiler (Stateless Mode)
+    // We pass our persistent _topologyMap so the compiler can mutate it in place (or clone if needed)
+    // The compiler will return the updated map (same instance if mutated)
+    const result = this._compiler.compile(this._entities, {
       dirtyIds: dirtySet,
       onDependency: (nodeId: string, atomKey: string) => {
         let nodeSet = this._dependencyMap.get(atomKey);
@@ -182,22 +182,14 @@ export class JsompRuntime implements IJsompRuntime {
           this._dependencyMap.set(atomKey, nodeSet);
         }
         nodeSet.add(nodeId);
-      }
+      },
+      // Pass the runtime's state to the compiler
+      nodes: this._topologyMap
     });
 
-    // Get the internal node mapping from the compiler
-    const compilerNodes = this._compiler.nodesMap;
-
-    // 3. Sync Compiler nodes into Runtime topologyCache
-    // Only process dirty IDs to ensure reference updates
-    dirtySet.forEach(id => {
-      const node = compilerNodes.get(id);
-      if (node) {
-        this._topologyMap.set(id, node);
-      } else {
-        this._topologyMap.delete(id);
-      }
-    });
+    // 3. Topology Map is now updated in-place by the stateless compiler but we still execute the sync.
+    // Just in case the compiler decided to clone or create a new map.
+    this._topologyMap = result.nodes;
 
     // 4. Validate topology (Circular & Orphan checks)
     this.validateTopology();

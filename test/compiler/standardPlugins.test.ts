@@ -1,22 +1,16 @@
-import {describe, it, expect, beforeEach, beforeAll, vi} from 'vitest';
+import {beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {JsompAtom, JsompCompiler, jsompEnv, PipelineStage, setupJsomp} from '../../src';
 import {
-  JsompCompiler,
-  PipelineStage,
-  setupJsomp,
-  JsompAtom
-} from '../../src/index';
-import {
+  actionTagsPlugin,
+  attributeCachePlugin,
+  autoSyncPlugin,
+  incrementalDiscoveryPlugin,
   inheritPlugin,
   pathResolutionPlugin,
-  incrementalDiscoveryPlugin,
-  treeAssemblyPlugin,
-  attributeCachePlugin,
   recursionGuardPlugin,
-  actionTagsPlugin,
-  autoSyncPlugin,
-  stateHydrationPlugin
-} from '../../src/engine/compiler/plugins/index';
-import {jsompEnv} from '../../src/JsompEnv';
+  stateHydrationPlugin,
+  treeAssemblyPlugin
+} from '../../src/engine';
 
 describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
   let compiler: JsompCompiler;
@@ -47,7 +41,7 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
         ['child', {id: 'child', inherit: 'base', props: {color: 'red'}}]
       ]);
 
-      const result = compiler.compile(entities, {rootId: 'child'});
+      const {roots: result} = compiler.compile(entities, {rootId: 'child'});
       const child = result[0];
 
       expect(child.props?.theme).toBe('dark');
@@ -65,14 +59,14 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
       atomRegistry.set('user', new JsompAtom('Alice'));
 
       // First compile
-      const result1 = compiler.compile(entities, {atomRegistry});
+      const {roots: result1} = compiler.compile(entities, {atomRegistry});
       expect(result1[0].props?.content).toBe('Hello Alice');
 
       // Update atom
       atomRegistry.set('user', new JsompAtom('Bob'));
 
       // Second compile (incremental)
-      const result2 = compiler.compile(entities, {
+      const {roots: result2} = compiler.compile(entities, {
         dirtyIds: new Set(['node']),
         atomRegistry
       });
@@ -90,9 +84,9 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
       ]);
 
       // 1. Initial compile
-      compiler.compile(entities, {rootId: 'root'});
-      const box1 = (compiler as any).nodes.get('box1');
-      const box2 = (compiler as any).nodes.get('box2');
+      const {nodes} = compiler.compile(entities, {rootId: 'root'});
+      const box1 = nodes.get('box1') as any;
+      const box2 = nodes.get('box2') as any;
 
       expect(box1.children.length).toBe(1);
       expect(box2.children.length).toBe(0);
@@ -103,7 +97,8 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
       // Perform incremental compile
       compiler.compile(entities, {
         dirtyIds: new Set(['item']),
-        rootId: 'root'
+        rootId: 'root',
+        nodes
       });
 
       // Verification: box1 should be empty, box2 should have 1 child
@@ -119,14 +114,17 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
         ['dynamic', {id: 'dynamic', type: 'span', parent: 'root'}]
       ]);
 
-      compiler.compile(entities);
-      const staticNodeBefore = (compiler as any).nodes.get('static');
+      const {nodes} = compiler.compile(entities);
+      const staticNodeBefore = nodes.get('static');
 
       // Only 'dynamic' changes
       entities.set('dynamic', {...entities.get('dynamic'), props: {updated: true}});
-      compiler.compile(entities, {dirtyIds: new Set(['dynamic'])});
+      const {nodes: nodesAfter} = compiler.compile(entities, {
+        dirtyIds: new Set(['dynamic']),
+        nodes
+      });
 
-      const staticNodeAfter = (compiler as any).nodes.get('static');
+      const staticNodeAfter = nodesAfter.get('static');
       expect(staticNodeBefore).toBe(staticNodeAfter); // 💡 Identity stability check
     });
   });
@@ -145,10 +143,10 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
         });
       }
 
-      const result = compiler.compile(entities, {rootId: 'root'});
+      const {roots} = compiler.compile(entities, {rootId: 'root'});
 
       // Navigate to the 32nd level
-      let current: any = result[0];
+      let current: any = roots[0];
       for (let i = 1; i < 32; i++) {
         current = current.children[0];
       }
@@ -163,12 +161,16 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
         ['a', {id: 'a', type: 'div', parent: 'a'}]
       ]);
       // Pass 1: Ensure node 'a' exists in the logic store
-      compiler.compile(entities);
+      const {nodes} = compiler.compile(entities);
 
       // Pass 2: Re-compile with dirty flag to trigger IncrementalDiscovery 
       // to link 'a' to itself (parent lookup finds 'a' in ctx.nodes), creating a cycle.
       expect(() => {
-        compiler.compile(entities, {rootId: 'a', dirtyIds: new Set(['a'])});
+        compiler.compile(entities, {
+          rootId: 'a',
+          dirtyIds: new Set(['a']),
+          nodes // 🚨 MUST pass manual state since compiler is now stateless
+        });
       }).toThrow();
     });
   });
@@ -184,8 +186,8 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
         ['btn', {id: 'btn', type: 'button', actions: {'my-btn': ['click']}}]
       ]);
 
-      const result = compiler.compile(entities, {actionRegistry});
-      const node = result[0] as any;
+      const {roots} = compiler.compile(entities, {actionRegistry});
+      const node = roots[0] as any;
 
       expect(node.onEvent?.click).toBeDefined();
       node.onEvent.click();
@@ -205,8 +207,8 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
         ['in', {id: 'in', type: 'Input', props: {value: '{{username}}'}}]
       ]);
 
-      const result = compiler.compile(entities, {atomRegistry});
-      const node = result[0] as any;
+      const {roots} = compiler.compile(entities, {atomRegistry});
+      const node = roots[0] as any;
 
       expect(node.onEvent?.onChange).toBeDefined();
 

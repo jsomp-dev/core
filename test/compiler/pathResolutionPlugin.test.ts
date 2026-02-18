@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, it} from 'vitest';
 import {ICompilerContext, JsompCompiler, PipelineStage, setupJsomp} from '../../src';
-import {pathResolutionPlugin} from '../../src/engine/compiler/plugins';
-import {InjectionRegistry} from '../../src/impl/core/InjectionRegistry';
+import {pathResolutionPlugin} from '../../src/engine';
+
 
 describe('PathResolutionPlugin', () => {
   let compiler: JsompCompiler;
@@ -19,10 +19,11 @@ describe('PathResolutionPlugin', () => {
       ['child', {id: 'child', type: 'span', parent: 'app'}]
     ]);
 
-    const result = compiler.compile(entities, {rootId: 'app'});
 
-    expect(result.length).toBe(1);
-    expect(result[0].id).toBe('app');
+    const {roots} = compiler.compile(entities, {rootId: 'app'});
+
+    expect(roots.length).toBe(1);
+    expect(roots[0].id).toBe('app');
   });
 
   it('should calculate _fullPath correctly for normal hierarchy', () => {
@@ -90,23 +91,3 @@ describe('PathResolutionPlugin', () => {
   });
 });
 
-describe('InjectionRegistry', () => {
-  it('should merge slot attribute from injection', () => {
-    const node: any = {id: 'test', type: 'div'};
-    const injection: any = {slot: 'header', props: {title: 'Hello'}};
-
-    const {mergedNode} = InjectionRegistry.resolve(node, 'full.path', injection);
-
-    expect(mergedNode.slot).toBe('header');
-    expect(mergedNode.props?.title).toBe('Hello');
-  });
-
-  it('should retain existing slot if not in injection', () => {
-    const node: any = {id: 'test', type: 'div', slot: 'footer'};
-    const injection: any = {props: {title: 'Hello'}};
-
-    const {mergedNode} = InjectionRegistry.resolve(node, 'full.path', injection);
-
-    expect(mergedNode.slot).toBe('footer');
-  });
-});

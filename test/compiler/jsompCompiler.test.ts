@@ -27,7 +27,7 @@ describe('JsompCompiler', () => {
 
       compiler.use('test-plugin', PipelineStage.PreProcess, plugin as any);
 
-      const result = compiler.compile(entities, {rootId: '1'});
+      const {roots: result} = compiler.compile(entities, {rootId: '1'});
 
       // Verify plugin execution
       expect(plugin.onNode).toHaveBeenCalledTimes(2);
@@ -90,7 +90,7 @@ describe('JsompCompiler', () => {
         }
       });
 
-      const result = compiler.compile(entities, {rootId: 'app'});
+      const {roots: result} = compiler.compile(entities, {rootId: 'app'});
       expect(result.length).toBe(1);
       expect(result[0].id).toBe('app');
     });
@@ -100,11 +100,11 @@ describe('JsompCompiler', () => {
       compiler.use('manual-result', PipelineStage.Hydrate, {
         id: 'manual',
         handler: (ctx: ICompilerContext) => {
-          ctx.result = [{id: 'manual-root', type: 'test', children: []}];
+          ctx.result = [{id: 'manual-root', type: 'test'}];
         }
       });
 
-      const result = compiler.compile(entities);
+      const {roots: result} = compiler.compile(entities);
       expect(result[0].id).toBe('manual-root');
     });
   });

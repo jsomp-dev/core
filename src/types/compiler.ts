@@ -38,18 +38,25 @@ export enum PipelineStage {
 }
 
 /**
+ * Result of a compilation run
+ */
+export interface CompilationResult {
+  /** The assembled root nodes of the tree */
+  roots: IJsompNode[];
+  /** The full map of all processed nodes */
+  nodes: Map<string, IJsompNode>;
+}
+
+/**
  * JSOMP Compiler Interface
  * Contract for both standard and custom compiler implementations.
  */
 export interface IJsompCompiler {
-  /** Access the internal logic node store */
-  readonly nodesMap: Map<string, IJsompNode>;
-
   /** 
    * Run the compilation pipeline to transform raw entities into logic nodes.
-   * Returns the root nodes of the assembled tree.
+   * Returns the roots and the full node map.
    */
-  compile(entities: Map<string, any>, options?: any): IJsompNode[];
+  compile(entities: Map<string, any>, options?: any): CompilationResult;
 
   /** 
    * Register a plugin to the compiler.

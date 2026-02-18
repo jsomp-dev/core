@@ -13,10 +13,11 @@ export const incrementalDiscoveryPlugin: IJsompPluginDef = {
   id: 'standard-incremental-discovery',
   stage: PipelineStage.ReStructure,
   handler: (ctx) => {
-    // If full compile, clear all existing children links to allow clean rebuilding.
-    // This is vital because other plugins (like PathResolution) might have created nodes
-    // but not yet established parent-child links in the current compiler instance.
-    if (!ctx.dirtyIds) {
+    // If full compile OR full-dataset update, clear all existing children links to allow clean rebuilding.
+    // This ensures that the array order in TEST_LAYOUT is correctly reflected in the children arrays.
+    const isFullDataset = ctx.dirtyIds && ctx.dirtyIds.size === ctx.entities.size;
+
+    if (!ctx.dirtyIds || isFullDataset) {
       ctx.nodes.forEach(node => {
         (node as any).children = [];
       });
@@ -32,8 +33,9 @@ export const incrementalDiscoveryPlugin: IJsompPluginDef = {
 
     // 2. O(1) Optimization check
     // Only skip if structure is stable AND we are in incremental mode.
-    // In full compile, we must proceed to establish parent-child links.
-    if (oldNode && oldParent === newParent && ctx.dirtyIds) {
+    // In full compile OR full-dataset feed, we must proceed to establish parent-child links to ensure order.
+    const isFullDataset = ctx.dirtyIds && ctx.dirtyIds.size === ctx.entities.size;
+    if (oldNode && oldParent === newParent && ctx.dirtyIds && !isFullDataset) {
       node.props = {...node.props, ...entity.props};
 
       // Copy other volatile fields

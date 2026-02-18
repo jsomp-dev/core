@@ -1,8 +1,7 @@
 import React, {useEffect, useMemo, useRef} from 'react';
 import {JsompRuntime, SignalCenter} from '../engine';
-import {ReactAdapter} from '../renderer/react/ReactAdapter';
+import {ReactAdapter, ReactRenderer} from '../renderer';
 import {useJsompRuntime} from '../hook/useJsompRuntime';
-import {ReactRenderer} from '../renderer';
 import {IAtomRegistry} from '../types';
 
 /**
@@ -59,7 +58,7 @@ export const JsompPage: React.FC<JsompPageProps> = ({
 
   // 1. Resolve JSOMP Service & Runtime
   const adapter = useMemo(() => {
-    // Create Runtime with Service-aware Compiler
+    // Use standard runtime which leverages the now STATELESS shared compiler
     const runtime = new JsompRuntime();
     runtimeRef.current = runtime;
 
