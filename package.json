@@ -8,11 +8,11 @@
   "types": "./dist/index.d.ts",
   "source": "./src/index.ts",
   "scripts": {
-    "dev": "tsup src/index.ts --format cjs,esm --watch --dts --splitting",
+    "dev": "tsup src/index.ts src/renderer/react/index.ts --format cjs,esm --watch --dts --splitting",
     "dev:ui": "vite",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "build": "tsup src/index.ts --format cjs,esm --clean --dts --splitting",
+    "build": "tsup src/index.ts src/renderer/react/index.ts --format cjs,esm --clean --dts --splitting",
     "lint": "tsc --noEmit"
   },
   "exports": {
@@ -22,10 +22,16 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./react": {
+      "development": "./src/renderer/react/index.ts",
+      "types": "./dist/renderer/react/index.d.ts",
+      "import": "./dist/renderer/react/index.js",
+      "require": "./dist/renderer/react/index.cjs"
+    },
     "./plugins": {
-      "development": "./src/impl/compiler/plugins/index.ts",
-      "types": "./dist/impl/compiler/plugins/index.d.ts",
-      "import": "./dist/impl/compiler/plugins/index.js"
+      "development": "./src/engine/compiler/plugins/index.ts",
+      "types": "./dist/engine/compiler/plugins/index.d.ts",
+      "import": "./dist/engine/compiler/plugins/index.js"
     }
   },
   "files": [
@@ -44,6 +50,14 @@
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

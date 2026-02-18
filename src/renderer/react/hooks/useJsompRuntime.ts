@@ -1,6 +1,6 @@
 import {useSyncExternalStore} from 'react';
-import {VisualDescriptor} from '../types';
-import {ReactAdapter} from '../renderer/react/ReactAdapter';
+import {VisualDescriptor} from '../../../types';
+import {ReactAdapter} from '../ReactAdapter';
 
 /**
  * useJsompRuntime Hook

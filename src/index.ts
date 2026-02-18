@@ -49,12 +49,8 @@ export type {
   PathProxy
 } from './types';
 
-// Export JsompPage Component
-export {JsompPage} from './component/JsompPage';
-export type {JsompPageProps} from './component/JsompPage';
-
-// Export Hooks
-export * from './hook';
+// Export renderer
+export * from './renderer';
 
 // Export Standard Presets (HTML)
 export * from './presets';

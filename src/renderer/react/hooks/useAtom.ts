@@ -1,5 +1,5 @@
 import {useSyncExternalStore, useMemo} from 'react';
-import {IAtomValue, IAtomRegistry} from '../types';
+import {IAtomValue, IAtomRegistry} from '../../../types';
 
 /**
  * Hook: Subscribe to atomic state at a specific path

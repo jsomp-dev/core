@@ -1,5 +1,5 @@
 import {useCallback, useRef, useSyncExternalStore} from 'react';
-import {IAtomRegistry, IJsompAtom} from '../types';
+import {IAtomRegistry, IJsompAtom} from '../../../types';
 
 function isAtom(obj: any): obj is IJsompAtom {
   return obj && typeof obj.subscribe === 'function' && 'value' in obj;
