@@ -38,16 +38,12 @@
   <br>
 
   <!-- Commercial Pro-Kit Teaser -->
-  <div style="padding: 20px; border: 1px solid rgba(0, 128, 160, 0.4); border-radius: 12px; background: rgba(0, 128, 160, 0.05); max-width: 750px;">
-    <span style="color: #0080A0; font-weight: bold; letter-spacing: 1px;">💎 JSOMP PRO-KIT Coming Soon</span><br>
-    <small style="color: #94a3b8;">The ultimate AI-Component library powered by Tailwind & Shadcn. Pre-built for enterprise. <strong>Stay Tuned</strong>.</small>
-  </div>
-
+  <img src="./assets/banner/jsomp-pro-kit-center.png" alt="JSOMP Pro-Kit Coming Soon!" width="800" />
 </div>
 
 <br>
 
-## 🤔 The Problem: UI for AI Agents
+## <a name="why-jsomp"></a>🤔 The Problem: UI for AI Agents
 
 When building AI Agents (using OpenAI, Claude, or Llama), developers often struggle with UI generation:
 
@@ -73,7 +69,7 @@ When building AI Agents (using OpenAI, Claude, or Llama), developers often strug
 
 ---
 
-## ✨ features
+## <a name="features"></a>✨ features
 
 | Feature | Description |
 | :--- | :--- |
@@ -83,9 +79,16 @@ When building AI Agents (using OpenAI, Claude, or Llama), developers often strug
 | 🔌 **Tree-Shakable** | **Plug & Play Architecture**. Replace native logic with your custom plugins. Unused native plugins are completely tree-shaken from your bundle. |
 | 🎨 **Design System Agnostic** | **Bring Your Own Components**. No enforced styling. |
 
+### 📦 What's Included?
+
+*   ✅ **Core Engine**: The heart of the runtime.
+*   ✅ **Standard Plugins**: `AutoSync` (v-model), `ActionTags`, `Inheritance`.
+*   ✅ **HTML Preset**: Renders standard HTML tags out of the box.
+*   ✅ **React Adapter**: Optimized React renderer.
+
 ---
 
-## ⚡ Quick Start
+## <a name="quick-start"></a>⚡ Quick Start
 
 ### 0. 🚀 Install
 
@@ -214,15 +217,6 @@ The JSOMP engine is built for extreme efficiency, offloading heavy logic from th
 | **High-Freq Stream (100 updates/s)** | **Batching Active** | Version convergence (2 updates) ensures zero UI jank. |
 | **Incremental Prop Change** | **< 1ms** | Sub-millisecond reconciliation for real-time reactivity. |
 | **Total Runtime Size** | **< 15kb** | Ultra-lightweight Gzipped footprint. |
-
----
-
-## 📦 What's Included?
-
-*   ✅ **Core Engine**: The heart of the runtime.
-*   ✅ **Standard Plugins**: `AutoSync` (v-model), `ActionTags`, `Inheritance`.
-*   ✅ **HTML Preset**: Renders standard HTML tags out of the box.
-*   ✅ **React Adapter**: Optimized React renderer.
 
 ---
 
