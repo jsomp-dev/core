@@ -1,9 +1,14 @@
-import React, {useEffect, useMemo} from 'react';
-import {IAtomRegistry, IJsompNode, IJsompService} from '../types';
+import React, {useMemo, useEffect, useRef} from 'react';
+import {JsompRuntime} from '../headless/JsompRuntime';
+import {SignalCenter} from '../headless/SignalCenter';
+import {ReactAdapter} from '../impl/renderer/ReactAdapter';
+import {useJsompRuntime} from '../hook/useJsompRuntime';
 import {ReactRenderer} from '../impl/renderer/ReactRenderer';
+import {IAtomRegistry, IJsompService} from '../types';
 
-import {requireJsomp} from "../setup";
-
+/**
+ * JsompPage Props Definition
+ */
 export interface JsompPageProps {
   /** Entity Map (usually from data reconciliation) */
   entities: Map<string, any> | Record<string, any>;
@@ -28,141 +33,42 @@ export interface JsompPageProps {
 }
 
 /**
- * JsompPage: High-level container component
- * Responsibility: Encapsulates scope creation, tree restoration, and rendering logic.
+ * JsompPage: The Skeleton (V2)
+ * Orchestrates the Runtime, Adapter, and Renderer with minimal logic.
  */
-export const JsompPage: React.FC<JsompPageProps> = ({
-  entities,
-  rootId = "root",
-  components,
-  stylePresets,
-  onMounted,
-  scope: externalScope,
-  jsomp = requireJsomp()
-}) => {
-  // 1. Manage scope lifecycle
-  const atomRegistry = useMemo(() => {
-    return externalScope || jsomp?.createScope();
-  }, [externalScope, jsomp]);
+export const JsompPage: React.FC<JsompPageProps> = ({entities}) => {
+  const isFirstRun = useRef(true);
 
-  // 2. Local state for dynamic nodes added at runtime (e.g., via streaming)
-  const [dynamicNodes, setDynamicNodes] = React.useState<Map<string, IJsompNode>>(new Map());
+  // 1. Instantiate Core (and Initial Feed)
+  const adapter = useMemo(() => {
+    const runtime = new JsompRuntime();
+    const center = new SignalCenter();
+    runtime.use(center);
 
-  // 3. Listen for global changes to discover and update structural nodes
-  useEffect(() => {
-    if (!atomRegistry || !jsomp) return;
-
-    return atomRegistry.subscribeAll((key: string, value: any) => {
-      // Discovery & Structure Update Logic: 
-      // If the value has structural fields, we track it in dynamicNodes to ensure tree rebuilds
-      if (value && typeof value === 'object' && value.type && value.parent) {
-        setDynamicNodes(prev => {
-          // Check if the structure actually changed or if it's a new discovery
-          const existing = prev.get(key);
-          if (existing && existing.type === value.type && existing.parent === value.parent) {
-            return prev;
-          }
-
-          // Check against initial entities
-          const isInitial = (entities instanceof Map)
-            ? entities.has(key)
-            : Array.isArray(entities)
-              ? entities.some(e => e.id === key)
-              : Object.prototype.hasOwnProperty.call(entities, key);
-
-          if (!isInitial) {
-            const newNode = {id: key, ...value};
-            return new Map(prev).set(key, newNode);
-          }
-          return prev;
-        });
-      }
-    });
-  }, [atomRegistry, jsomp, entities]);
-
-  // 4. Handle data conversion automatically
-  const nodes = useMemo(() => {
-    if (!jsomp || !atomRegistry) return [] as IJsompNode[];
-
-    // Supports Map, Array, or Plain Object inputs
-    let entityMap: Map<string, any>;
-    if (entities instanceof Map) {
-      entityMap = new Map(entities);
-    } else if (Array.isArray(entities)) {
-      entityMap = new Map();
-      entities.forEach((e: any) => {
-        if (e && typeof e === 'object' && e.id) {
-          entityMap.set(e.id, e);
-        }
-      });
-    } else {
-      entityMap = new Map(Object.entries(entities));
+    // Initial Sync Feed for SSR support
+    if (entities) {
+      const map = entities instanceof Map ? entities : new Map(Object.entries(entities));
+      runtime.feed(map);
     }
 
-    // Merge in dynamic nodes discovered at runtime
-    dynamicNodes.forEach((node, id) => {
-      if (!entityMap.has(id)) {
-        entityMap.set(id, node);
-      }
-    });
+    return new ReactAdapter(runtime, center);
+  }, []); // Stable adapter
 
-    // For all nodes in the map, ensure we use the LATEST structure from registry
-    // This solves the issue where discovery might have been partial or structure changed
-    entityMap.forEach((v, k) => {
-      const regVal = atomRegistry.get(k);
-      if (regVal && typeof regVal === 'object' && !('subscribe' in regVal)) {
-        const atomVal = regVal as any; // Cast to avoid complex type intersection issues in render loop
-        if (atomVal.type) v.type = atomVal.type;
-        if (atomVal.parent) v.parent = atomVal.parent;
-      }
-    });
-
-
-    return jsomp.restoreTree(entityMap, rootId, atomRegistry);
-  }, [entities, dynamicNodes, rootId, jsomp, atomRegistry]);
-
-  /**
-   * 5. Create Layout Manager for the current nodes
-   */
-  const layout = useMemo(() => {
-    if (!jsomp || !nodes || nodes.length === 0) return undefined;
-    return jsomp.getLayout(nodes);
-  }, [jsomp, nodes]);
-
-  /**
-   * 6. Emit render event for system integration (e.g. AI Context)
-   */
+  // 2. Data Updates
   useEffect(() => {
-    if (nodes && nodes.length > 0 && layout) {
-      jsomp.env.eventBus?.emit('did-render', {
-        rootId,
-        nodeCount: nodes.length,
-        nodes,
-        layout
-      });
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return;
     }
-  }, [nodes, layout, rootId, jsomp]);
 
-  // 7. Mount notification
-  useEffect(() => {
-    if (atomRegistry) {
-      onMounted?.(atomRegistry);
-    }
-  }, [atomRegistry, onMounted]);
+    if (!entities) return;
+    const map = entities instanceof Map ? entities : new Map(Object.entries(entities));
+    adapter.feed(map);
+  }, [entities, adapter]);
 
-  if (!atomRegistry) return null;
+  // 3. Connect to React
+  const descriptors = useJsompRuntime(adapter);
 
-  return (
-    <ReactRenderer
-      nodes={nodes}
-      context={{
-        atomRegistry,
-        components,
-        componentRegistry: jsomp.componentRegistry,
-        stylePresets,
-        layout
-      }}
-    />
-  );
+  // 4. Render
+  return <ReactRenderer descriptors={descriptors} adapter={adapter} />;
 };
-

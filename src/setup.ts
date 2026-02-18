@@ -74,6 +74,11 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
     pipeline.register('standard-auto-sync', PipelineStage.Hydrate, autoSyncPlugin, 'StandardAutoSync');
   }
 
+  if (!pipeline.getPlugins(PipelineStage.PostAssemble).some((p: any) => p.id === 'standard-dependency')) {
+    const {dependencyPlugin} = await import('./impl/compiler/plugins/DependencyPlugin');
+    pipeline.register('standard-dependency', PipelineStage.PostAssemble, dependencyPlugin, 'StandardDependency');
+  }
+
   if (!pipeline.getPlugins(PipelineStage.PostAssemble).some((p: any) => p.id === 'standard-recursion-guard')) {
     const {recursionGuardPlugin} = await import('./impl/compiler/plugins/RecursionGuardPlugin');
     pipeline.register('standard-recursion-guard', PipelineStage.PostAssemble, recursionGuardPlugin, 'StandardRecursionGuard');

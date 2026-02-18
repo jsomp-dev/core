@@ -1,2 +1,2 @@
 export * from './TraitPipeline';
-export * from './StandardTraits';
+export * from './traits';

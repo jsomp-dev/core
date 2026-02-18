@@ -58,6 +58,9 @@ export interface ICompilerContext {
    */
   dirtyIds?: Set<string>;
 
+  /** Callback for dependency collection */
+  onDependency?: (nodeId: string, atomKey: string) => void;
+
   /** Root ID for the tree (optional) */
   rootId?: string;
 

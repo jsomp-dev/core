@@ -1,17 +1,37 @@
 import {IJsompNode, VisualDescriptor} from '../types';
 
 /**
- * TopologySnapshot - Phase 1 Deliverable
+ * Performance Metrics Structure
+ */
+export interface PerformanceMetrics {
+  /** Timestamp when reconciliation started (t1 - performance.now()) */
+  startTime: number;
+  /** Kernel Reconcile time (ms) */
+  reconcileMs: number;
+  /** Rendering Pipeline processing time (ms) */
+  pipelineMs: number;
+  /** Time from React trigger to DOM update completion (ms) */
+  renderMs: number;
+  /** Total active nodes in this render */
+  activeNodes: number;
+  /** Maximum recursion depth detected in this render */
+  recursionDepth: number;
+}
+
+/**
+ * TopologySnapshot
  */
 export interface TopologySnapshot {
   /** Topology version, auto-incremented on each change */
   version: number;
   /** Flat snapshot of all current logic tree nodes */
   allNodes: IJsompNode[];
-  /** Flat snapshot of visual descriptors (Phase 2) */
+  /** Flat snapshot of visual descriptors */
   descriptors?: VisualDescriptor[];
   /** Set of dirty node IDs involved in this change (for downstream incremental computation) */
   dirtyIds: Set<string>;
+  /** Performance metrics for this snapshot generation */
+  metrics?: Partial<PerformanceMetrics>;
 }
 
 /**

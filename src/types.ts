@@ -624,6 +624,8 @@ export interface VisualDescriptor {
   styles: Record<string, any>;
   /** Slot distribution table: key=slotName, value=childIds */
   slots: Record<string, string[]>;
+  /** Parent ID to identify roots */
+  parentId?: string | null;
 }
 
 /**

@@ -28,14 +28,9 @@ export class SignalCenter implements ISignalCenter {
     const oldValue = this._values.get(id);
     if (oldValue === newValue) return;
 
-    // 2. Static Filtering: Only process atoms with 'type' or 'parent' properties
-    if (newValue && typeof newValue === 'object') {
-      const isStructural = 'type' in newValue || 'parent' in newValue;
-      if (!isStructural) return;
-    } else {
-      // Filter out non-object types (e.g., string, number) as they are not structural Node fragments
-      return;
-    }
+    // 2. Static Filtering (Removed in V2 to support Primitive Atoms)
+    // We allow all values to pass through because they might be data bindings (e.g. strings, numbers)
+    // The Runtime will decide if they are structural nodes or just dependencies.
 
     // Update cached value
     this._values.set(id, newValue);

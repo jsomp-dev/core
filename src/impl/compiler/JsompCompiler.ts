@@ -14,6 +14,9 @@ export interface CompilerOptions {
    * If missing, fall back to full scanning.
    */
   dirtyIds?: Set<string>;
+
+  /** Callback for dependency collection (V2) */
+  onDependency?: (nodeId: string, atomKey: string) => void;
 }
 
 /**
@@ -69,6 +72,7 @@ export class JsompCompiler {
       rootId: options.rootId,
       atomRegistry: options.atomRegistry,
       actionRegistry: options.actionRegistry,
+      onDependency: options.onDependency,
       options: {},
       logger: jsompEnv.logger
     };

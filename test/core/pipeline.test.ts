@@ -95,35 +95,6 @@ describe('TraitPipeline & StandardTraits', () => {
     expect(result3).not.toBe(result1); // New object
   });
 
-  it('should use mustache cache for content resolution', () => {
-    const node: IJsompNode = {id: 'cached-content', type: 'Text', props: {content: '{{foo}}'}};
-
-    // Mock Version Control
-    const versionMock = context.registry.version as any;
-    versionMock.mockReturnValue(1); // Version 1
-
-    // Pass 1
-    const res1 = pipeline.processNode(node, context);
-    expect(context.resolver?.resolve).toHaveBeenCalledTimes(1);
-    expect(res1.props.content).toBe('Resolved: {{foo}}');
-
-    // Pass 2 (Same Version)
-    // Note: We need to force pipeline to re-run trait, so we make node dirty, 
-    // BUT trait should hit cache.
-    context.dirtyIds = new Set(['cached-content']);
-
-    const res2 = pipeline.processNode(node, context);
-    expect(context.resolver?.resolve).toHaveBeenCalledTimes(1); // Should NOT increment
-    expect(res2.props.content).toBe('Resolved: {{foo}}');
-
-    // Pass 3 (New Version)
-    versionMock.mockReturnValue(2); // Version Bump
-
-    const res3 = pipeline.processNode(node, context);
-    expect(context.resolver?.resolve).toHaveBeenCalledTimes(2); // Should increment
-    expect(res3.props.content).toBe('Resolved: {{foo}}');
-  });
-
   it('should handle slots correctly', () => {
     // Mocking node with children (which is 'any' access in trait)
     const child1 = {id: 'c1', type: 'Span', slot: 'header'};

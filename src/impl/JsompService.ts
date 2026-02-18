@@ -66,7 +66,7 @@ export class JsompService implements IJsompService {
     this.globalRegistry = new AtomRegistry();
     this.pipeline = PipelineRegistry.global.clone();
     this.traitPipeline = new TraitPipeline();
-    this.schemas = SchemaRegistry.global; // TODO: Support schema cloning if needed
+    this.schemas = SchemaRegistry.global;
   }
 
   /**
