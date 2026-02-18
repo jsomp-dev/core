@@ -10,7 +10,6 @@
   <!-- Badges -->
   <p>
     <img src="https://img.shields.io/badge/Size-%3C15kb-blue?style=flat-square" alt="Size" />
-    <img src="https://img.shields.io/badge/Performance-%3C50ms-orange?style=flat-square" alt="Performance" />
     <img src="https://img.shields.io/badge/2,000_Nodes-%3C20ms-brightgreen?style=flat-square" alt="Scale Performance" />
     <img src="https://img.shields.io/badge/License-Apache--2.0-purple?style=flat-square" alt="License" />
   </p>
@@ -32,7 +31,12 @@
     <a href="#quick-start">⚡ Quick Start</a> •
     <a href="#why-jsomp">🤔 Why JSOMP</a> •
     <a href="#features">✨ Features</a> •
+    <a href="#perf">🚀 Performance</a> •
     <a href="https://example.com/playground">🎮 Live Playground</a>
+  </p>
+  <p>
+    <a href="#roadmap">🗺️ Roadmap</a> •
+    <a href="#faq">❓ FAQ</a>
   </p>
 
   <br>
@@ -45,7 +49,7 @@
 
 ## <a name="why-jsomp"></a>🤔 The Problem: UI for AI Agents
 
-When building AI Agents (using OpenAI, Claude, or Llama), developers often struggle with UI generation:
+When building AI Agents, developers often struggle with UI generation:
 
 [⚠️] **Generating React/Vue Code is Bad**:
 - 🐌 **Slow**: Generating JSX tokens is expensive and slow.
@@ -99,7 +103,8 @@ npm install @jsomp/core
 ### 1. 🧩 Render Your First JSON
 
 ```tsx
-import { JsompPage, setupJsomp } from '@jsomp/core';
+import { setupJsomp } from '@jsomp/core';
+import { JsompPage } from '@jsomp/core/react';
 
 // 1. Initialize (Once)
 setupJsomp();
@@ -120,7 +125,11 @@ export default () => (
 );
 ```
 
-> **Note**: While the example above uses React, JSOMP's core is framework-agnostic. You can easily plug in Vue, Svelte, or custom Canvas adapters.
+> **More Frameworks Soon**: JSOMP is designed to be **framework-agnostic**.
+>
+> While we currently provide a `@jsomp/core/react` renderer, first-class support for **Vue**, **Svelte**, **Angular**, and **Solid** is on our roadmap.
+>
+> Feeling adventurous? You can already implement your own **Custom Adapter** (e.g., for Canvas, WebGL, or CLI). The core logic remains exactly the same.
 
 ### 2. 🛠️ Register Custom Components
 JSOMP is design-system agnostic. Register any React component (shadcn-ui, ant-design, mui, or any other ui library) in seconds.
@@ -144,7 +153,8 @@ jsomp.componentRegistry.register('MyButton', Button, {
 JSOMP provides a built-in `JsompStream` with real-time JSON repair. It handles malformed fragments as they arrive from the LLM, ensuring the UI starts rendering before the first bracket is closed.
 
 ```tsx
-import { JsompStream, JsompPage } from '@jsomp/core';
+import { JsompStream } from '@jsomp/core';
+import { JsompPage } from '@jsomp/core/react';
 
 // 1. Initialize Stream with Auto-Repair
 const [entities, setEntities] = useState(new Map());
@@ -207,7 +217,7 @@ graph TD
 
 ---
 
-## 🚀 Performance Benchmark
+## <a name="perf"></a> 🚀 Performance Benchmark
 
 The JSOMP engine is built for extreme efficiency, offloading heavy logic from the main UI thread.
 
@@ -220,7 +230,7 @@ The JSOMP engine is built for extreme efficiency, offloading heavy logic from th
 
 ---
 
-## 🗺️ Roadmap
+## <a name="roadmap"></a> 🗺️ Roadmap
 
 ### Phase 1: Foundation (Current)
 - ✅ **Core Engine**: Fully headless runtime with Signal reactivity.
@@ -234,19 +244,64 @@ The JSOMP engine is built for extreme efficiency, offloading heavy logic from th
 - 💎 **JSOMP Pro-Kit**: Premium, enterprise-ready UI components based on **Tailwind & Shadcn**.
 - 🚧 **Design System Schema (DSS)**: CVA-style variant matrices and semantic mapping.
 - 🚧 **Type-Safe DX**: Auto-generation of TypeScript interfaces from component manifests.
-- 🚧 **Multi-Framework**: Official adapters for **Vue** and **Svelte**.
+- 🚧 **Framework Adapters (Official)**: 
+  - **Vue 3**: Reactivity integration via `ref` and `reactive`.
+  - **Svelte 5**: Native runes support for blazing performance.
+  - **Solid.js**: Fine-grained reactivity alignment.
+- 🚧 **Community Adapters**: Experimental support for Canvas (Konva/Pixi) and Terminal (Ink).
 
 ### Phase 3: Extreme Scale & Infrastructure (Vision)
+- ⏳ **Native Engine**: Direct mapping to **iOS/Android** native views (SwiftUI/Compose/Reactive Native) via the JSOMP protocol.
 - ⏳ **WASM Compiler**: Core compiler rewritten in WebAssembly for deterministic performance.
 - ⏳ **Style System 2.0**: Support for parameterized presets (e.g., `blur(4)`).
-- ⏳ **Native Engine**: Direct mapping to iOS/Android native views via the JSOMP protocol.
 - ⏳ **AI Prompt Engine**: Automated metadata generation to optimize LLM logic.
 
 ---
 
-## 🤝 Contributing
+## <a name="faq"></a>❓ FAQ
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+### Q: Why not just use React/Vue directly?
+**A:** React/Vue are excellent for *humans* writing code. JSOMP is designed for *AI Agents* streaming data.
+1.  **Safety**: Executing LLM-generated JSX/Vue templates is dangerous (XSS/RCE risks). JSOMP is pure JSON data, inherently safe.
+2.  **Stability**: LLMs often screw up closing tags or import statements in code. JSON is much easier to repair and validate.
+3.  **Traffic**: Streaming a 50kb React component source code vs streaming a 5kb JSOMP JSON definition.
+
+### Q: How does this help with Context Window & Cost?
+**A:** We use a **"Reference-based"** architecture that goes beyond simple compression.
+
+1.  **Granular Patching**: Instead of regenerating the full component code (50 tokens), the AI sends a precise patch: `{"id": "btn1", "props": {"loading": true}}` (8 tokens).
+2.  **Logic as Data**: We use **Action Tags** (e.g., `"actions": { "submit": ["onClick"] }`) to define behavior. The AI orchestrates logic by just referencing these tags, without generating fragile JavaScript code.
+3.  **Targeted Updates**: The AI can dynamically target any specific component by ID to update its state or props in real-time, making it perfect for **long-running interactive sessions** where cost accumulates.
+
+### Q: Does it support SSR/SEO?
+**A:** **Yes!** The `@jsomp/core` runtime is isomorphic. You can run `JsompRuntime` on the server (Node.js/Bun) to generate the initial HTML snapshot, then hydrate it on the client. It's fully compatible with Next.js/Nuxt.js server-side rendering.
+
+### Q: I'm a Python/Go engineer. Can I use this?
+**A:** **Absolutely, for UI orchestration.** This is the beauty of JSOMP.
+-   **Frontend Role**: Your frontend team sets up the "Building Blocks" (registering components & actions) once.
+-   **Backend Role**: You (the Agent) assemble these blocks via JSON. You control the layout, content, and flow dynamically without touching React/Vue code.
+
+### Q: Is this just for static content? Can it handle logic?
+**A:** It is **fully interactive** JSOMP includes a specific "Logic Layer":
+-   **State Binding**: Use Mustache syntax `{{user.name}}` to bind directly to atomic state.
+-   **Action Tags**: Register explicit logic action tags (e.g., `submit_form`) and trigger them via JSON like `"actions": {"submit_form": ["onClick"]}`, no need input params in JSON layer, all params are extracted from the current enviroment of the component (Props + Atom State in current scope).
+-   It transforms static JSON into a living application with forms and real-time updates.
+
+### Q: Do I need to rewrite my entire app?
+**A:** **No.** JSOMP follows the **"Progressive Adoption"** philosophy.
+-   **Island Architecture**: Keep your App Shell in Next.js/Vue. Just mount `<JsompPage />` where you need AI-driven dynamic content.
+-   **State Integration**: We provide direct adapters for **Zustand, Redux, Jotai, or Signals** (and more are coming soon). Your AI components can read/write to your existing app state seamlessly.
+
+### Q: What do you mean by "Native Engine"?
+**A:** This is our generic protocol vision. Since JSOMP logic is purely data-driven (JSON + Signals), we can port the `JsompRuntime` core to **Swift, Kotlin, or Rust**.
+
+1.  **Cloud-Driven (Streaming)**: AI streams UI from the server directly to the client.
+2.  **Embedded Native (Local)**: This is **better than React Native**.
+    *   **Zero VM**: Unlike RN which needs a JavaScript VM (Hermes), JSOMP Core can be compiled to pure **Swift/Kotlin**.
+    *   **No Bridge**: Logic runs in native memory. No serialization bottleneck.
+    *   **Store Safe**: Hot-update your app by downloading JSON "Configuration", not "Executable Code".
+
+---
 
 ## 📄 License
 
