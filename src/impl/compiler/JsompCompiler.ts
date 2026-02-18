@@ -40,6 +40,13 @@ export class JsompCompiler {
   }
 
   /**
+   * Access the internal node store
+   */
+  public get nodesMap(): Map<string, IJsompNode> {
+    return this.nodes;
+  }
+
+  /**
    * Run the compilation pipeline on a flat entity map
    */
   public compile(

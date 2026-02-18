@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "import/no-restricted-paths": [
+      "error",
+      {
+        "zones": [
+          {
+            "target": "./core/src/headless",
+            "from": "./core/src",
+            "except": [
+              "./headless"
+            ],
+            "message": "Headless core must NOT depend on framework/UI components. Only core types are allowed."
+          }
+        ]
+      }
+    ]
+  }
+}
