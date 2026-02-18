@@ -1,8 +1,8 @@
 import React, {useEffect, useMemo, useRef} from 'react';
-import {JsompRuntime, SignalCenter} from '../headless';
-import {ReactAdapter} from '../impl/renderer/ReactAdapter';
+import {JsompRuntime, SignalCenter} from '../engine';
+import {ReactAdapter} from '../renderer/react/ReactAdapter';
 import {useJsompRuntime} from '../hook/useJsompRuntime';
-import {ReactRenderer} from '../impl/renderer';
+import {ReactRenderer} from '../renderer';
 import {IAtomRegistry} from '../types';
 
 /**

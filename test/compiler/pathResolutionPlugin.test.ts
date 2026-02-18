@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it} from 'vitest';
 import {ICompilerContext, JsompCompiler, PipelineStage, setupJsomp} from '../../src';
-import {pathResolutionPlugin} from '../../src/impl/compiler/plugins';
+import {pathResolutionPlugin} from '../../src/engine/compiler/plugins';
 import {InjectionRegistry} from '../../src/impl/core/InjectionRegistry';
 
 describe('PathResolutionPlugin', () => {

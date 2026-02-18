@@ -5,15 +5,15 @@ export {setupJsomp} from './setup';
 // Export environment and core service
 export {JsompEnv, jsompEnv} from './JsompEnv';
 
-export {JsompService} from './impl/JsompService';
-export {AtomRegistry} from './impl/core/AtomRegistry';
-export {JsompAtom} from './impl/core/JsompAtom';
-export {JsompStream} from './impl/core/JsompStream';
-export {BindingResolver} from './impl/core/BindingResolver';
-export {ComponentRegistry} from './impl/provider/ComponentRegistry';
-export {JsompLayoutManager, createLayoutManager} from './impl/core/JsompLayoutManager';
-export * from './impl/compiler/JsompCompiler';
-export * from './impl/compiler/JsompDecompiler';
+export {JsompService} from './JsompService';
+export {AtomRegistry} from './state/AtomRegistry';
+export {JsompAtom} from './state/JsompAtom';
+export {JsompStream} from './misc/JsompStream';
+export {BindingResolver} from './state/BindingResolver';
+export {ComponentRegistry} from './registry/ComponentRegistry';
+export {JsompLayoutManager, createLayoutManager} from './misc/JsompLayoutManager';
+export * from './engine/compiler/JsompCompiler';
+export * from './engine/compiler/JsompDecompiler';
 
 // State Management Implementations (Registries & Adapters)
 export {
@@ -21,7 +21,7 @@ export {
   ExternalStateRegistry,
   ZustandAdapter,
   ObjectAdapter
-} from './impl/state';
+} from './state';
 
 // Re-export core types explicitly for convenience
 export type {
@@ -60,7 +60,7 @@ export * from './hook';
 export * from './presets';
 
 // Export Trait Pipeline
-export * from './impl/pipeline';
+export * from './engine/trait';
 export type {
   VisualDescriptor,
   PipelineContext,

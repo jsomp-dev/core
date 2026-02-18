@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it} from 'vitest';
-import {setupJsomp} from '@jsomp/core';
+import {setupJsomp} from '../../src';
 import {DefaultFlattener} from '../../src/uniform';
 
 // Define a basic Node interface for clarity and type safety

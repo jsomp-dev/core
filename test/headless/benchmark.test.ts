@@ -1,5 +1,5 @@
 import {beforeAll, describe, expect, it} from 'vitest';
-import {JsompRuntime, SignalCenter} from '../../src/headless';
+import {JsompRuntime, SignalCenter} from '../../src/engine';
 import {setupJsomp} from '../../src';
 
 describe('Headless Core Benchmark & Extreme Cases', () => {

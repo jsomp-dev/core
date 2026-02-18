@@ -15,7 +15,7 @@ import {
   actionTagsPlugin,
   autoSyncPlugin,
   stateHydrationPlugin
-} from '../../src/impl/compiler/plugins/index';
+} from '../../src/engine/compiler/plugins/index';
 import {jsompEnv} from '../../src/JsompEnv';
 
 describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {

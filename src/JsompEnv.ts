@@ -1,4 +1,4 @@
-import {JsompService} from './impl/JsompService';
+import {JsompService} from './JsompService';
 import {JsompConfig, JsompLogger, JsompFlattener, JsompEventBus, IJsompEnv, IJsompService} from './types';
 
 /**
