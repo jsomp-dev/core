@@ -8,7 +8,7 @@ const TEST_LAYOUT = [
   {
     id: 'app_root',
     type: 'div',
-    style_tw: ['p-8', 'bg-slate-900', 'min-h-[400px]', 'rounded-xl', 'border', 'border-slate-800'],
+    style_tw: ['p-8', 'bg-slate-900', 'min-h-[200px]', 'rounded-xl', 'border', 'border-slate-800'],
   },
   {
     id: 'isolated_root',
@@ -52,7 +52,7 @@ const TEST_LAYOUT = [
     type: 'div',
     parent: 'app_root',
     style_tw: ['mt-8', 'text-slate-500', 'text-sm'],
-    props: {children: 'Paths are automatically calculated below:'}
+    props: {children: 'Paths are automatically calculated below'}
   }
 ] as const;
 
@@ -106,7 +106,7 @@ export const LayoutTest: React.FC = () => {
       {/* C. Hierarchy Viewer (AI View) */}
       <section>
         <h3 className="text-slate-400 text-xs font-bold uppercase mb-2">Topological Hierarchy (getHierarchy)</h3>
-        <pre className="p-4 bg-slate-950 text-emerald-500 rounded-lg border border-slate-800 text-xs overflow-auto max-h-[300px]">
+        <pre className="p-4 bg-slate-950 text-emerald-500 rounded-lg border border-slate-800 text-xs overflow-auto max-h-[600px]">
           {hierarchySnapshot}
         </pre>
       </section>
