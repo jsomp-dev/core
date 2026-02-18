@@ -1,4 +1,4 @@
-import {useSyncExternalStore, useMemo, useRef, useCallback} from 'react';
+import {useCallback, useRef, useSyncExternalStore} from 'react';
 import {IAtomRegistry, IJsompAtom} from '../types';
 
 function isAtom(obj: any): obj is IJsompAtom {

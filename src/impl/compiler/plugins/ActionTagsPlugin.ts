@@ -1,5 +1,4 @@
-import {IActionRegistry, PipelineStage} from '../../../types';
-import {IJsompPluginDef} from '../types';
+import {IActionRegistry, IJsompPluginDef, PipelineStage} from '../../../types';
 
 /**
  * ActionTagsPlugin

@@ -1,5 +1,4 @@
-import {IAtomRegistry, IAtomValue, IJsompAtom} from '../types';
-import {ISignalCenter} from './types';
+import {IAtomRegistry, IAtomValue, IJsompAtom, ISignalCenter} from '../types';
 
 /**
  * Signal-to-Registry Adapter

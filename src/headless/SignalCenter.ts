@@ -1,4 +1,4 @@
-import {ISignalCenter} from './types';
+import {ISignalCenter} from '../types';
 
 /**
  * SignalCenter

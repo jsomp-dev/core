@@ -1,7 +1,16 @@
-import {IJsompNode, VisualDescriptor, PipelineContext, IAtomRegistry, IJsompCompiler} from '../types';
+import {
+  IJsompNode,
+  VisualDescriptor,
+  PipelineContext,
+  IAtomRegistry,
+  IJsompCompiler,
+  IJsompRuntime,
+  ISignalCenter,
+  TopologySnapshot,
+  PerformanceMetrics
+} from '../types';
 import {JsompCompiler} from '../impl/compiler/JsompCompiler';
 import {TraitPipeline, styleTrait, contentTrait, slotTrait, propsTrait, mustacheTrait} from '../impl/pipeline';
-import {IJsompRuntime, ISignalCenter, TopologySnapshot, PerformanceMetrics} from './types';
 import {SignalRegistryAdapter} from './SignalRegistryAdapter';
 import {BindingResolver} from '../impl/core/BindingResolver';
 import {jsompEnv} from '../JsompEnv';

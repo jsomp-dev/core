@@ -1,11 +1,9 @@
-import React, {useMemo, useEffect, useRef} from 'react';
-import {JsompRuntime} from '../headless/JsompRuntime';
-import {SignalCenter} from '../headless/SignalCenter';
+import React, {useEffect, useMemo, useRef} from 'react';
+import {JsompRuntime, SignalCenter} from '../headless';
 import {ReactAdapter} from '../impl/renderer/ReactAdapter';
 import {useJsompRuntime} from '../hook/useJsompRuntime';
-import {ReactRenderer} from '../impl/renderer/ReactRenderer';
-import {IAtomRegistry, IJsompService} from '../types';
-import {jsompEnv} from '../JsompEnv';
+import {ReactRenderer} from '../impl/renderer';
+import {IAtomRegistry} from '../types';
 
 /**
  * JsompPage Props Definition

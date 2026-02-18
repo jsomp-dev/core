@@ -1,4 +1,8 @@
-import {IJsompNode, VisualDescriptor} from '../types';
+import {IJsompNode, VisualDescriptor} from './node';
+import {IAtomRegistry} from './state';
+import {IComponentRegistry} from './component';
+import {IActionRegistry} from './action';
+import {IJsompLayoutManager} from './layout';
 
 /**
  * Performance Metrics Structure
@@ -60,4 +64,40 @@ export interface IJsompRuntime {
   getSnapshot(): TopologySnapshot;
   /** Internal reconciliation logic */
   reconcile(dirtyIds: string[]): void;
+  /** Optional: Fallback registry for state lookup */
+  setRegistryFallback?(registry: IAtomRegistry): void;
+}
+
+/**
+ * Rendering Context
+ */
+export interface IJsompRenderContext {
+  /**
+   * [Reactive] Atomic state registry
+   * Replace the original injections object and provide fine-grained update capabilities
+   */
+  atomRegistry: IAtomRegistry;
+  /**
+   * Named binding context (Scope)
+   * Store named atoms or constants referenced by {{key}}
+   */
+  scope?: Record<string, any>;
+  /**
+   * Component mapping table
+   * If passed in, it will take precedence over ComponentRegistry for matching
+   */
+  components?: Record<string, any>;
+  /**
+   * Component registration center
+   */
+  componentRegistry?: IComponentRegistry;
+  /** Premade style mapping table (mapping semantic names to class name arrays) */
+  stylePresets?: Record<string, string[]>;
+  /** Path prefix (automatically maintained during recursion) */
+  pathStack?: string[];
+  /** 
+   * Layout Manager
+   * Allows components to resolve full paths and hierarchy
+   */
+  layout?: IJsompLayoutManager;
 }

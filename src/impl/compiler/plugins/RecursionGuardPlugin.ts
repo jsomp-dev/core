@@ -1,5 +1,4 @@
-import {ICompilerContext, IJsompPluginDef} from '../types';
-import {IJsompNode, PipelineStage} from '../../../types';
+import {ICompilerContext, IJsompNode, IJsompPluginDef, PipelineStage} from '../../../types';
 
 /**
  * RecursionGuardPlugin

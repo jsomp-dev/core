@@ -1,5 +1,4 @@
-import {IJsompPluginDef} from './types';
-import {PipelineStage} from "../../types";
+import {IJsompPluginDef, PipelineStage} from '../../types';
 
 /**
  * Registry for managing compiler plugins

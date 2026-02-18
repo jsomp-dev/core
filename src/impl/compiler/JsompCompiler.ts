@@ -1,6 +1,5 @@
-import {IAtomRegistry, IJsompNode, IJsompCompiler, PipelineStage} from '../../types';
+import {IAtomRegistry, ICompilerContext, IJsompCompiler, IJsompNode, IJsompPluginDef, PipelineStage} from '../../types';
 import {PipelineRegistry} from './PipelineRegistry';
-import {ICompilerContext, IJsompPluginDef} from './types';
 import {jsompEnv} from "../../JsompEnv";
 
 export interface CreateCompilerOptions extends CompilerOptions {
