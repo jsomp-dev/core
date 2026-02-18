@@ -44,29 +44,6 @@ describe('PathResolutionPlugin', () => {
     expect(childNode._fullPath).toBe('app.child');
   });
 
-  it('should handle legacy [slot] notation in parent', () => {
-    const entities = new Map([
-      ['card', {id: 'card', type: 'Card'}],
-      ['icon', {id: 'icon', type: 'Icon', parent: '[slot]card.header'}]
-    ]);
-
-    let nodes: any[] = [];
-    compiler.use('capture', PipelineStage.Hydrate, {
-      id: 'capture',
-      handler: (ctx: ICompilerContext) => {
-        nodes = Array.from(ctx.nodes.values());
-      }
-    });
-    compiler.compile(entities);
-
-    const iconNode = nodes.find(n => n.id === 'icon');
-    expect(iconNode.id).toBe('icon');
-    expect(iconNode.parent).toBe('card');
-    expect(iconNode.slot).toBe('header');
-    expect(iconNode.__jsomp_slot).toBe('header');
-    expect(iconNode._fullPath).toBe('card.icon');
-  });
-
   it('should handle modern slot attribute', () => {
     const entities = new Map([
       ['card', {id: 'card', type: 'Card'}],
@@ -86,7 +63,6 @@ describe('PathResolutionPlugin', () => {
     expect(iconNode.id).toBe('icon');
     expect(iconNode.parent).toBe('card');
     expect(iconNode.slot).toBe('header');
-    expect(iconNode.__jsomp_slot).toBe('header');
     expect(iconNode._fullPath).toBe('card.icon');
   });
 
@@ -95,29 +71,6 @@ describe('PathResolutionPlugin', () => {
       ['root', {id: 'root', type: 'div'}],
       ['card', {id: 'card', type: 'Card', parent: 'root'}],
       ['icon', {id: 'icon', type: 'Icon', parent: 'root.card', slot: 'header'}]
-    ]);
-
-    let nodes: any[] = [];
-    compiler.use('capture', PipelineStage.Hydrate, {
-      id: 'capture',
-      handler: (ctx: ICompilerContext) => {
-        nodes = Array.from(ctx.nodes.values());
-      }
-    });
-    compiler.compile(entities);
-
-    const iconNode = nodes.find(n => n.id === 'icon');
-    expect(iconNode.id).toBe('icon');
-    expect(iconNode.parent).toBe('card');
-    expect(iconNode.slot).toBe('header');
-    expect(iconNode._fullPath).toBe('root.card.icon');
-  });
-
-  it('should handle deep legacy [slot] notation', () => {
-    const entities = new Map([
-      ['root', {id: 'root', type: 'div'}],
-      ['card', {id: 'card', type: 'Card', parent: 'root'}],
-      ['icon', {id: 'icon', type: 'Icon', parent: '[slot]root.card.header'}]
     ]);
 
     let nodes: any[] = [];

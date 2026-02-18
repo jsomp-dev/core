@@ -16,7 +16,8 @@ export const inheritPlugin: IJsompPluginDef = {
   id: 'standard-inherit',
   stage: PipelineStage.PreProcess,
   handler: (ctx: ICompilerContext) => {
-    const resolved = new Set<string>();
+    const resolved = new Map<string, any>();
+    const updates = new Map<string, any>();
 
     /**
      * Merge two entities based on JSOMP inheritance rules
@@ -74,12 +75,12 @@ export const inheritPlugin: IJsompPluginDef = {
      * Recursive resolver with cycle detection and memoization
      */
     const resolve = (id: string, visited: Set<string>): any => {
-      // Return cached result if already processed
-      if (resolved.has(id)) return ctx.entities.get(id);
+      // Return cached result if already processed in this pass
+      if (resolved.has(id)) return resolved.get(id);
 
       const entity = ctx.entities.get(id);
       if (!entity || !entity.inherit) {
-        resolved.add(id);
+        resolved.set(id, entity);
         return entity;
       }
 
@@ -94,7 +95,7 @@ export const inheritPlugin: IJsompPluginDef = {
 
       if (!parent) {
         ctx.logger.warn(`[Inherit] Node ${id} refers to missing base node: ${parentId}`);
-        resolved.add(id);
+        resolved.set(id, entity);
         return entity;
       }
 
@@ -102,14 +103,17 @@ export const inheritPlugin: IJsompPluginDef = {
       const merged = mergeEntities(parent, entity);
       delete merged.inherit; // Prevents re-triggering and keeps output clean
 
-      ctx.entities.set(id, merged);
-      resolved.add(id);
+      resolved.set(id, merged);
+      updates.set(id, merged);
       return merged;
     };
 
-    // Process all entities
-    ctx.entities.forEach((_, id) => {
+    // Process all entities (or only dirty ones if available)
+    const targetIds = ctx.dirtyIds ? Array.from(ctx.dirtyIds) : Array.from(ctx.entities.keys());
+    targetIds.forEach(id => {
       resolve(id, new Set());
     });
+
+    return updates;
   }
 };

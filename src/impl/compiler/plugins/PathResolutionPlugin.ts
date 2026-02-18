@@ -1,10 +1,12 @@
-import {ICompilerContext} from '../types';
+import {ICompilerContext, IJsompPluginDef, PipelineStage} from '../types';
 
 /**
  * Resolves physical paths and handles parent-child relationships,
  * including support for deep paths and legacy slot notation.
  */
-export const pathResolutionPlugin = {
+export const pathResolutionPlugin: IJsompPluginDef = {
+  id: 'standard-path',
+  stage: PipelineStage.ReStructure,
   onNode: (id: string, entity: any, ctx: ICompilerContext) => {
     // 1. Skip non-UI entities
     if (entity.type === 'State') return;
@@ -18,6 +20,10 @@ export const pathResolutionPlugin = {
     const pathCache = ctx.options.__pathCache as Map<string, string>;
     const pathToIdMap = ctx.options.__pathToId as Map<string, string>;
 
+    // 3. Resolve Parent/Slot references
+    const parentVal = entity.parent;
+    const explicitSlot = entity.slot;
+
     /**
      * Recursive path calculator (Memoized)
      */
@@ -27,33 +33,16 @@ export const pathResolutionPlugin = {
       const targetEntity = ctx.entities.get(targetId);
       if (!targetEntity) return targetId;
 
-      const parentVal = targetEntity.parent;
-      const explicitSlot = targetEntity.slot;
+      const pVal = targetEntity.parent;
+      let pId: string | undefined;
 
-      // Resolve basic parent ID from string or slot notation
-      let parentId: string | undefined;
-
-      if (typeof parentVal === 'string') {
-        if (explicitSlot) {
-          // Rule 1: Explicit slot attribute, parent is the physical parent
-          parentId = parentVal.includes('.') ? parentVal.split('.').pop()! : parentVal;
-        } else if (parentVal.startsWith('[slot]')) {
-          // Rule 2: Legacy slot notation [slot]path.to.parent.slotName
-          const cleanPath = parentVal.slice(6);
-          const segments = cleanPath.split('.');
-          if (segments.length > 1) {
-            parentId = segments[segments.length - 2];
-          } else {
-            parentId = undefined;
-          }
-        } else {
-          // Rule 3: Standard parent reference
-          parentId = parentVal.includes('.') ? parentVal.split('.').pop()! : parentVal;
-        }
+      // Standard parent resolution: handle both ID and path.notation
+      if (typeof pVal === 'string') {
+        pId = pVal.includes('.') ? pVal.split('.').pop()! : pVal;
       }
 
-      const path = (parentId && ctx.entities.has(parentId))
-        ? `${getCalculatedPath(parentId)}.${targetId}`
+      const path = (pId && ctx.entities.has(pId))
+        ? `${getCalculatedPath(pId)}.${targetId}`
         : targetId;
 
       pathCache.set(targetId, path);
@@ -64,44 +53,36 @@ export const pathResolutionPlugin = {
     // calculate current node's path
     const path = getCalculatedPath(id);
 
-    // 3. Create node instance
-    const node = {
-      ...entity,
+    // 4. Create or Update node instance
+    const existingNode = ctx.nodes.get(id);
+    const node: any = existingNode ? existingNode : {
       id: entity.id || id,
-      props: entity.props ? {...entity.props} : {},
-      children: entity.children ? [...entity.children] : [],
-      _fullPath: path
+      children: []
     };
 
-    // 4. Resolve Parent/Slot references
-    const parentVal = node.parent;
-    const explicitSlot = (entity as any).slot;
+    // Sink data from entity
+    node.type = entity.type;
+    node.props = entity.props ? {...entity.props} : (node.props || {});
+    node.style_presets = entity.style_presets;
+    node.style_tw = entity.style_tw;
+    node.style_css = entity.style_css;
+    node.actions = entity.actions;
+    node._fullPath = path;
 
-    if (explicitSlot) {
-      // Priority 1: Use explicit slot attribute
-      node.slot = explicitSlot;
-      (node as any).__jsomp_slot = explicitSlot;
-      if (typeof parentVal === 'string' && parentVal.includes('.')) {
+    // Normalize parent ID
+    if (typeof parentVal === 'string') {
+      if (parentVal.includes('.')) {
         node.parent = pathToIdMap.get(parentVal) || parentVal.split('.').pop();
+      } else {
+        node.parent = parentVal;
       }
-    } else if (typeof parentVal === 'string') {
-      if (parentVal.startsWith('[slot]')) {
-        // Priority 2: Legacy mode
-        const content = parentVal.slice(6);
-        const segments = content.split('.');
-        if (segments.length > 1) {
-          const slotName = segments.pop()!;
-          const parentPath = segments.join('.');
-          const pId = pathToIdMap.get(parentPath) || segments[segments.length - 1];
-          node.parent = pId;
-          node.slot = slotName;
-          (node as any).__jsomp_slot = slotName;
-        }
-      } else if (parentVal.includes('.')) {
-        // Priority 3: Path notation but not slot
-        const pId = pathToIdMap.get(parentVal) || parentVal.split('.').pop();
-        node.parent = pId;
-      }
+    } else {
+      node.parent = parentVal;
+    }
+
+    // Explicit slot assignment
+    if (explicitSlot) {
+      node.slot = explicitSlot;
     }
 
     ctx.nodes.set(id, node);

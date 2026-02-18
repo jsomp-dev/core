@@ -44,6 +44,16 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
     pipeline.register('standard-state', PipelineStage.PreProcess, stateHydrationPlugin, 'StandardStateHydration');
   }
 
+  if (!pipeline.getPlugins(PipelineStage.PreProcess).some((p: any) => p.id === 'standard-attribute-cache')) {
+    const {attributeCachePlugin} = await import('./impl/compiler/plugins/AttributeCachePlugin');
+    pipeline.register('standard-attribute-cache', PipelineStage.PreProcess, attributeCachePlugin, 'StandardAttributeCache');
+  }
+
+  if (!pipeline.getPlugins(PipelineStage.ReStructure).some((p: any) => p.id === 'standard-incremental-discovery')) {
+    const {incrementalDiscoveryPlugin} = await import('./impl/compiler/plugins/IncrementalDiscoveryPlugin');
+    pipeline.register('standard-incremental-discovery', PipelineStage.ReStructure, incrementalDiscoveryPlugin, 'StandardIncrementalDiscovery');
+  }
+
   if (!pipeline.getPlugins(PipelineStage.ReStructure).some((p: any) => p.id === 'standard-path')) {
     const {pathResolutionPlugin} = await import('./impl/compiler/plugins/PathResolutionPlugin');
     pipeline.register('standard-path', PipelineStage.ReStructure, pathResolutionPlugin, 'StandardPathResolution');
@@ -62,6 +72,11 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
   if (!pipeline.getPlugins(PipelineStage.Hydrate).some((p: any) => p.id === 'standard-auto-sync')) {
     const {autoSyncPlugin} = await import('./impl/compiler/plugins/AutoSyncPlugin');
     pipeline.register('standard-auto-sync', PipelineStage.Hydrate, autoSyncPlugin, 'StandardAutoSync');
+  }
+
+  if (!pipeline.getPlugins(PipelineStage.PostAssemble).some((p: any) => p.id === 'standard-recursion-guard')) {
+    const {recursionGuardPlugin} = await import('./impl/compiler/plugins/RecursionGuardPlugin');
+    pipeline.register('standard-recursion-guard', PipelineStage.PostAssemble, recursionGuardPlugin, 'StandardRecursionGuard');
   }
 
   jsompEnv.isSetup = true;

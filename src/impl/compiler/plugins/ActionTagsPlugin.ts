@@ -10,9 +10,10 @@ export const actionTagsPlugin: IJsompPluginDef = {
   id: 'standard-actions',
   stage: PipelineStage.Hydrate,
   onNode: (id, entity, ctx) => {
-    // 1. Get resolved node from context (if available) or raw entity
-    const node = ctx.nodes.get(id) || entity;
-    if (!node.actions) return;
+    // 1. Get resolved node from context. 
+    // Must work on logic nodes to avoid mutating shared entity map and ensure persistence.
+    const node = ctx.nodes.get(id);
+    if (!node || !node.actions) return;
 
     const actionRegistry = ctx.actionRegistry as IActionRegistry;
     if (!actionRegistry) {

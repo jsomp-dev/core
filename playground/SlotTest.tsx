@@ -92,29 +92,6 @@ export const SlotTest: React.FC = () => {
         padding: '0.4rem 0.8rem',
         borderRadius: '0.4rem'
       }
-    },
-
-    // --- Card 2: Using LEGACY [slot] notation ---
-    {
-      id: 'card_legacy',
-      type: 'CustomCard',
-      parent: 'app_root',
-      props: {title: 'Legacy Slot Notation'},
-      style_css: {marginTop: '2rem'}
-    },
-    {
-      id: 'header_legacy',
-      type: 'span',
-      parent: '[slot]card_legacy.header',
-      props: {children: '🕰️ Header Slot (Legacy)'},
-      style_css: {color: '#60a5fa', fontWeight: 'bold'}
-    },
-    {
-      id: 'content_legacy',
-      type: 'p',
-      parent: 'card_legacy',
-      props: {children: 'This card uses the legacy "[slot]parent.id.slot" format to ensure backward compatibility.'},
-      style_css: {color: '#94a3b8'}
     }
   ]);
   const [includePath, setIncludePath] = useState(false);
@@ -144,11 +121,10 @@ export const SlotTest: React.FC = () => {
         fontSize: '0.9rem'
       }}>
         <strong>Debug Info:</strong>
-        <ul style={{margin: '0.5rem 0 0 1.5rem', padding: 0}}>
-          <li>Slot 1: Explicit <code>slot: "header"</code> attribute.</li>
-          <li>Slot 2: Legacy <code>parent: "[slot]card.header"</code> notation.</li>
-          <li>Both are resolved to the same internal structure.</li>
-        </ul>
+        <p style={{marginTop: '0.5rem'}}>
+          JSOMP V2 uses the standard <code>slot</code> attribute for component distribution.
+          Legacy path-based slot notation has been deprecated and removed.
+        </p>
       </section>
 
       {/* 2. Hierarchy Viewer for Verification */}

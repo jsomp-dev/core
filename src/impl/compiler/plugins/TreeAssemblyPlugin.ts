@@ -1,30 +1,46 @@
-import {ICompilerContext} from '../types';
+import {ICompilerContext, IJsompPluginDef, PipelineStage} from '../types';
 import {IJsompNode} from '../../../types';
-import {jsompEnv} from "../../../JsompEnv";
 
 /**
  * Assembles the flat nodes into a tree structure and handles slot distribution.
  */
-export const treeAssemblyPlugin = {
+export const treeAssemblyPlugin: IJsompPluginDef = {
+  id: 'standard-tree',
+  stage: PipelineStage.Hydrate,
   handler: (ctx: ICompilerContext) => {
-    const flattener = jsompEnv.flattener;
-    if (!flattener) return;
+    // 1. Identify roots (nodes without parent or pointing to non-existent parent)
+    const roots: IJsompNode[] = [];
+    ctx.nodes.forEach(node => {
+      const isRoot = ctx.rootId
+        ? node.id === ctx.rootId
+        : (!node.parent || (node.parent === 'root' && !ctx.nodes.has('root')) || !ctx.nodes.has(node.parent));
 
-    // 1. Unflatten basic structure
-    const tree = flattener.unflatten<IJsompNode>(ctx.nodes as any, ctx.rootId);
+      if (isRoot) {
+        roots.push(node);
+      }
+    });
 
     // 2. Post-processing: Slot distribution (Legacy support)
-    const applySlots = (nodes: IJsompNode[]) => {
+    // Runs in-place on logic nodes. Since we want stability, we process each node once.
+    const processed = new Set<string>();
+
+    const applySlotsRecursive = (nodes: IJsompNode[]) => {
       nodes.forEach(node => {
+        if (processed.has(node.id)) return;
+        processed.add(node.id);
+
         const anyNode = node as any;
         if (anyNode.children && anyNode.children.length > 0) {
-          applySlots(anyNode.children);
+          // Recursively process children first
+          applySlotsRecursive(anyNode.children);
 
           const realChildren: IJsompNode[] = [];
           anyNode.children.forEach((child: any) => {
-            if (child.__jsomp_slot) {
-              const slotName = child.__jsomp_slot;
-              delete child.__jsomp_slot;
+            if (child.slot) {
+              const slotName = child.slot;
+              // Clean up slot after use to keep the tree pure for the renderer
+              delete child.slot;
+
               node.props = node.props || {};
               const prev = node.props[slotName];
 
@@ -46,7 +62,7 @@ export const treeAssemblyPlugin = {
       });
     };
 
-    applySlots(tree);
-    ctx.result = tree;
+    applySlotsRecursive(roots);
+    ctx.result = roots;
   }
 };

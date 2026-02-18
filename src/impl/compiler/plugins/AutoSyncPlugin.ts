@@ -8,12 +8,12 @@ import {jsompEnv} from '../../../JsompEnv';
  * Stage: Hydrate (Runs when atoms and nodes are being finalized)
  */
 export const autoSyncPlugin: IJsompPluginDef = {
-  id: 'standard-autosync',
+  id: 'standard-auto-sync',
   stage: PipelineStage.Hydrate,
   onNode: (id, entity, ctx) => {
-    // 1. Get current node from context
-    const node = ctx.nodes.get(id) || entity;
-    if (!node.type) return;
+    // 1. Get current node from logic store
+    const node = ctx.nodes.get(id);
+    if (!node || !node.type) return;
 
     // 2. Lookup component metadata for sync traits
     const componentRegistry = jsompEnv.service?.componentRegistry;
@@ -38,12 +38,22 @@ export const autoSyncPlugin: IJsompPluginDef = {
     const atomRegistry = ctx.atomRegistry;
     if (!atomRegistry) return;
 
+    // Helper: Find property in raw entity hierarchy (ignoring resolved values in context)
+    const getUnresolvedProp = (targetId: string, propName: string): any => {
+      const e = ctx.entities.get(targetId);
+      if (!e) return undefined;
+      if (e.props && propName in e.props) return e.props[propName];
+      if (e.inherit) return getUnresolvedProp(e.inherit, propName);
+      return undefined;
+    };
+
     // 4. Process each sync trait
     meta.sync.forEach(trait => {
       const {prop, event, extract, required} = trait;
 
-      // A. Check if the prop is bound to a mustache key
-      const bindingValue = node.props?.[prop];
+      // A. Check if the prop is bound to a mustache key in the RAW entity hierarchy
+      // We look up the raw hierarchy because node.props/entity.props might have been resolved by AttrCachePlugin.
+      const bindingValue = getUnresolvedProp(id, prop);
       const atomKey = BindingResolver.getBindingKey(bindingValue);
 
       if (atomKey) {
@@ -60,9 +70,13 @@ export const autoSyncPlugin: IJsompPluginDef = {
         // Create the sync handler
         const syncHandler = (eventArgs: any) => {
           const actualValue = extractor(eventArgs);
-          atomRegistry.set(atomKey, {value: actualValue});
+          const atom = atomRegistry.get(atomKey);
 
-          // Note: If there was an existing handler, it will be called by the composition logic below
+          if (atom && typeof (atom as any).set === 'function') {
+            (atom as any).set(actualValue);
+          } else {
+            atomRegistry.set(atomKey, {value: actualValue});
+          }
         };
 
         // B. Bind to onEvent with composition
@@ -79,7 +93,7 @@ export const autoSyncPlugin: IJsompPluginDef = {
           node.onEvent[event] = syncHandler;
         }
       } else if (required) {
-        // C. If required but not bound to mustache, ensured a No-op
+        // C. If required but not bound to mustache, ensured a No-op (or keep existing)
         node.onEvent = node.onEvent || {};
         if (!node.onEvent[event]) {
           node.onEvent[event] = () => { };

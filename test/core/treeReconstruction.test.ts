@@ -29,7 +29,7 @@ describe('JSOMP Core - Tree Reconstruction (1.1)', () => {
       id: 'header_node',
       type: 'div',
       parent: 'parent',
-      __jsomp_slot: 'header',  // 👈 Special marker
+      slot: 'header',
       props: {children: 'Title'}
     });
     entities.set('content_node', {
@@ -51,7 +51,7 @@ describe('JSOMP Core - Tree Reconstruction (1.1)', () => {
     expect((parent as any).children[0].id).toBe('content_node');
 
     // Verify marker is cleaned up
-    expect(parent.props?.header.__jsomp_slot).toBeUndefined();
+    expect(parent.props?.header.slot).toBeUndefined();
   });
 
   // 1.1.3 Should fail if not implemented

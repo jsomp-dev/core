@@ -1,4 +1,4 @@
-import {ICompilerContext} from '../types';
+import {ICompilerContext, IJsompPluginDef, PipelineStage} from '../types';
 import {JsompAtom} from '../../core/JsompAtom';
 import {SchemaRegistry} from '../../core/SchemaRegistry';
 
@@ -6,7 +6,9 @@ import {SchemaRegistry} from '../../core/SchemaRegistry';
  * Handles 'State' type entities and initializes them in the AtomRegistry.
  * Also supports implicit typed atoms based on SchemaRegistry matching.
  */
-export const stateHydrationPlugin = {
+export const stateHydrationPlugin: IJsompPluginDef = {
+  id: 'standard-state',
+  stage: PipelineStage.PreProcess,
   onNode: (id: string, entity: any, ctx: ICompilerContext) => {
     if (!ctx.atomRegistry) return;
 

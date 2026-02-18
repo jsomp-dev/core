@@ -3,3 +3,7 @@ export * from './PathResolutionPlugin';
 export * from './TreeAssemblyPlugin';
 export * from './InheritPlugin';
 export * from './ActionTagsPlugin';
+export * from './AttributeCachePlugin';
+export * from './IncrementalDiscoveryPlugin';
+export * from './RecursionGuardPlugin';
+export * from './AutoSyncPlugin';
