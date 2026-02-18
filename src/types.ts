@@ -1,4 +1,5 @@
 import type {ZodType} from 'zod';
+import type {TraitPipeline} from './impl/pipeline';
 
 /**
  * JSOMP Node definition (Atomic structure)
@@ -81,6 +82,11 @@ export interface IAtomRegistry {
   batchSet(updates: Record<string, IJsompAtom | IAtomValue | undefined>): void;
   subscribe(key: string, callback: () => void): () => void;
   subscribeAll(callback: (key: string, value: any) => void): () => void;
+  /**
+   * Get the current version of the registry or a specific atom
+   * Used for cache invalidation.
+   */
+  version?(key?: string): number;
 
   // --- Dispatcher Extensions ---
   mount?(namespace: string, registry: IAtomRegistry): void;
@@ -254,6 +260,11 @@ export interface IJsompService {
    * Global compiler pipeline registry
    */
   readonly pipeline: IPipelineRegistry;
+
+  /**
+   * Global trait pipeline for visual processing
+   */
+  readonly traitPipeline: TraitPipeline;
 
   /**
    * Schema Registry for typed atoms
@@ -594,3 +605,75 @@ export interface IContentTrait {
   children: any;
 }
 
+
+// --- Visual Pipeline Types ---
+
+/**
+ * Visual Descriptor (Phase 2 Deliverable)
+ * The output of the TraitPipeline processing.
+ * Represents the final, framework-agnostic description of a UI element.
+ */
+export interface VisualDescriptor {
+  /** Unique identifier */
+  id: string;
+  /** Component type name (from registry) */
+  componentType: string;
+  /** Final props after trait processing */
+  props: Record<string, any>;
+  /** Final styles after trait processing */
+  styles: Record<string, any>;
+  /** Slot distribution table: key=slotName, value=childIds */
+  slots: Record<string, string[]>;
+}
+
+/**
+ * Pipeline Context
+ * The environment passed through the pipeline traits.
+ */
+export interface PipelineContext {
+  /** Global atom registry */
+  registry: IAtomRegistry;
+  /** Global action registry */
+  actions?: IActionRegistry;
+  /** Component registry */
+  components?: IComponentRegistry;
+
+  /** 
+   * Multi-level cache storage
+   * Structure: Map<TraitName, Map<CacheKey, CacheValue>>
+   */
+  cache: Map<string, Map<string, any>>;
+
+  /** Set of dirty atom IDs (or node IDs) that need reprocessing */
+  dirtyIds?: Set<string>;
+
+  /** Mustache resolver helper */
+  resolver?: {
+    resolve(content: string, context?: any): any;
+  };
+
+  /** Current recursion depth (for DepthGuard) */
+  depth?: number;
+
+  /** Style presets map (name -> classNames) */
+  stylePresets?: Record<string, string[]>;
+}
+
+/**
+ * Trait Processor Function Signature
+ * Designed to be pure and side-effect free on the input node.
+ * Modifies the descriptor in place.
+ */
+export type TraitProcessor = (
+  node: IJsompNode,
+  descriptor: VisualDescriptor,
+  context: PipelineContext
+) => void;
+
+/**
+ * Trait Registration Option
+ */
+export interface TraitOption {
+  priority: number; // Higher runs first
+  name: string;
+}

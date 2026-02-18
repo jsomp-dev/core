@@ -15,7 +15,7 @@ import {JsompLayoutManager} from './core/JsompLayoutManager';
 import {jsompEnv} from '../JsompEnv';
 import {JsompAtom} from './core/JsompAtom';
 import {IJsompAtom} from '../types';
-
+import {TraitPipeline} from './pipeline';
 
 /**
  * JSOMP Service Implementation
@@ -57,9 +57,15 @@ export class JsompService implements IJsompService {
    */
   public readonly pipeline: PipelineRegistry;
 
+  /**
+   * Trait Pipeline
+   */
+  public readonly traitPipeline: TraitPipeline;
+
   constructor() {
     this.globalRegistry = new AtomRegistry();
     this.pipeline = PipelineRegistry.global.clone();
+    this.traitPipeline = new TraitPipeline();
     this.schemas = SchemaRegistry.global; // TODO: Support schema cloning if needed
   }
 

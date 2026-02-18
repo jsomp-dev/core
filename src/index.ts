@@ -59,3 +59,12 @@ export * from './hook';
 
 // Export Standard Presets (HTML)
 export * from './presets';
+
+// Export Trait Pipeline
+export * from './impl/pipeline';
+export type {
+  VisualDescriptor,
+  PipelineContext,
+  TraitProcessor,
+  TraitOption
+} from './types';

@@ -9,6 +9,7 @@ export class SignalCenter implements ISignalCenter {
   private _isPending = false;
   private _subscribers = new Set<(dirtyIds: string[]) => void>();
   private _values = new Map<string, any>();
+  private _versions = new Map<string, number>();
 
   /**
    * Register a listener
@@ -38,6 +39,10 @@ export class SignalCenter implements ISignalCenter {
 
     // Update cached value
     this._values.set(id, newValue);
+    // Increment version
+    const currentVersion = this._versions.get(id) || 0;
+    this._versions.set(id, currentVersion + 1);
+
     this._dirtyIds.add(id);
 
     // 3. Asynchronous Batching: Using microtask
@@ -70,5 +75,12 @@ export class SignalCenter implements ISignalCenter {
    */
   public get(id: string): any {
     return this._values.get(id);
+  }
+
+  /**
+   * Get the version of a specific atom
+   */
+  public getVersion(id: string): number {
+    return this._versions.get(id) || 0;
   }
 }

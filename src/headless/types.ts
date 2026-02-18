@@ -1,4 +1,4 @@
-import {IJsompNode} from '../types';
+import {IJsompNode, VisualDescriptor} from '../types';
 
 /**
  * TopologySnapshot - Phase 1 Deliverable
@@ -8,6 +8,8 @@ export interface TopologySnapshot {
   version: number;
   /** Flat snapshot of all current logic tree nodes */
   allNodes: IJsompNode[];
+  /** Flat snapshot of visual descriptors (Phase 2) */
+  descriptors?: VisualDescriptor[];
   /** Set of dirty node IDs involved in this change (for downstream incremental computation) */
   dirtyIds: Set<string>;
 }
@@ -22,6 +24,8 @@ export interface ISignalCenter {
   onUpdate(id: string, newValue: any): void;
   /** Access the buffered/latest value */
   get(id: string): any;
+  /** Get the version of a specific atom (incremented on update) */
+  getVersion(id: string): number;
 }
 
 /**
