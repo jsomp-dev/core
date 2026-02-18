@@ -1,37 +1,4 @@
-import {IAtomRegistry, IJsompNode, JsompLogger} from '../../types';
-
-/**
- * JSOMP Compiler Pipeline Stages
- */
-export enum PipelineStage {
-  /**
-   * Phase 1: Pre-Process
-   * Responsibility: Clean and enhance the raw entity Map.
-   * Typical tasks: Inheritance merging, Default props filling.
-   */
-  PreProcess = 'PreProcess',
-
-  /**
-   * Phase 2: Re-Structure
-   * Responsibility: Establish node relationships (Parent/Child) and resolve addressing.
-   * Typical tasks: Slot tagging, Path calculation, ID resolution.
-   */
-  ReStructure = 'ReStructure',
-
-  /**
-   * Phase 3: Hydrate
-   * Responsibility: Transform nodes into final renderable instances and assemble the tree.
-   * Typical tasks: Action binding (ActionTags), State atom initialization, Tree splicing.
-   */
-  Hydrate = 'Hydrate',
-
-  /**
-   * Phase 4: Post-Assemble
-   * Responsibility: Global tree inspection and final adjustments.
-   * Typical tasks: Recursion guarding, global path calculation, cross-reference validation.
-   */
-  PostAssemble = 'PostAssemble',
-}
+import {IAtomRegistry, IJsompNode, JsompLogger, PipelineStage} from '../../types';
 
 /**
  * Context flowing through the compiler pipeline

@@ -1,5 +1,4 @@
 import type {ZodType} from 'zod';
-import type {TraitPipeline} from './impl/pipeline';
 
 /**
  * JSOMP Node definition (Atomic structure)
@@ -62,6 +61,59 @@ export interface IJsompAtom<T = any> {
   set(newValue: T): void;
   /** Execute manual validation and return result */
   validate?(value: any): {success: boolean; error?: any};
+}
+
+/**
+ * JSOMP Compiler Pipeline Stages
+ */
+export enum PipelineStage {
+  /**
+   * Phase 1: Pre-Process
+   * Responsibility: Clean and enhance the raw entity Map.
+   * Typical tasks: Inheritance merging, Default props filling.
+   */
+  PreProcess = 'PreProcess',
+
+  /**
+   * Phase 2: Re-Structure
+   * Responsibility: Establish node relationships (Parent/Child) and resolve addressing.
+   * Typical tasks: Slot tagging, Path calculation, ID resolution.
+   */
+  ReStructure = 'ReStructure',
+
+  /**
+   * Phase 3: Hydrate
+   * Responsibility: Transform nodes into final renderable instances and assemble the tree.
+   * Typical tasks: Action binding (ActionTags), State atom initialization, Tree splicing.
+   */
+  Hydrate = 'Hydrate',
+
+  /**
+   * Phase 4: Post-Assemble
+   * Responsibility: Global tree inspection and final adjustments.
+   * Typical tasks: Recursion guarding, global path calculation, cross-reference validation.
+   */
+  PostAssemble = 'PostAssemble',
+}
+
+/**
+ * JSOMP Compiler Interface
+ * Contract for both standard and custom compiler implementations.
+ */
+export interface IJsompCompiler {
+  /** Access the internal logic node store */
+  readonly nodesMap: Map<string, IJsompNode>;
+
+  /** 
+   * Run the compilation pipeline to transform raw entities into logic nodes.
+   * Returns the root nodes of the assembled tree.
+   */
+  compile(entities: Map<string, any>, options?: any): IJsompNode[];
+
+  /** 
+   * Register a plugin to the compiler.
+   */
+  use(id: string, stage: PipelineStage, handler: any, name?: string): this;
 }
 
 /**
@@ -264,7 +316,7 @@ export interface IJsompService {
   /**
    * Global trait pipeline for visual processing
    */
-  readonly traitPipeline: TraitPipeline;
+  readonly traitPipeline: ITraitPipeline;
 
   /**
    * Schema Registry for typed atoms
@@ -306,9 +358,15 @@ export interface IJsompService {
   createStream(options?: StreamOptions): IJsompStream;
 
   /**
-   * Create a new compiler instance with all registered plugins
+   * The primary compiler instance shared across the service.
+   * Most users should use this instead of creating new instances.
    */
-  createCompiler(options?: any): any;
+  readonly compiler: IJsompCompiler;
+
+  /**
+   * Create a new compiler instance with all registered plugins (Advanced)
+   */
+  createCompiler(options?: any): IJsompCompiler;
 
   /**
    * Get layout manager for a given set of entities.
@@ -351,9 +409,6 @@ export interface IJsompRenderContext {
   layout?: IJsompLayoutManager;
 }
 
-
-// --- New Refactoring Types ---
-
 /**
  * JSOMP Logger Interface
  */
@@ -379,8 +434,6 @@ export interface JsompFlattener {
   unflatten<T = any>(entities: Map<string, IJsompNode>, rootId?: string, childrenField?: string): T[];
   flatten<T extends IJsompNode = IJsompNode>(root: any, idField?: string, childrenField?: string): Map<string, T>;
 }
-
-
 
 /**
  * JSOMP Event Bus Interface
@@ -658,4 +711,44 @@ export type TraitProcessor = (
 export interface TraitOption {
   priority: number; // Higher runs first
   name: string;
+}
+
+/**
+ * Interface for the TraitPipeline class.
+ * Defines the public API for processing nodes and managing descriptors.
+ */
+export interface ITraitPipeline {
+  /**
+   * Register a trait processor with specific options.
+   * @param processor - The trait processor function.
+   * @param options - The options for the trait processor.
+   */
+  registerTrait(processor: TraitProcessor, options: TraitOption): void;
+
+  /**
+   * Process a node and produce a VisualDescriptor.
+   * Handles caching, recursion depth check, and trait execution.
+   * @param node - The input node to process.
+   * @param context - The pipeline context.
+   * @returns The resulting VisualDescriptor.
+   */
+  processNode(node: IJsompNode, context: PipelineContext): VisualDescriptor;
+
+  /**
+   * Explicitly invalidate cache for specific IDs.
+   * @param ids - An array of node IDs to invalidate.
+   */
+  invalidate(ids: string[]): void;
+
+  /**
+   * Clear the entire cache.
+   */
+  clearCache(): void;
+
+  /**
+   * Get a descriptor from cache directly.
+   * @param id - The ID of the node whose descriptor is requested.
+   * @returns The cached VisualDescriptor or undefined if not found.
+   */
+  getDescriptor(id: string): VisualDescriptor | undefined;
 }

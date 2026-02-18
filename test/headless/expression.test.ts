@@ -1,7 +1,6 @@
-import {describe, it, expect, beforeEach} from 'vitest';
-import {JsompRuntime} from '../../src/headless/JsompRuntime';
-import {SignalCenter} from '../../src/headless/SignalCenter';
-import {setupJsomp} from '../../src/setup';
+import {beforeEach, describe, expect, it} from 'vitest';
+import {JsompRuntime, SignalCenter} from '../../src/headless';
+import {setupJsomp} from '../../src';
 
 describe('Headless Expression Resolution', () => {
   let runtime: JsompRuntime;

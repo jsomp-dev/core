@@ -1,3 +1,4 @@
+import {JsompService} from './impl/JsompService';
 import {JsompConfig, JsompLogger, JsompFlattener, JsompEventBus, IJsompEnv, IJsompService} from './types';
 
 /**
@@ -22,12 +23,12 @@ export class JsompEnv implements IJsompEnv {
   // --- Getters with Guard ---
 
   public get logger(): JsompLogger {
-    if (!this._logger) throw new Error('[JSOMP] Logger not initialized. Call setup() first.');
+    if (!this._logger) throw new Error('[JSOMP] Logger not initialized. Call setupJsomp() first.');
     return this._logger;
   }
 
   public get flattener(): JsompFlattener {
-    if (!this._flattener) throw new Error('[JSOMP] Flattener not initialized. Call setup() first.');
+    if (!this._flattener) throw new Error('[JSOMP] Flattener not initialized. Call setupJsomp() first.');
     return this._flattener;
   }
 
@@ -35,7 +36,8 @@ export class JsompEnv implements IJsompEnv {
     return this._eventBus || undefined;
   }
 
-  public get service() {
+  public get service(): IJsompService {
+    if (!this._service) throw new Error('[JSOMP] Service not initialized. Call setupJsomp() first.');
     return this._service;
   }
 
@@ -47,6 +49,8 @@ export class JsompEnv implements IJsompEnv {
     // 1. Service Injection
     if (config.service) {
       this._service = config.service;
+    } else {
+      this._service = new JsompService();
     }
 
     // 2. Logger (Dynamic Load Default if missing)

@@ -5,13 +5,14 @@ import {ReactAdapter} from '../impl/renderer/ReactAdapter';
 import {useJsompRuntime} from '../hook/useJsompRuntime';
 import {ReactRenderer} from '../impl/renderer/ReactRenderer';
 import {IAtomRegistry, IJsompService} from '../types';
+import {jsompEnv} from '../JsompEnv';
 
 /**
  * JsompPage Props Definition
  */
 export interface JsompPageProps {
   /** Entity Map (usually from data reconciliation) */
-  entities: Map<string, any> | Record<string, any>;
+  entities: Map<string, any> | Record<string, any> | any[];
 
   /** Root node ID, defaults to "root" */
   rootId?: string;
@@ -27,34 +28,74 @@ export interface JsompPageProps {
 
   /** Optional external scope (internal scope created if not provided) */
   scope?: IAtomRegistry;
+}
 
-  /** Optional JSOMP service instance (uses default if not provided) */
-  jsomp?: IJsompService;
+/**
+ * Helper to normalize various input formats into a Map<string, any>
+ */
+function normalizeToMap(entities: any): Map<string, any> {
+  if (entities instanceof Map) return entities;
+  if (Array.isArray(entities)) {
+    return new Map(entities.map(item => [item.id || item.key, item]));
+  }
+  if (typeof entities === 'object' && entities !== null) {
+    return new Map(Object.entries(entities));
+  }
+  return new Map();
 }
 
 /**
  * JsompPage: The Skeleton (V2)
  * Orchestrates the Runtime, Adapter, and Renderer with minimal logic.
  */
-export const JsompPage: React.FC<JsompPageProps> = ({entities}) => {
+export const JsompPage: React.FC<JsompPageProps> = ({
+  entities,
+  rootId,
+  components,
+  stylePresets,
+  onMounted,
+  scope
+}) => {
   const isFirstRun = useRef(true);
+  const runtimeRef = useRef<JsompRuntime | null>(null);
 
-  // 1. Instantiate Core (and Initial Feed)
+  // 1. Resolve JSOMP Service & Runtime
   const adapter = useMemo(() => {
+    // Create Runtime with Service-aware Compiler
     const runtime = new JsompRuntime();
+    runtimeRef.current = runtime;
+
     const center = new SignalCenter();
     runtime.use(center);
 
-    // Initial Sync Feed for SSR support
-    if (entities) {
-      const map = entities instanceof Map ? entities : new Map(Object.entries(entities));
-      runtime.feed(map);
+    // Initial Context Injection
+    runtime.updateContext({
+      components: components as any,
+      stylePresets
+    });
+
+    // Connectivity: If a scope (AtomRegistry) is provided, connect it as a fallback
+    if (scope) {
+      runtime.setRegistryFallback(scope);
     }
 
-    return new ReactAdapter(runtime, center);
-  }, []); // Stable adapter
+    const reactAdapter = new ReactAdapter(runtime, center);
 
-  // 2. Data Updates
+    // Initial Sync Feed for SSR support
+    if (entities) {
+      const map = normalizeToMap(entities);
+      reactAdapter.feed(map);
+    }
+
+    // Lifecycle: onMounted
+    if (onMounted) {
+      onMounted(scope || center as any);
+    }
+
+    return reactAdapter;
+  }, []); // Stable adapter for the lifecycle of this page instance
+
+  // 2. Continuous Data Updates (Incremental)
   useEffect(() => {
     if (isFirstRun.current) {
       isFirstRun.current = false;
@@ -62,13 +103,26 @@ export const JsompPage: React.FC<JsompPageProps> = ({entities}) => {
     }
 
     if (!entities) return;
-    const map = entities instanceof Map ? entities : new Map(Object.entries(entities));
+    const map = normalizeToMap(entities);
     adapter.feed(map);
   }, [entities, adapter]);
 
-  // 3. Connect to React
+  // 3. Update Pipeline Context when props change
+  useEffect(() => {
+    runtimeRef.current?.updateContext({
+      components: components as any,
+      stylePresets
+    });
+
+    // Update registry fallback if scope changes
+    if (scope) {
+      runtimeRef.current?.setRegistryFallback(scope);
+    }
+  }, [components, stylePresets, scope]);
+
+  // 4. Connect to React Store
   const descriptors = useJsompRuntime(adapter);
 
-  // 4. Render
-  return <ReactRenderer descriptors={descriptors} adapter={adapter} />;
+  // 5. Render
+  return <ReactRenderer descriptors={descriptors} adapter={adapter} rootId={rootId} components={components} />;
 };

@@ -1,7 +1,6 @@
-import {describe, it, expect, vi, beforeAll} from 'vitest';
-import {JsompRuntime} from '../../src/headless/JsompRuntime';
-import {SignalCenter} from '../../src/headless/SignalCenter';
-import {setupJsomp} from '../../src/setup';
+import {beforeAll, describe, expect, it} from 'vitest';
+import {JsompRuntime, SignalCenter} from '../../src/headless';
+import {setupJsomp} from '../../src';
 
 describe('Headless Core Benchmark & Extreme Cases', () => {
   let service: any;

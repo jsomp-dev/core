@@ -1,5 +1,5 @@
 import {describe, it, expect, beforeEach} from 'vitest';
-import {setupJsomp, BindingResolver, AtomRegistry, ObjectAdapter, ExternalStateRegistry} from '@jsomp/core';
+import {AtomRegistry, BindingResolver, ExternalStateRegistry, ObjectAdapter, setupJsomp} from "../../src";
 
 describe('BindingResolver (1.2)', () => {
   let registry: AtomRegistry;

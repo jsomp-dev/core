@@ -1,7 +1,11 @@
-import {IAtomRegistry, IJsompNode} from '../../types';
+import {IAtomRegistry, IJsompNode, IJsompCompiler, PipelineStage} from '../../types';
 import {PipelineRegistry} from './PipelineRegistry';
-import {ICompilerContext, IJsompPluginDef, PipelineStage} from './types';
+import {ICompilerContext, IJsompPluginDef} from './types';
 import {jsompEnv} from "../../JsompEnv";
+
+export interface CreateCompilerOptions extends CompilerOptions {
+  compilerConstructor?: new (options: CompilerOptions) => IJsompCompiler;
+}
 
 export interface CompilerOptions {
   pipeline?: PipelineRegistry;
@@ -23,7 +27,7 @@ export interface CompilerOptions {
  * JSOMP Compiler
  * Orchestrates the pipeline stages and runs registered plugins.
  */
-export class JsompCompiler {
+export class JsompCompiler implements IJsompCompiler {
   private localRegistry: PipelineRegistry;
   private nodes: Map<string, IJsompNode> = new Map();
 

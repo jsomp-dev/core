@@ -1,4 +1,5 @@
-import {ICompilerContext, IJsompPluginDef, PipelineStage} from '../types';
+import {PipelineStage} from '../../../types';
+import {ICompilerContext, IJsompPluginDef} from '../types';
 
 /**
  * Resolves physical paths and handles parent-child relationships,

@@ -19,8 +19,7 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
     jsompEnv.setService(new JsompService());
   }
 
-  const {PipelineRegistry} = await import('./impl/compiler/PipelineRegistry');
-  const {PipelineStage} = await import('./impl/compiler/types');
+  const {PipelineStage} = await import('./types');
 
   const pipeline = jsompEnv.service!.pipeline;
 

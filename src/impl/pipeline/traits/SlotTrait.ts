@@ -1,4 +1,4 @@
-import {IJsompNode, PipelineContext, TraitProcessor, VisualDescriptor} from "@/types";
+import {IJsompNode, PipelineContext, TraitProcessor, VisualDescriptor} from "../../../types";
 
 /**
  * Standard Slot Trait

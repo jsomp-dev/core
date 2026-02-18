@@ -1,4 +1,3 @@
-
 import {JsompLogger} from '../types';
 
 /**

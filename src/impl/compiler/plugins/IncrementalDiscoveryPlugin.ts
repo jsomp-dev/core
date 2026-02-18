@@ -1,4 +1,5 @@
-import {IJsompPluginDef, PipelineStage} from '../types';
+import {IJsompPluginDef} from '../types';
+import {PipelineStage} from "../../../types";
 
 /**
  * IncrementalDiscoveryPlugin

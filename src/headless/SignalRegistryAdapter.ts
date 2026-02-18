@@ -1,4 +1,3 @@
-
 import {IAtomRegistry, IAtomValue, IJsompAtom} from '../types';
 import {ISignalCenter} from './types';
 
@@ -9,6 +8,7 @@ import {ISignalCenter} from './types';
  */
 export class SignalRegistryAdapter implements IAtomRegistry {
   private _signalCenter: ISignalCenter | null = null;
+  private _externalFallback: IAtomRegistry | null = null;
   /**
    * Fallback values or temporary storage if SignalCenter is not connected.
    * Useful for unit testing or fallback scenarios.
@@ -28,35 +28,68 @@ export class SignalRegistryAdapter implements IAtomRegistry {
     this._signalCenter = signalCenter;
   }
 
+  /**
+   * Set an external fallback registry (e.g. from React Props)
+   */
+  public setExternalFallback(registry: IAtomRegistry | null): void {
+    this._externalFallback = registry;
+  }
+
   // --- IAtomRegistry Implementation ---
 
   public get(key: string): IJsompAtom | IAtomValue | undefined {
     // 1. Try SignalCenter (Primary)
     if (this._signalCenter) {
-      return this._signalCenter.get(key);
+      const val = this._signalCenter.get(key);
+      if (val !== undefined) return val;
     }
-    // 2. Fallback
+    // 2. Try External Fallback
+    if (this._externalFallback) {
+      const val = this._externalFallback.get(key);
+      if (val !== undefined) return val;
+    }
+    // 3. Persistent Fallback
     return this._fallbackMap.get(key);
   }
 
   public set(key: string, value: any): void {
-    // In Runtime context, 'set' usually means updating the SignalCenter
+    const existing = this.get(key);
+    let targetValue = value;
+
+    // Structure Preservation:
+    // If existing value is an object with a 'value' property (IAtomValue), 
+    // and we are setting a raw value, wrap it to maintain compatibility.
+    // This allows lab code like 'registry.get(key).value' to continue working after sync.
+    if (
+      existing &&
+      typeof existing === 'object' &&
+      'value' in existing &&
+      !(typeof value === 'object' && value !== null && 'value' in value)
+    ) {
+      targetValue = {...existing as any, value};
+    }
+
+    // Propagation:
+    // If there is an external fallback registry and it contains this key, 
+    // update it directly so the source of truth is consistent.
+    if (this._externalFallback && this._externalFallback.get(key) !== undefined) {
+      this._externalFallback.set(key, targetValue);
+      // Note: No need to manually update signalCenter here if the fallback is 
+      // already subscribed by JsompRuntime (which it is).
+      return;
+    }
+
+    // Standard Runtime Update
     if (this._signalCenter) {
-      this._signalCenter.onUpdate(key, value);
+      this._signalCenter.onUpdate(key, targetValue);
     } else {
-      this._fallbackMap.set(key, value);
+      this._fallbackMap.set(key, targetValue);
     }
   }
 
   public batchSet(updates: Record<string, any>): void {
-    if (this._signalCenter) {
-      for (const [key, value] of Object.entries(updates)) {
-        this._signalCenter.onUpdate(key, value);
-      }
-    } else {
-      for (const [key, value] of Object.entries(updates)) {
-        this._fallbackMap.set(key, value);
-      }
+    for (const [key, value] of Object.entries(updates)) {
+      this.set(key, value);
     }
   }
 

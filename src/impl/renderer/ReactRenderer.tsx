@@ -1,4 +1,4 @@
-import React, {Fragment, memo, useMemo, useLayoutEffect, useContext, createContext, ReactNode} from 'react';
+import React, {createContext, Fragment, memo, ReactNode, useContext, useLayoutEffect, useMemo} from 'react';
 import {VisualDescriptor} from '../../types';
 import {jsompEnv} from '../../JsompEnv';
 import {PerformanceMonitor} from './PerformanceMonitor';
@@ -10,33 +10,51 @@ import {ReactAdapter} from './ReactAdapter';
 const JsompNodesContext = createContext<Map<string, VisualDescriptor>>(new Map());
 
 /**
+ * Context for local component overrides
+ */
+const JsompComponentsContext = createContext<Record<string, any>>({});
+
+/**
  * JsompNodeItem
  * Zero-Logic Atomic Renderer.
- * Relies on React.memo + useMemo (inner) to ensure zero re-rendering for unchanged descriptors.
  */
 const JsompNodeItem = memo(({id}: {id: string}) => {
   const nodesMap = useContext(JsompNodesContext);
+  const localComponents = useContext(JsompComponentsContext);
   const descriptor = nodesMap.get(id);
 
   // Inner memoization to block re-render if descriptor reference is stable
-  // even if Context (nodesMap) identity changed.
   return useMemo(() => {
     if (!descriptor) return null;
 
     // 1. Resolve Component
     let Component: any = descriptor.componentType;
-    // Try registry if string
+
+    // Step 1: Try local overrides (Props)
     if (typeof descriptor.componentType === 'string') {
-      Component = jsompEnv.service?.componentRegistry.get(descriptor.componentType);
+      if (localComponents[descriptor.componentType]) {
+        Component = localComponents[descriptor.componentType];
+      } else {
+        // Step 2: Try global registry
+        const registered = jsompEnv.service?.componentRegistry.get(descriptor.componentType);
+        if (registered) {
+          Component = registered;
+        }
+      }
     }
 
     if (!Component) {
       if (typeof descriptor.componentType === 'string') {
-        // Fallback for primitive HTML tags if allowed or warn
-        // Assuming strict registry for now, or maybe generic div?
         console.warn(`[JsompRenderer] Component not found: ${descriptor.componentType}`);
         return null;
       }
+    }
+
+    // FINAL SAFETY: If Component is still a string and starts with Uppercase, but not in registry/local,
+    // React will warn about incorrect casing. We should probably only allow lowercase (native tags) or functions.
+    if (typeof Component === 'string' && /^[A-Z]/.test(Component)) {
+      console.error(`[JsompRenderer] Detected unresolved PascalCase component name: "${Component}". This will cause React warning. Skipping render.`);
+      return null;
     }
 
     // 2. Resolve Children/Slots
@@ -50,28 +68,41 @@ const JsompNodeItem = memo(({id}: {id: string}) => {
         if (name === 'children' || name === 'default') {
           children.push(...rendered);
         } else {
-          // Flatten if single? Or fragment
           slotProps[name] = <Fragment>{rendered}</Fragment>;
         }
       });
     }
 
     // 3. Render
+    // If children (nodes) is empty, we must fallback to props.children (e.g. text content)
+    // Otherwise, spreading props.children into Component while also passing undefined as child 
+    // will wipe out the text.
+    const finalChildren = children.length > 0 ? children : descriptor.props.children;
+
     return (
       <Component {...descriptor.props} {...slotProps} style={descriptor.styles}>
-        {children.length > 0 ? children : undefined}
+        {finalChildren}
       </Component>
     );
-  }, [descriptor]);
+  }, [descriptor, localComponents]);
 }, (prev, next) => prev.id === next.id);
 
 /**
  * Zero-Logic React Renderer
  */
-export const ReactRenderer = memo(({descriptors, adapter}: {descriptors: VisualDescriptor[], adapter: ReactAdapter}) => {
+export const ReactRenderer = memo(({
+  descriptors,
+  adapter,
+  rootId,
+  components = {}
+}: {
+  descriptors: VisualDescriptor[],
+  adapter: ReactAdapter,
+  rootId?: string,
+  components?: Record<string, any>
+}) => {
 
   // 1. Build lookup map (O(N))
-  // Descriptors array is stable from adapter if no changes.
   const nodesMap = useMemo(() => {
     return new Map(descriptors.map(d => [d.id, d]));
   }, [descriptors]);
@@ -79,20 +110,27 @@ export const ReactRenderer = memo(({descriptors, adapter}: {descriptors: VisualD
   // 2. Performance Monitoring
   useLayoutEffect(() => {
     const metrics = adapter.getMetrics();
-    // Assuming descriptors length roughly equals active nodes
     PerformanceMonitor.instance.report(
-      {metrics, version: -1 /* version available in adapter? */} as any,
+      {metrics, version: -1} as any,
       descriptors.length,
       performance.now()
     );
   });
 
-  // 3. Identify Roots (Nodes without parent)
-  const roots = useMemo(() => descriptors.filter(d => !d.parentId), [descriptors]);
+  // 3. Identify Roots
+  const roots = useMemo(() => {
+    if (rootId) {
+      const root = descriptors.find(d => d.id === rootId);
+      if (root) return [root];
+    }
+    return descriptors.filter(d => !d.parentId);
+  }, [descriptors, rootId]);
 
   return (
     <JsompNodesContext.Provider value={nodesMap}>
-      {roots.map(node => <JsompNodeItem key={node.id} id={node.id} />)}
+      <JsompComponentsContext.Provider value={components}>
+        {roots.map(node => <JsompNodeItem key={node.id} id={node.id} />)}
+      </JsompComponentsContext.Provider>
     </JsompNodesContext.Provider>
   );
 });

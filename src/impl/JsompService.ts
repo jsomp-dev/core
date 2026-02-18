@@ -1,20 +1,25 @@
 import {
-  IJsompService, IJsompNode, IAtomRegistry, IComponentRegistry, IStateDispatcherRegistry,
-  IJsompStream, StreamOptions, IJsompLayoutManager
+  IAtomRegistry,
+  IComponentRegistry,
+  IJsompAtom,
+  IJsompCompiler,
+  IJsompLayoutManager,
+  IJsompNode,
+  IJsompService,
+  IJsompStream,
+  IStateDispatcherRegistry, ITraitPipeline,
+  StreamOptions
 } from '../types';
 import {AtomRegistry} from './core/AtomRegistry';
 import {JsompStream} from './core/JsompStream';
-import {ComponentRegistry} from './provider/ComponentRegistry';
+import {ActionRegistry, ComponentRegistry} from './provider';
 import {ExternalStateRegistry, ObjectAdapter, StateDispatcherRegistry, ZustandAdapter} from './state';
-import {JsompCompiler, CompilerOptions} from './compiler/JsompCompiler';
+import {CreateCompilerOptions, JsompCompiler} from './compiler/JsompCompiler';
 import {PipelineRegistry} from './compiler/PipelineRegistry';
-import {JsompDecompiler} from './compiler/JsompDecompiler';
 import {SchemaRegistry} from './core/SchemaRegistry';
-import {ActionRegistry} from './provider/ActionRegistry';
 import {JsompLayoutManager} from './core/JsompLayoutManager';
 import {jsompEnv} from '../JsompEnv';
 import {JsompAtom} from './core/JsompAtom';
-import {IJsompAtom} from '../types';
 import {TraitPipeline} from './pipeline';
 
 /**
@@ -60,7 +65,7 @@ export class JsompService implements IJsompService {
   /**
    * Trait Pipeline
    */
-  public readonly traitPipeline: TraitPipeline;
+  public readonly traitPipeline: ITraitPipeline;
 
   constructor() {
     this.globalRegistry = new AtomRegistry();
@@ -110,11 +115,32 @@ export class JsompService implements IJsompService {
     });
   }
 
+  private _compiler?: IJsompCompiler;
+
   /**
-   * Create a new compiler instance with all registered plugins
+   * The primary compiler instance shared across the service.
    */
-  public createCompiler(options?: CompilerOptions): JsompCompiler {
-    return new JsompCompiler({
+  public get compiler(): IJsompCompiler {
+    if (!this._compiler) {
+      this._compiler = this.createCompiler();
+    }
+    return this._compiler;
+  }
+
+  /**
+   * Inject a custom compiler instance to be used as the primary compiler.
+   */
+  public setCompiler(compiler: IJsompCompiler) {
+    this._compiler = compiler;
+  }
+
+  /**
+   * Create a new compiler instance with all registered plugins (Advanced).
+   * Supports passing a custom compilerConstructor that implements IJsompCompiler.
+   */
+  public createCompiler(options?: CreateCompilerOptions): IJsompCompiler {
+    const CompilerClass = options?.compilerConstructor ?? JsompCompiler;
+    return new CompilerClass({
       pipeline: this.pipeline,
       actionRegistry: this.actions,
       ...options

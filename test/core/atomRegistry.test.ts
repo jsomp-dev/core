@@ -1,5 +1,5 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {AtomRegistry, setupJsomp} from '@jsomp/core';
+import {AtomRegistry, setupJsomp} from "../../src";
 
 // Mock IJsompAtom for testing
 class MockAtom {

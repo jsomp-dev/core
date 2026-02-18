@@ -1,7 +1,5 @@
-
-import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {TraitPipeline, styleTrait, contentTrait, slotTrait} from '../../src/impl/pipeline';
-import {PipelineContext, IJsompNode} from '../../src/types';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {contentTrait, IJsompNode, PipelineContext, slotTrait, styleTrait, TraitPipeline} from '../../src';
 
 describe('TraitPipeline & StandardTraits', () => {
   let pipeline: TraitPipeline;

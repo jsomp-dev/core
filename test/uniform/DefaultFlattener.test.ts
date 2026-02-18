@@ -1,6 +1,6 @@
-import {describe, it, expect, beforeEach} from 'vitest';
+import {beforeEach, describe, expect, it} from 'vitest';
 import {setupJsomp} from '@jsomp/core';
-import {DefaultFlattener} from '../../src/uniform/DefaultFlattener';
+import {DefaultFlattener} from '../../src/uniform';
 
 // Define a basic Node interface for clarity and type safety
 interface TestNode {

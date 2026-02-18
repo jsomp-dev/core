@@ -1,8 +1,10 @@
-import {IJsompNode, VisualDescriptor, PipelineContext} from '../types';
+import {IJsompNode, VisualDescriptor, PipelineContext, IAtomRegistry, IJsompCompiler} from '../types';
 import {JsompCompiler} from '../impl/compiler/JsompCompiler';
-import {TraitPipeline, styleTrait, contentTrait, slotTrait} from '../impl/pipeline';
+import {TraitPipeline, styleTrait, contentTrait, slotTrait, propsTrait, mustacheTrait} from '../impl/pipeline';
 import {IJsompRuntime, ISignalCenter, TopologySnapshot, PerformanceMetrics} from './types';
 import {SignalRegistryAdapter} from './SignalRegistryAdapter';
+import {BindingResolver} from '../impl/core/BindingResolver';
+import {jsompEnv} from '../JsompEnv';
 
 /**
  * JsompRuntime (Stateful Scheduler)
@@ -11,7 +13,7 @@ import {SignalRegistryAdapter} from './SignalRegistryAdapter';
 export class JsompRuntime implements IJsompRuntime {
   private _topologyMap = new Map<string, IJsompNode>();
   private _entities = new Map<string, any>();
-  private _compiler: JsompCompiler;
+  private _compiler: IJsompCompiler;
   // Reverse Index: Atom Key -> Set<NodeId>
   private _dependencyMap = new Map<string, Set<string>>();
 
@@ -26,11 +28,15 @@ export class JsompRuntime implements IJsompRuntime {
   private _dirtyIdsLastRun = new Set<string>();
 
   constructor(compiler?: JsompCompiler) {
-    // Inject or create a stateless Compiler
-    this._compiler = compiler || new JsompCompiler();
+    // Inject or use shared Service compiler
+    // Priority: Prop > Global Env
+    this._compiler = compiler || jsompEnv.service.compiler;
 
     // Initialize Pipeline
     this._pipeline = new TraitPipeline();
+    // propsTrait copies standard props as early base
+    this._pipeline.registerTrait(propsTrait, {priority: 100, name: 'props'});
+    this._pipeline.registerTrait(mustacheTrait, {priority: 80, name: 'mustache'});
     this._pipeline.registerTrait(styleTrait, {priority: 10, name: 'style'});
     this._pipeline.registerTrait(contentTrait, {priority: 20, name: 'content'});
     this._pipeline.registerTrait(slotTrait, {priority: 30, name: 'slot'});
@@ -40,14 +46,46 @@ export class JsompRuntime implements IJsompRuntime {
     this._pipelineContext = {
       registry: new SignalRegistryAdapter(),
       cache: new Map(),
-      dirtyIds: new Set()
+      dirtyIds: new Set(),
+      resolver: {
+        resolve: (content: string) => BindingResolver.resolve(content, this._pipelineContext.registry)
+      }
     };
   }
+
+  /**
+   * Update pipeline context with external providers (components, stylePresets)
+   */
+  public updateContext(context: Partial<PipelineContext>): void {
+    this._pipelineContext = {
+      ...this._pipelineContext,
+      ...context
+    };
+  }
+
+  /**
+   * Set an external AtomRegistry as a fallback for Mustache resolution.
+   * Also binds the registry to the runtime to trigger updates on change.
+   */
+  public setRegistryFallback(registry: IAtomRegistry | null): void {
+    if (this._pipelineContext.registry instanceof SignalRegistryAdapter) {
+      this._pipelineContext.registry.setExternalFallback(registry);
+    }
+
+    if (registry) {
+      registry.subscribeAll((key: string, value: any) => {
+        this._signalCenter?.onUpdate(key, value);
+      });
+    }
+  }
+
+  private _signalCenter?: ISignalCenter;
 
   /**
    * Bind a SignalCenter to achieve automated recompilation
    */
   public use(signalCenter: ISignalCenter): void {
+    this._signalCenter = signalCenter;
     signalCenter.subscribe((dirtyAtomIds) => {
       // Set to collect all affected NODE IDs
       const dirtyNodeIds = new Set<string>();
@@ -117,7 +155,7 @@ export class JsompRuntime implements IJsompRuntime {
   public reconcile(dirtyIds: string[]): void {
     if (dirtyIds.length === 0) return;
 
-    // t1: Start of reconciliation
+    // Start of reconciliation
     const tStart = performance.now();
 
     // 1. Prepare incremental context
@@ -128,7 +166,7 @@ export class JsompRuntime implements IJsompRuntime {
     // JsompCompiler.compile will update its internal this.nodes store
     this._compiler.compile(this._entities, {
       dirtyIds: dirtySet,
-      onDependency: (nodeId, atomKey) => {
+      onDependency: (nodeId: string, atomKey: string) => {
         let nodeSet = this._dependencyMap.get(atomKey);
         if (!nodeSet) {
           nodeSet = new Set();
@@ -154,7 +192,6 @@ export class JsompRuntime implements IJsompRuntime {
 
     // 4. Validate topology (Circular & Orphan checks)
     this.validateTopology();
-
 
     // 5. Run Visual Pipeline
     const tPipeStart = performance.now();

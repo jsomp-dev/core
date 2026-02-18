@@ -1,5 +1,6 @@
-import {IJsompPluginDef, PipelineStage} from '../types';
-import {BindingResolver} from '../../core/BindingResolver';
+import {IJsompPluginDef} from '../types';
+import {PipelineStage} from "../../../types";
+import {BindingResolver} from "../../core/BindingResolver";
 
 /**
  * Attribute Cache Plugin

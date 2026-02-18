@@ -1,6 +1,7 @@
-import {IJsompPluginDef, PipelineStage} from '../types';
+import {IJsompPluginDef} from '../types';
 import {BindingResolver} from '../../core/BindingResolver';
 import {jsompEnv} from '../../../JsompEnv';
+import {PipelineStage} from "../../../types";
 
 /**
  * AutoSyncPlugin

@@ -1,6 +1,5 @@
-import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {JsompStream} from '../../src/impl/core/JsompStream';
-import {IAtomRegistry} from '../../src/types';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {IAtomRegistry, JsompStream} from '../../src';
 
 describe('JsompStream', () => {
   let stream: JsompStream;

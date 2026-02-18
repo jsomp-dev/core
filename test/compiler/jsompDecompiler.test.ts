@@ -1,6 +1,5 @@
-import {describe, it, expect, beforeEach} from 'vitest';
-import {JsompDecompiler} from '../../src/impl/compiler/JsompDecompiler';
-import {setupJsomp} from '../../src/index';
+import {beforeEach, describe, expect, it} from 'vitest';
+import {JsompDecompiler, setupJsomp} from '../../src';
 
 describe('JsompDecompiler', () => {
   beforeEach(async () => {

@@ -1,5 +1,5 @@
-import {ICompilerContext, IJsompPluginDef, PipelineStage} from '../types';
-import {IJsompNode} from '../../../types';
+import {ICompilerContext, IJsompPluginDef} from '../types';
+import {IJsompNode, PipelineStage} from '../../../types';
 
 /**
  * Assembles the flat nodes into a tree structure and handles slot distribution.
@@ -36,26 +36,9 @@ export const treeAssemblyPlugin: IJsompPluginDef = {
 
           const realChildren: IJsompNode[] = [];
           anyNode.children.forEach((child: any) => {
-            if (child.slot) {
-              const slotName = child.slot;
-              // Clean up slot after use to keep the tree pure for the renderer
-              delete child.slot;
-
-              node.props = node.props || {};
-              const prev = node.props[slotName];
-
-              if (prev) {
-                if (Array.isArray(prev)) {
-                  prev.push(child);
-                } else {
-                  node.props[slotName] = [prev, child];
-                }
-              } else {
-                node.props[slotName] = child;
-              }
-            } else {
-              realChildren.push(child);
-            }
+            // In-place slot movement is disabled to prevent React rendering errors with logic node objects.
+            // SlotTrait will handle distributing these nodes via descriptor.slots.
+            realChildren.push(child);
           });
           anyNode.children = realChildren;
         }

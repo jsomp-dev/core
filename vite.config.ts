@@ -17,8 +17,6 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@jsomp/core': path.resolve(__dirname, './src/index.ts'),
       'react': path.resolve(__dirname, './node_modules/react'),
       'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
     },
@@ -28,7 +26,6 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['test/**/*.{test,spec}.{ts,tsx}'],
     alias: {
-      '@jsomp/core': path.resolve(__dirname, './src/index.ts'),
       'react': path.resolve(__dirname, './node_modules/react'),
       'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
     }

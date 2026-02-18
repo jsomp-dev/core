@@ -1,11 +1,10 @@
-
-import {IJsompNode, VisualDescriptor, PipelineContext, TraitProcessor, TraitOption} from '../../types';
+import {IJsompNode, ITraitPipeline, PipelineContext, TraitOption, TraitProcessor, VisualDescriptor} from '../../types';
 
 /**
  * JSOMP Trait Pipeline
  * Orchestrates the transformation of raw IJsompNode to VisualDescriptor using a sequence of traits.
  */
-export class TraitPipeline {
+export class TraitPipeline implements ITraitPipeline {
   private traits: Array<{processor: TraitProcessor; options: TraitOption}> = [];
 
   // Internal cache for VisualDescriptors: NodeID -> Descriptor

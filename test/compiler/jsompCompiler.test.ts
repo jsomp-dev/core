@@ -1,5 +1,5 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {JsompCompiler, PipelineStage, ICompilerContext, setupJsomp} from '@jsomp/core';
+import {ICompilerContext, JsompCompiler, PipelineStage, setupJsomp} from "../../src";
 
 describe('JsompCompiler', () => {
   let compiler: JsompCompiler;

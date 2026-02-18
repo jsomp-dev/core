@@ -15,15 +15,7 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@jsomp/core": [
-        "./src/index.ts"
-      ]
-    }
+    "baseUrl": "."
   },
   "include": [
     "src/**/*",

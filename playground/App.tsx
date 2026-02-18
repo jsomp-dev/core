@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
-import {setupJsomp, JsompPage, HtmlRegistry} from '@jsomp/core';
 import {LayoutTest} from './LayoutTest';
 import {SlotTest} from './SlotTest';
 import {AutoSyncTest} from './AutoSyncTest';
+import {HtmlRegistry, JsompPage, setupJsomp} from "../src";
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);

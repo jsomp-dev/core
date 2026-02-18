@@ -1,7 +1,7 @@
-import {ICompilerContext, IJsompPluginDef, PipelineStage} from '../types';
+import {ICompilerContext, IJsompPluginDef} from '../types';
 import {JsompAtom} from '../../core/JsompAtom';
 import {SchemaRegistry} from '../../core/SchemaRegistry';
-
+import {PipelineStage} from "../../../types";
 /**
  * Handles 'State' type entities and initializes them in the AtomRegistry.
  * Also supports implicit typed atoms based on SchemaRegistry matching.
