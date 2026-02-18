@@ -119,11 +119,8 @@ export default () => (
 
 > **Note**: While the example above uses React, JSOMP's core is framework-agnostic. You can easily plug in Vue, Svelte, or custom Canvas adapters.
 
-
----
-
 ### 2. 🛠️ Register Custom Components
-JSOMP is design-system agnostic. Register any React component (AntD, MUI, or your own) in seconds.
+JSOMP is design-system agnostic. Register any React component (shadcn-ui, ant-design, mui, or any other ui library) in seconds.
 
 ```tsx
 import { setupJsomp } from '@jsomp/core';
