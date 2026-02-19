@@ -13,12 +13,13 @@ describe('TraitPipeline & StandardTraits', () => {
 
     context = {
       registry: {
-        get: () => undefined,
-        set: () => { },
-        batchSet: () => { },
-        subscribe: () => () => { },
-        subscribeAll: () => () => { },
+        get: vi.fn(() => undefined),
+        set: vi.fn(),
+        batchSet: vi.fn(),
+        subscribe: vi.fn(() => () => { }),
+        subscribeAll: vi.fn(() => () => { }),
         version: vi.fn(), // Mock version
+        clear: vi.fn(),
       },
       actions: {
         register: () => { },
@@ -60,6 +61,27 @@ describe('TraitPipeline & StandardTraits', () => {
     expect(result.styles.fontSize).toBe(16);                 // Inline CSS
     // Content Trait
     expect(result.props.content).toBe('Resolved: Click Me');
+  });
+
+  it('should resolve bindings in style_tw and style_css', () => {
+    const node: IJsompNode = {
+      id: 'node2',
+      type: 'Text',
+      style_tw: ['{{padding}}'],
+      style_css: {color: '{{color}}'}
+    };
+
+    // Inject values into registry mock via context
+    (context.registry.get as any).mockImplementation((key: string) => {
+      if (key === 'padding') return {value: 'p-8'};
+      if (key === 'color') return {value: 'blue'};
+      return undefined;
+    });
+
+    const result = pipeline.processNode(node, context);
+
+    expect(result.props.className).toBe('p-8');
+    expect(result.styles.color).toBe('blue');
   });
 
   it('should activate DepthGuard when recursion limit exceeded', () => {
