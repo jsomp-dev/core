@@ -82,6 +82,10 @@ When building AI Agents, developers often struggle with UI generation:
 | 🧩 **Headless Core** | **Framework Agnostic**. The logic engine is decoupled from React. Adaptable to Vue, Canvas, or Native. |
 | 🔌 **Tree-Shakable** | **Plug & Play Architecture**. Replace native logic with your custom plugins. Unused native plugins are completely tree-shaken from your bundle. |
 | 🎨 **Design System Agnostic** | **Bring Your Own Components**. No enforced styling. |
+| 🚀 **Zero-VM Native** | **Run Anywhere**. Core can be ported to Swift/Kotlin/Rust. No heavy JS Bridge required on native devices. |
+| 🧠 **Logic as Data** | **Action Tags & Signals**. Define complex logic via JSON configuration. No fragile code generation required. |
+| 🏝️ **Island Architecture** | **Progressive Adoption**. Mounts inside existing React/Vue apps. Supports direct state adapters (Zustand/Redux). |
+| 💰 **Token Efficient** | **Reference-Based Updates**. AI sends tiny patches (`{id, props}`) instead of re-generating full components. |
 
 ### 📦 What's Included?
 
