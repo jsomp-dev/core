@@ -32,7 +32,7 @@
     <a href="#why-jsomp">🤔 Why JSOMP</a> •
     <a href="#features">✨ Features</a> •
     <a href="#perf">🚀 Performance</a> •
-    <a href="https://example.com/playground">🎮 Live Playground</a>
+    <a href="https://jsomp.dev">🗃️ Documentation</a>
   </p>
   <p>
     <a href="#roadmap">🗺️ Roadmap</a> •
