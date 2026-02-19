@@ -3,11 +3,14 @@ import {LayoutTest} from './LayoutTest';
 import {SlotTest} from './SlotTest';
 import {AutoSyncTest} from './AutoSyncTest';
 import {PerformanceTest} from './PerformanceTest';
-import {HtmlRegistry, JsompPage, setupJsomp} from "../src";
+import {StreamTest} from './StreamTest';
+import {HtmlRegistry, setupJsomp} from "../src";
+import {JsompPage} from "../src/renderer/react";
+
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'layout' | 'slot' | 'sync' | 'perf'>('basic');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream'>('basic');
   const [entities] = useState<any[]>([
     {
       id: 'app_root',
@@ -16,11 +19,10 @@ const App: React.FC = () => {
         padding: '2rem',
         maxWidth: '800px',
         margin: '0 auto',
-        background: 'rgba(255, 255, 255, 0.05)',
-        borderRadius: '1rem',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        background: '#09090b',
+        borderRadius: '0.5rem',
+        border: '1px solid #27272a',
+        boxShadow: 'none',
         maxHeight: '60vh',
         height: '60vh'
       }
@@ -30,13 +32,12 @@ const App: React.FC = () => {
       type: 'h1',
       parent: 'app_root',
       style_css: {
-        fontSize: '1.8rem',
+        fontSize: '1.5rem',
         marginBottom: '0.5rem',
-        background: 'linear-gradient(to right, #60a5fa, #a855f7)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        fontWeight: 'bold',
-        textAlign: 'center'
+        color: '#fafafa',
+        fontWeight: '600',
+        textAlign: 'center',
+        letterSpacing: '-0.025em'
       },
       props: {
         children: 'JSOMP Core Laboratory'
@@ -47,10 +48,10 @@ const App: React.FC = () => {
       type: 'p',
       parent: 'app_root',
       style_css: {
-        color: '#94a3b8',
-        fontSize: '1rem',
-        lineHeight: '1.4',
-        marginBottom: '1.5rem',
+        color: '#a1a1aa',
+        fontSize: '0.875rem',
+        lineHeight: '1.5',
+        marginBottom: '2rem',
         textAlign: 'center'
       },
       props: {
@@ -63,9 +64,9 @@ const App: React.FC = () => {
       parent: 'app_root',
       style_css: {
         padding: '1rem',
-        background: '#1e293b',
+        background: '#18181b',
         borderRadius: '0.5rem',
-        borderLeft: '4px solid #3b82f6',
+        border: '1px solid #27272a',
         marginBottom: '1.5rem'
       }
     },
@@ -89,13 +90,15 @@ const App: React.FC = () => {
       style_css: {
         display: 'block',
         margin: '0 auto',
-        padding: '0.6rem 1.2rem',
-        background: '#3b82f6',
-        color: 'white',
+        padding: '0.5rem 1rem',
+        background: '#fafafa',
+        color: '#09090b',
         border: 'none',
-        borderRadius: '0.5rem',
+        borderRadius: '0.25rem',
         cursor: 'pointer',
-        fontWeight: '600'
+        fontWeight: '500',
+        fontSize: '0.875rem',
+        transition: 'opacity 0.2s'
       },
       props: {
         children: 'Trigger Test Action',
@@ -148,8 +151,9 @@ const App: React.FC = () => {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        color: '#60a5fa',
-        background: '#0f172a'
+        color: '#fafafa',
+        background: '#09090b',
+        fontSize: '0.875rem'
       }}>
         Initializing...
       </div>
@@ -161,34 +165,37 @@ const App: React.FC = () => {
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      background: '#0f172a',
-      color: 'white',
-      padding: '1rem',
+      background: '#09090b',
+      color: '#fafafa',
+      padding: '1.5rem',
       boxSizing: 'border-box',
-      overflow: 'auto'
+      overflow: 'auto',
+      fontFamily: 'Inter, sans-serif'
     }}>
       {/* Navigation Switcher */}
       <nav style={{
         display: 'flex',
-        gap: '1rem',
+        gap: '0.25rem',
         marginBottom: '2rem',
         justifyContent: 'center',
-        padding: '0.5rem',
-        background: 'rgba(255,255,255,0.05)',
-        borderRadius: '0.75rem',
+        padding: '0.25rem',
+        background: '#18181b',
+        borderRadius: '0.5rem',
         width: 'fit-content',
-        margin: '0 auto 2rem'
+        margin: '0 auto 2rem',
+        border: '1px solid #27272a'
       }}>
         <button
           onClick={() => setCurrentTab('basic')}
           style={{
             padding: '0.4rem 1rem',
-            borderRadius: '0.5rem',
-            background: currentTab === 'basic' ? '#3b82f6' : 'transparent',
+            borderRadius: '0.25rem',
+            background: currentTab === 'basic' ? '#27272a' : 'transparent',
             border: 'none',
-            color: 'white',
+            color: currentTab === 'basic' ? '#fafafa' : '#a1a1aa',
             cursor: 'pointer',
-            fontWeight: 'bold',
+            fontWeight: '500',
+            fontSize: '0.875rem',
             transition: 'all 0.2s'
           }}
         >
@@ -198,12 +205,13 @@ const App: React.FC = () => {
           onClick={() => setCurrentTab('layout')}
           style={{
             padding: '0.4rem 1rem',
-            borderRadius: '0.5rem',
-            background: currentTab === 'layout' ? '#3b82f6' : 'transparent',
+            borderRadius: '0.25rem',
+            background: currentTab === 'layout' ? '#27272a' : 'transparent',
             border: 'none',
-            color: 'white',
+            color: currentTab === 'layout' ? '#fafafa' : '#a1a1aa',
             cursor: 'pointer',
-            fontWeight: 'bold',
+            fontWeight: '500',
+            fontSize: '0.875rem',
             transition: 'all 0.2s'
           }}
         >
@@ -213,12 +221,13 @@ const App: React.FC = () => {
           onClick={() => setCurrentTab('slot')}
           style={{
             padding: '0.4rem 1rem',
-            borderRadius: '0.5rem',
-            background: currentTab === 'slot' ? '#3b82f6' : 'transparent',
+            borderRadius: '0.25rem',
+            background: currentTab === 'slot' ? '#27272a' : 'transparent',
             border: 'none',
-            color: 'white',
+            color: currentTab === 'slot' ? '#fafafa' : '#a1a1aa',
             cursor: 'pointer',
-            fontWeight: 'bold',
+            fontWeight: '500',
+            fontSize: '0.875rem',
             transition: 'all 0.2s'
           }}
         >
@@ -228,12 +237,13 @@ const App: React.FC = () => {
           onClick={() => setCurrentTab('sync')}
           style={{
             padding: '0.4rem 1rem',
-            borderRadius: '0.5rem',
-            background: currentTab === 'sync' ? '#3b82f6' : 'transparent',
+            borderRadius: '0.25rem',
+            background: currentTab === 'sync' ? '#27272a' : 'transparent',
             border: 'none',
-            color: 'white',
+            color: currentTab === 'sync' ? '#fafafa' : '#a1a1aa',
             cursor: 'pointer',
-            fontWeight: 'bold',
+            fontWeight: '500',
+            fontSize: '0.875rem',
             transition: 'all 0.2s'
           }}
         >
@@ -243,16 +253,33 @@ const App: React.FC = () => {
           onClick={() => setCurrentTab('perf')}
           style={{
             padding: '0.4rem 1rem',
-            borderRadius: '0.5rem',
-            background: currentTab === 'perf' ? '#ec4899' : 'transparent',
+            borderRadius: '0.25rem',
+            background: currentTab === 'perf' ? '#27272a' : 'transparent',
             border: 'none',
-            color: 'white',
+            color: currentTab === 'perf' ? '#fafafa' : '#a1a1aa',
             cursor: 'pointer',
-            fontWeight: 'bold',
+            fontWeight: '500',
+            fontSize: '0.875rem',
             transition: 'all 0.2s'
           }}
         >
           Performance Lab
+        </button>
+        <button
+          onClick={() => setCurrentTab('stream')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.25rem',
+            background: currentTab === 'stream' ? '#27272a' : 'transparent',
+            border: 'none',
+            color: currentTab === 'stream' ? '#fafafa' : '#a1a1aa',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s'
+          }}
+        >
+          Stream Lab
         </button>
       </nav>
 
@@ -272,17 +299,18 @@ const App: React.FC = () => {
           <SlotTest />
         ) : currentTab === 'sync' ? (
           <AutoSyncTest />
-        ) : (
+        ) : currentTab === 'perf' ? (
           <PerformanceTest />
+        ) : (
+          <StreamTest />
         )}
       </main>
 
       <div style={{
         marginTop: '1.5rem',
         textAlign: 'center',
-        color: '#475569',
+        color: '#71717a',
         fontSize: '0.75rem',
-        opacity: 0.8,
         paddingBottom: '1rem'
       }}>
         Running on <strong>Vite</strong> Playground (Isolated)

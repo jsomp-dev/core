@@ -1,5 +1,6 @@
 import React, {useMemo, useState} from 'react';
-import {createLayoutManager, JsompPage} from "../src";
+import {createLayoutManager} from "../src";
+import {JsompPage} from "../src/renderer/react";
 
 // 1. Define a Mock Component that uses Slots
 const CustomCard: React.FC<{
@@ -10,26 +11,25 @@ const CustomCard: React.FC<{
 }> = ({title, header, children, footer}) => {
   return (
     <div style={{
-      background: '#1e293b',
-      borderRadius: '1rem',
+      background: '#18181b',
+      borderRadius: '0.5rem',
       overflow: 'hidden',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
+      border: '1px solid #27272a',
       width: '100%',
       maxWidth: '400px',
-      margin: '1rem auto',
-      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
+      margin: '1rem auto'
     }}>
       {header && (
-        <div style={{padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
+        <div style={{padding: '0.75rem 1rem', background: '#27272a33', borderBottom: '1px solid #27272a'}}>
           {header}
         </div>
       )}
       <div style={{padding: '1.5rem'}}>
-        <h3 style={{margin: '0 0 1rem 0', color: '#3b82f6'}}>{title}</h3>
+        <h3 style={{margin: '0 0 1rem 0', color: '#fafafa', fontSize: '1rem', fontWeight: '600'}}>{title}</h3>
         {children}
       </div>
       {footer && (
-        <div style={{padding: '0.75rem 1rem', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid rgba(255,255,255,0.1)'}}>
+        <div style={{padding: '0.75rem 1rem', background: '#00000022', borderTop: '1px solid #27272a'}}>
           {footer}
         </div>
       )}
@@ -55,7 +55,7 @@ export const SlotTest: React.FC = () => {
       type: 'h2',
       parent: 'app_root',
       props: {children: 'Slot Standardization Test'},
-      style_tw: ['text-2xl', 'font-bold', 'text-white', 'mb-4']
+      style_tw: ['text-xl', 'font-semibold', 'text-zinc-50', 'mb-6', 'tracking-tight']
     },
     // --- Card 1: Using NEW slot attribute ---
     {
@@ -69,15 +69,15 @@ export const SlotTest: React.FC = () => {
       type: 'span',
       parent: 'card_new',
       slot: 'header',
-      props: {children: '🔥 Header Slot (New)'},
-      style_css: {color: '#fbbf24', fontWeight: 'bold'}
+      props: {children: 'Header Slot (New)'},
+      style_css: {color: '#fafafa', fontWeight: 'bold', fontSize: '0.875rem'}
     },
     {
       id: 'content_new',
       type: 'p',
       parent: 'card_new',
       props: {children: 'This card uses the standard "slot" attribute.'},
-      style_css: {color: '#94a3b8'}
+      style_css: {color: '#a1a1aa', fontSize: '0.875rem'}
     },
     {
       id: 'footer_new',
@@ -86,11 +86,13 @@ export const SlotTest: React.FC = () => {
       slot: 'footer',
       props: {children: 'New Action'},
       style_css: {
-        background: '#3b82f6',
+        background: '#fafafa',
         border: 'none',
-        color: 'white',
+        color: '#09090b',
         padding: '0.4rem 0.8rem',
-        borderRadius: '0.4rem'
+        borderRadius: '0.25rem',
+        fontSize: '0.75rem',
+        fontWeight: '500'
       }
     }
   ]);
@@ -114,24 +116,24 @@ export const SlotTest: React.FC = () => {
 
       <section style={{
         padding: '1rem',
-        background: 'rgba(59, 130, 246, 0.1)',
+        background: '#18181b',
         borderRadius: '0.5rem',
-        border: '1px dashed #3b82f6',
-        color: '#93c5fd',
-        fontSize: '0.9rem'
+        border: '1px solid #27272a',
+        color: '#a1a1aa',
+        fontSize: '0.8125rem',
+        lineHeight: '1.5'
       }}>
-        <strong>Debug Info:</strong>
+        <strong style={{color: '#fafafa'}}>Debug Info:</strong>
         <p style={{marginTop: '0.5rem'}}>
-          JSOMP V2 uses the standard <code>slot</code> attribute for component distribution.
+          JSOMP uses the standard <code>slot</code> attribute for component distribution.
           Legacy path-based slot notation has been deprecated and removed.
         </p>
       </section>
 
-      {/* 2. Hierarchy Viewer for Verification */}
       <section>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-slate-400 text-xs font-bold uppercase">Topological Hierarchy (Verifying 'slot' export)</h3>
-          <label className="flex items-center gap-2 text-xs text-blue-400 cursor-pointer select-none">
+          <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-wider">Topological Hierarchy</h3>
+          <label className="flex items-center gap-2 text-[10px] text-zinc-400 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={includePath}
@@ -140,7 +142,7 @@ export const SlotTest: React.FC = () => {
             Include Path Property
           </label>
         </div>
-        <pre className="p-4 bg-slate-950 text-emerald-500 rounded-lg border border-slate-800 text-xs overflow-auto max-h-[400px]">
+        <pre className="p-4 bg-zinc-950 text-zinc-400 rounded-lg border border-zinc-800 text-[11px] leading-relaxed overflow-auto max-h-[400px]">
           {hierarchySnapshot}
         </pre>
       </section>

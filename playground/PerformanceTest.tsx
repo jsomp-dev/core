@@ -1,5 +1,6 @@
 import React, {useMemo, useState} from 'react';
-import {jsompEnv, JsompPage, PipelineStage} from "../src";
+import {jsompEnv, PipelineStage} from "../src";
+import {JsompPage} from "../src/renderer/react";
 
 export const PerformanceTest: React.FC = () => {
   const [count, setCount] = useState(0);
@@ -18,37 +19,39 @@ export const PerformanceTest: React.FC = () => {
       id: 'perf_root',
       type: 'div',
       style_css: {
-        padding: '2rem',
-        background: '#0f172a',
-        borderRadius: '1rem',
-        color: 'white',
-        border: '1px solid #1e293b'
+        padding: '2.5rem',
+        background: '#18181b',
+        borderRadius: '0.5rem',
+        color: '#fafafa',
+        border: '1px solid #27272a'
       }
     },
     {
       id: 'header',
       type: 'h2',
       parent: 'perf_root',
-      props: {children: '🚀 Performance & Jank Monitor Lab'}
+      style_css: {marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: '600', letterSpacing: '-0.025em'},
+      props: {children: 'Performance & Jank Monitor'}
     },
     {
       id: 'desc',
       type: 'p',
       parent: 'perf_root',
-      style_css: {color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem'},
+      style_css: {color: '#a1a1aa', fontSize: '0.8125rem', marginBottom: '1.5rem', lineHeight: '1.6'},
       props: {children: 'This lab verifies that our Jank detection still works for real data updates while ignoring pure React re-renders.'}
     },
     {
       id: 'stat_card',
       type: 'div',
       parent: 'perf_root',
-      style_tw: ['p-4', 'bg-slate-800', 'rounded-lg', 'border', 'border-slate-700', 'mb-6'],
+      style_tw: ['p-3', 'bg-zinc-950', 'rounded', 'border', 'border-zinc-800', 'mb-6'],
     },
     {
       id: 'stat_text',
       type: 'div',
       parent: 'stat_card',
-      props: {children: 'Status: {{status}} | Updates: {{taskCount}}'}
+      style_css: {fontSize: '0.75rem', color: '#a1a1aa', fontFamily: 'monospace'},
+      props: {children: 'STATUS: {{status}} | UPDATES: {{taskCount}}'}
     },
     {
       id: 'btn_group',
@@ -60,7 +63,7 @@ export const PerformanceTest: React.FC = () => {
       id: 'btn_normal',
       type: 'button',
       parent: 'btn_group',
-      style_tw: ['px-4', 'py-2', 'bg-emerald-600', 'rounded', 'text-sm'],
+      style_tw: ['px-4', 'py-1.5', 'bg-zinc-50', 'hover:bg-zinc-200', 'text-zinc-950', 'rounded', 'text-xs', 'font-medium', 'transition-colors'],
       props: {
         children: 'Normal Update (Fast)',
         onClick: () => {
@@ -77,7 +80,7 @@ export const PerformanceTest: React.FC = () => {
       id: 'btn_slow',
       type: 'button',
       parent: 'btn_group',
-      style_tw: ['px-4', 'py-2', 'bg-rose-600', 'rounded', 'text-sm'],
+      style_tw: ['px-4', 'py-1.5', 'bg-rose-600', 'hover:bg-rose-500', 'text-white', 'rounded', 'text-xs', 'font-medium', 'transition-colors'],
       props: {
         children: 'Trigger Jank (Slow)',
         onClick: () => {
@@ -115,23 +118,23 @@ export const PerformanceTest: React.FC = () => {
         <div style={{
           width: '240px',
           padding: '1.5rem',
-          background: '#1e293b',
-          borderRadius: '1rem',
-          border: '1px solid rgba(255,255,255,0.1)'
+          background: '#18181b',
+          borderRadius: '0.5rem',
+          border: '1px solid #27272a'
         }}>
-          <h4 style={{margin: '0 0 1rem 0', color: '#60a5fa', fontSize: '0.8rem', fontWeight: 'bold'}}>PURE REACT STATE</h4>
-          <p style={{fontSize: '0.75rem', color: '#94a3b8', marginBottom: '1rem'}}>
+          <h4 style={{margin: '0 0 1rem 0', color: '#71717a', fontSize: '0.625rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em'}}>PURE REACT STATE</h4>
+          <p style={{fontSize: '0.75rem', color: '#a1a1aa', marginBottom: '1rem', lineHeight: '1.5'}}>
             Clicking this button causes a React re-render BUT NO JSOMP version change.
           </p>
           <button
             onClick={() => setCount(c => c + 1)}
-            style={{width: '100%', padding: '0.5rem', background: '#334155', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer'}}
+            style={{width: '100%', padding: '0.5rem', background: '#27272a', border: 'none', borderRadius: '4px', color: '#fafafa', cursor: 'pointer', fontSize: '0.75rem'}}
           >
             React Render: {count}
           </button>
 
-          <div style={{marginTop: '1.5rem', fontSize: '0.7rem', color: '#10b981'}}>
-            <strong>Expectation:</strong> Silent in Console
+          <div style={{marginTop: '1.5rem', fontSize: '0.625rem', color: '#10b981', fontFamily: 'monospace'}}>
+            <strong>EXPECTATION:</strong> SILENT IN CONSOLE
           </div>
         </div>
       </div>

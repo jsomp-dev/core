@@ -1,5 +1,6 @@
 import React, {useMemo} from 'react';
-import {createLayoutManager, JsompPage} from '../src';
+import {createLayoutManager, } from '../src';
+import {JsompPage} from "../src/renderer/react";
 
 /**
  * Static layout definition with 'as const' for type safety
@@ -8,25 +9,25 @@ const TEST_LAYOUT = [
   {
     id: 'app_root',
     type: 'div',
-    style_tw: ['p-8', 'bg-slate-900', 'min-h-[200px]', 'rounded-xl', 'border', 'border-slate-800'],
+    style_tw: ['p-8', 'bg-zinc-950', 'min-h-[200px]', 'rounded-lg', 'border', 'border-zinc-800'],
   },
   {
     id: 'isolated_root',
     type: 'div',
-    style_tw: ['p-8', 'bg-slate-900', 'min-h-[400px]', 'rounded-xl', 'border', 'border-slate-800'],
+    style_tw: ['p-8', 'bg-zinc-950', 'min-h-[400px]', 'rounded-lg', 'border', 'border-zinc-800'],
   },
   {
     id: 'header',
     type: 'div',
     parent: 'app_root',
-    style_tw: ['mb-6', 'pb-4', 'border-b', 'border-slate-800'],
+    style_tw: ['mb-6', 'pb-4', 'border-b', 'border-zinc-800'],
   },
   {
     id: 'title',
     type: 'h2',
     parent: 'header',
     props: {children: 'Layout Path Management Test'},
-    style_tw: ['text-2xl', 'font-bold', 'text-blue-400'],
+    style_tw: ['text-xl', 'font-semibold', 'text-zinc-50', 'tracking-tight'],
   },
   {
     id: 'content',
@@ -38,20 +39,20 @@ const TEST_LAYOUT = [
     id: 'form',
     type: 'div',
     parent: 'content',
-    style_tw: ['p-4', 'bg-slate-800/50', 'rounded-lg'],
+    style_tw: ['p-4', 'bg-zinc-900', 'rounded-lg', 'border', 'border-zinc-800/50'],
   },
   {
     id: 'submit_btn',
     type: 'button',
     parent: 'form',
     props: {children: 'Submit'},
-    style_tw: ['px-4', 'py-2', 'bg-blue-600', 'hover:bg-blue-500', 'text-white', 'rounded'],
+    style_tw: ['px-4', 'py-1.5', 'bg-zinc-50', 'hover:bg-zinc-200', 'text-zinc-950', 'rounded', 'text-sm', 'font-medium', 'transition-colors'],
   },
   {
     id: 'footer',
     type: 'div',
     parent: 'app_root',
-    style_tw: ['mt-8', 'text-slate-500', 'text-sm'],
+    style_tw: ['mt-8', 'text-zinc-500', 'text-xs'],
     props: {children: 'Paths are automatically calculated below'}
   }
 ] as const;
@@ -71,42 +72,40 @@ export const LayoutTest: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-4xl">
-      {/* A. Live Render */}
       <section>
-        <h3 className="text-slate-400 text-xs font-bold uppercase mb-2">Live JSOMP Render</h3>
+        <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-wider mb-3">Live JSOMP Render</h3>
         <JsompPage entities={TEST_LAYOUT as any} rootId="app_root" />
       </section>
 
       {/* B. Path Resolution Verification */}
       <section className="grid grid-cols-2 gap-4">
-        <div className="p-4 bg-slate-950 rounded-lg border border-slate-800">
-          <h4 className="text-blue-400 font-bold mb-2">Type-Safe Paths Proxy</h4>
-          <div className="space-y-2 font-mono text-sm">
-            <div className="text-slate-300">
-              <span className="text-slate-500">Title:</span> {titlePath}
+        <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800">
+          <h4 className="text-zinc-50 font-semibold text-sm mb-3">Type-Safe Paths Proxy</h4>
+          <div className="space-y-2 font-mono text-xs">
+            <div className="text-zinc-300">
+              <span className="text-zinc-600">Title:</span> {titlePath}
             </div>
-            <div className="text-slate-300">
-              <span className="text-slate-500">Submit:</span> {subBtnPath}
+            <div className="text-zinc-300">
+              <span className="text-zinc-600">Submit:</span> {subBtnPath}
             </div>
           </div>
         </div>
 
-        <div className="p-4 bg-slate-950 rounded-lg border border-slate-800">
-          <h4 className="text-blue-400 font-bold mb-2">Internal Index (getNodes)</h4>
-          <div className="text-slate-300 font-mono text-sm">
+        <div className="p-4 bg-zinc-950 rounded-lg border border-zinc-800">
+          <h4 className="text-zinc-50 font-semibold text-sm mb-3">Internal Index (getNodes)</h4>
+          <div className="text-zinc-300 font-mono text-xs">
             {manager.getNodes('submit_btn').map(node => (
               <div key={node._fullPath}>
-                Resolved: <span className="text-green-400">{node._fullPath}</span>
+                Resolved: <span className="text-emerald-400 font-medium">{node._fullPath}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* C. Hierarchy Viewer (AI View) */}
       <section>
-        <h3 className="text-slate-400 text-xs font-bold uppercase mb-2">Topological Hierarchy (getHierarchy)</h3>
-        <pre className="p-4 bg-slate-950 text-emerald-500 rounded-lg border border-slate-800 text-xs overflow-auto max-h-[600px]">
+        <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-wider mb-3">Topological Hierarchy</h3>
+        <pre className="p-4 bg-zinc-950 text-zinc-400 rounded-lg border border-zinc-800 text-[11px] leading-relaxed overflow-auto max-h-[600px]">
           {hierarchySnapshot}
         </pre>
       </section>
