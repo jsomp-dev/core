@@ -1,4 +1,5 @@
 import {IJsompNode, PipelineContext, TraitProcessor, VisualDescriptor} from "../../../types";
+import {BindingResolver} from "../../../state";
 
 /**
  * Standard Style Trait
@@ -25,13 +26,18 @@ export const styleTrait: TraitProcessor = (
   }
 
   // 2. Handle Tailwind (style_tw)
-  if (node.style_tw && Array.isArray(node.style_tw)) {
-    classNames.push(...node.style_tw);
+  const rawTw = node.style_tw;
+  if (rawTw && Array.isArray(rawTw)) {
+    const resolvedTw = BindingResolver.resolve(rawTw, context.registry);
+    if (Array.isArray(resolvedTw)) {
+      classNames.push(...resolvedTw);
+    }
   }
 
   // 3. Handle Inline CSS (style_css)
   if (node.style_css) {
-    Object.assign(styles, node.style_css);
+    const resolvedStyles = BindingResolver.resolve(node.style_css, context.registry);
+    Object.assign(styles, resolvedStyles);
   }
 
   descriptor.styles = styles;
