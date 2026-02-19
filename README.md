@@ -23,7 +23,7 @@
   Right: Button pops up instantly
   Then user types "color": "red" in JSON -> Button turns red 
   -->
-  <img src="https://via.placeholder.com/800x400/0f172a/a855f7?text=JSOMP+Interactive+Runtime+Demo" alt="JSOMP Demo" width="800" />
+  <img src="./assets/banner/jsomp-banner.png" alt="JSOMP Banner" width="1280" />
 
   <br><br>
 
@@ -82,9 +82,8 @@ When building AI Agents, developers often struggle with UI generation:
 | 🧩 **Headless Core** | **Framework Agnostic**. The logic engine is decoupled from React. Adaptable to Vue, Canvas, or Native. |
 | 🔌 **Tree-Shakable** | **Plug & Play Architecture**. Replace native logic with your custom plugins. Unused native plugins are completely tree-shaken from your bundle. |
 | 🎨 **Design System Agnostic** | **Bring Your Own Components**. No enforced styling. |
-| 🚀 **Zero-VM Native** | **Run Anywhere**. Core can be ported to Swift/Kotlin/Rust. No heavy JS Bridge required on native devices. |
 | 🧠 **Logic as Data** | **Action Tags & Signals**. Define complex logic via JSON configuration. No fragile code generation required. |
-| 🏝️ **Island Architecture** | **Progressive Adoption**. Mounts inside existing React/Vue apps. Supports direct state adapters (Zustand/Redux). |
+| 🏝️ **Island Architecture** | **Progressive Adoption**. Mounts inside existing apps. Supports direct state adapters. |
 | 💰 **Token Efficient** | **Reference-Based Updates**. AI sends tiny patches (`{id, props}`) instead of re-generating full components. |
 
 ### 📦 What's Included?
@@ -205,7 +204,7 @@ No need to write CSS. Use the `style_tw` array for full Tailwind V4 support with
 
 ## 🧠 Architecture
 
-JSOMP separates the **Logic Tree** (JsompRuntime) from the **Render Tree** (React/Vue).
+JSOMP separates the **Logic Tree** (JsompRuntime) from the **Render Tree** (Modern UI Framework).
 
 ```mermaid
 graph TD
@@ -293,7 +292,7 @@ The JSOMP engine is built for extreme efficiency, offloading heavy logic from th
 
 ### Q: Do I need to rewrite my entire app?
 **A:** **No.** JSOMP follows the **"Progressive Adoption"** philosophy.
--   **Island Architecture**: Keep your App Shell in Next.js/Vue. Just mount `<JsompView />` where you need AI-driven dynamic content.
+-   **Island Architecture**: Keep your App Shell. Just mount `<JsompView />` where you need AI-driven dynamic content.
 -   **State Integration**: We provide direct adapters for **Zustand, Redux, Jotai, or Signals** (and more are coming soon). Your AI components can read/write to your existing app state seamlessly.
 
 ### Q: What do you mean by "Native Engine"?
