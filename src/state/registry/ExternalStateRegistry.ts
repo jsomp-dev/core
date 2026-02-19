@@ -102,4 +102,12 @@ export class ExternalStateRegistry implements IAtomRegistry {
     // we return a no-op to maintain interface compatibility.
     return () => { };
   }
+
+  /**
+   * Clear local cache. 
+   * Note: This does not clear the external store itself.
+   */
+  clear(): void {
+    this.cache.clear();
+  }
 }

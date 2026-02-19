@@ -145,4 +145,15 @@ export class StateDispatcherRegistry implements IStateDispatcherRegistry {
 
     return () => unsubs.forEach(unsub => unsub());
   }
+
+  /**
+   * Clear all mounted registries and the default registry.
+   */
+  clear(): void {
+    this.namespaces.forEach(reg => reg.clear());
+    this.namespaces.clear();
+    this.ambients.forEach(reg => reg.clear());
+    this.ambients.length = 0;
+    this.defaultRegistry.clear();
+  }
 }

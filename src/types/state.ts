@@ -40,6 +40,10 @@ export interface IAtomRegistry {
   // --- Dispatcher Extensions ---
   mount?(namespace: string, registry: IAtomRegistry): void;
   use?(registry: IAtomRegistry): void;
+  /**
+   * Clear all entries and listeners in the registry.
+   */
+  clear(): void;
 }
 
 /**

@@ -91,6 +91,10 @@ export interface IJsompService {
    * Internal implementation should use WeakMap for caching.
    */
   getLayout(entities: IJsompNode[]): IJsompLayoutManager;
+  /**
+   * Reset the service state, clearing the global registry and other caches.
+   */
+  reset(): void;
 }
 
 /**

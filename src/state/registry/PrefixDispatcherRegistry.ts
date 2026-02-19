@@ -68,4 +68,13 @@ export class PrefixDispatcherRegistry implements IAtomRegistry {
     }
     return () => unsubs.forEach(unsub => unsub());
   }
+
+  /**
+   * Clear all managed registries and the default registry.
+   */
+  clear(): void {
+    this.registries.forEach(reg => reg.clear());
+    this.registries.clear();
+    this.defaultRegistry.clear();
+  }
 }

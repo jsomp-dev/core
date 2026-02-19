@@ -102,4 +102,20 @@ export class AtomRegistry implements IAtomRegistry {
   private notifyGlobal(key: string, value: any) {
     this.globalListeners.forEach(cb => cb(key, value));
   }
+
+  /**
+   * Clear all atoms and local listeners.
+   */
+  clear() {
+    // 1. Unsubscribe from all internal atom listeners
+    this.atomUnsubs.forEach(unsub => unsub());
+    this.atomUnsubs.clear();
+
+    // 2. Clear local data
+    this.atoms.clear();
+    this.listeners.clear();
+
+    // 3. Notify global listeners of a complete reset
+    this.notifyGlobal('*', undefined);
+  }
 }

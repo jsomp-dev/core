@@ -162,4 +162,13 @@ export class JsompService implements IJsompService {
     this._layoutMap.set(entities, manager);
     return manager;
   }
+
+  /**
+   * Reset the service state.
+   */
+  public reset(): void {
+    this.globalRegistry.clear();
+    this._compiler = undefined;
+    // We don't clear registries like componentRegistry as they are usually static definitions.
+  }
 }
