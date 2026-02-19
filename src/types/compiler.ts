@@ -185,8 +185,8 @@ export interface PipelineContext {
   /** Current recursion depth (for DepthGuard) */
   depth?: number;
 
-  /** Style presets map (name -> classNames) */
-  stylePresets?: Record<string, string[]>;
+  /** Style presets map (name -> classNames or config) */
+  stylePresets?: Record<string, string | string[] | {tw?: string[], css?: Record<string, string | number>}>;
 }
 
 /**

@@ -91,8 +91,8 @@ export interface IJsompRenderContext {
    * Component registration center
    */
   componentRegistry?: IComponentRegistry;
-  /** Premade style mapping table (mapping semantic names to class name arrays) */
-  stylePresets?: Record<string, string[]>;
+  /** Premade style mapping table (mapping semantic names to class names or config) */
+  stylePresets?: Record<string, string | string[] | {tw?: string[], css?: Record<string, string | number>}>;
   /** Path prefix (automatically maintained during recursion) */
   pathStack?: string[];
   /** 

@@ -111,4 +111,47 @@ describe('StyleTrait', () => {
     expect(descriptor.props.className).toBeUndefined();
     expect(Object.keys(descriptor.styles).length).toBe(0);
   });
+
+  it('should support combined (recursive) prefabs', () => {
+    context.stylePresets = {
+      'base': ['rounded', 'p-4'],
+      'primary-btn': ['base', 'bg-blue-500', '{{isLarge}}']
+    };
+
+    const node: IJsompNode = {
+      id: 'n1',
+      type: 'button',
+      style_presets: ['primary-btn']
+    };
+
+    styleTrait(node, descriptor, context);
+
+    expect(descriptor.props.className).toContain('rounded');
+    expect(descriptor.props.className).toContain('p-4');
+    expect(descriptor.props.className).toContain('bg-blue-500');
+    expect(descriptor.props.className).toContain('text-lg'); // from {{isLarge}}
+  });
+
+  it('should support object-based prefabs with tw and css', () => {
+    context.stylePresets = {
+      'fancy-btn': {
+        tw: ['rounded', 'p-4', '{{isLarge}}'],
+        css: {transition: 'transform 0.2s', color: '{{primaryColor}}'}
+      }
+    };
+
+    const node: IJsompNode = {
+      id: 'n1',
+      type: 'button',
+      style_presets: ['fancy-btn']
+    };
+
+    styleTrait(node, descriptor, context);
+
+    expect(descriptor.props.className).toContain('rounded');
+    expect(descriptor.props.className).toContain('p-4');
+    expect(descriptor.props.className).toContain('text-lg');
+    expect(descriptor.styles.transition).toBe('transform 0.2s');
+    expect(descriptor.styles.color).toBe('red');
+  });
 });
