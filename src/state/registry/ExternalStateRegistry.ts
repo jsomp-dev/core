@@ -92,7 +92,7 @@ export class ExternalStateRegistry implements IAtomRegistry {
 
   /**
    * Subscribe to all changes in the external store.
-   * This is crucial for dynamic node discovery in JsompPage.
+   * This is crucial for dynamic node discovery in JsompView.
    */
   subscribeAll(callback: (key: string, value: any) => void): () => void {
     if (this.adapter.subscribeAll) {

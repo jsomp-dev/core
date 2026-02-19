@@ -5,7 +5,7 @@ import {AutoSyncTest} from './AutoSyncTest';
 import {PerformanceTest} from './PerformanceTest';
 import {StreamTest} from './StreamTest';
 import {HtmlRegistry, setupJsomp} from "../src";
-import {JsompPage} from "../src/renderer/react";
+import {JsompView} from "../src/renderer/react";
 
 
 const App: React.FC = () => {
@@ -292,7 +292,7 @@ const App: React.FC = () => {
         justifyContent: (currentTab === 'basic' || currentTab === 'perf') ? 'center' : 'flex-start'
       }}>
         {currentTab === 'basic' ? (
-          <JsompPage entities={entities} rootId='app_root' />
+          <JsompView entities={entities} rootId='app_root' />
         ) : currentTab === 'layout' ? (
           <LayoutTest />
         ) : currentTab === 'slot' ? (

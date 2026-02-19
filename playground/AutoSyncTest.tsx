@@ -1,6 +1,6 @@
 import React, {useMemo, useState} from 'react';
 import {jsompEnv} from "../src";
-import {JsompPage} from "../src/renderer/react";
+import {JsompView} from "../src/renderer/react";
 
 export const AutoSyncTest: React.FC = () => {
   // 1. Prepare local state registry for this test
@@ -164,7 +164,7 @@ export const AutoSyncTest: React.FC = () => {
   return (
     <div style={{padding: '20px', display: 'flex', gap: '2rem', justifyContent: 'center', width: '100%', maxWidth: '900px'}}>
       <div style={{flex: 1, maxWidth: '500px'}}>
-        <JsompPage
+        <JsompView
           entities={entities}
           rootId="sync_root"
           scope={registry}

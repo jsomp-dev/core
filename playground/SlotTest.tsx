@@ -1,6 +1,6 @@
 import React, {useMemo, useState} from 'react';
 import {createLayoutManager} from "../src";
-import {JsompPage} from "../src/renderer/react";
+import {JsompView} from "../src/renderer/react";
 
 // 1. Define a Mock Component that uses Slots
 const CustomCard: React.FC<{
@@ -105,7 +105,7 @@ export const SlotTest: React.FC = () => {
   return (
     <div style={{width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '2rem'}}>
       <section>
-        <JsompPage
+        <JsompView
           entities={entities}
           rootId='app_root'
           components={{

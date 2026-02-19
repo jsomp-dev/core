@@ -1,6 +1,6 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {JsompStream} from "../src";
-import {JsompPage} from "../src/renderer/react";
+import {JsompView} from "../src/renderer/react";
 
 type StreamMode = 'char' | 'chunk';
 
@@ -78,7 +78,7 @@ export const StreamTest: React.FC = () => {
     setIsStreaming(true);
     setLogs([{type: 'info', content: `Pipeline Resetting...`}]);
     setRawText('');
-    setTestKey(prev => prev + 1); // FORCE Remount JsompPage to clear child states
+    setTestKey(prev => prev + 1); // FORCE Remount JsompView to clear child states
 
     setLogs(prev => [...prev, {type: 'info', content: `Pipeline Initialized (Mode: ${streamMode.toUpperCase()})`}]);
 
@@ -289,7 +289,7 @@ export const StreamTest: React.FC = () => {
             minHeight: '600px',
             boxShadow: 'inset 0 0 100px rgba(0,0,0,0.5)'
           }}>
-            <JsompPage key={testKey} entities={entities} rootId="stream_root" />
+            <JsompView key={testKey} entities={entities} rootId="stream_root" />
             {!isStreaming && logs.length === 0 && (
               <div style={{
                 position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',

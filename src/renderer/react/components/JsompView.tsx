@@ -2,13 +2,13 @@ import React, {useEffect, useMemo, useRef} from 'react';
 import {JsompRuntime, SignalCenter} from '../../../engine';
 import {ReactAdapter} from '../ReactAdapter';
 import {ReactRenderer} from '../ReactRenderer';
-import {useJsompRuntime} from '../hooks/useJsompRuntime';
+import {useJsompRuntime} from '../hooks';
 import {IAtomRegistry} from '../../../types';
 
 /**
- * JsompPage Props Definition
+ * JsompView Props Definition
  */
-export interface JsompPageProps {
+export interface JsompViewProps {
   /** Entity Map (usually from data reconciliation) */
   entities: Map<string, any> | Record<string, any> | any[];
 
@@ -43,10 +43,10 @@ function normalizeToMap(entities: any): Map<string, any> {
 }
 
 /**
- * JsompPage: The Skeleton (V2)
+ * JsompView: The Skeleton
  * Orchestrates the Runtime, Adapter, and Renderer with minimal logic.
  */
-export const JsompPage: React.FC<JsompPageProps> = ({
+export const JsompView: React.FC<JsompViewProps> = ({
   entities,
   rootId,
   components,

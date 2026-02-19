@@ -1,6 +1,6 @@
 import React, {useMemo, useState} from 'react';
 import {jsompEnv, PipelineStage} from "../src";
-import {JsompPage} from "../src/renderer/react";
+import {JsompView} from "../src/renderer/react";
 
 export const PerformanceTest: React.FC = () => {
   const [count, setCount] = useState(0);
@@ -107,7 +107,7 @@ export const PerformanceTest: React.FC = () => {
       <div style={{display: 'flex', gap: '2rem', alignItems: 'start'}}>
         {/* Left: JSOMP Rendered Section */}
         <div style={{flex: 1}}>
-          <JsompPage
+          <JsompView
             entities={entities}
             rootId="perf_root"
             scope={registry}

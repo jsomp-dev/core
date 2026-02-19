@@ -1,1 +1,1 @@
-export * from './JsompPage'
+export * from './JsompView'

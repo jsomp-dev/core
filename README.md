@@ -108,7 +108,7 @@ npm install @jsomp/core
 
 ```tsx
 import { setupJsomp } from '@jsomp/core';
-import { JsompPage } from '@jsomp/core/react';
+import { JsompView } from '@jsomp/core/react';
 
 // 1. Initialize (Once)
 setupJsomp();
@@ -122,7 +122,7 @@ const uiDefinition = [
 
 // 3. Render (Example using React Adapter)
 export default () => (
-  <JsompPage 
+  <JsompView 
     entities={uiDefinition} 
     rootId="card" 
   />
@@ -158,7 +158,7 @@ JSOMP provides a built-in `JsompStream` with real-time JSON repair. It handles m
 
 ```tsx
 import { JsompStream } from '@jsomp/core';
-import { JsompPage } from '@jsomp/core/react';
+import { JsompView } from '@jsomp/core/react';
 
 // 1. Initialize Stream with Auto-Repair
 const [entities, setEntities] = useState(new Map());
@@ -182,7 +182,7 @@ async function handleAiStream(response) {
   }
 }
 
-return <JsompPage entities={entities} />;
+return <JsompView entities={entities} />;
 ```
 
 ### 4. 🎨 Native Tailwind CSS
@@ -293,7 +293,7 @@ The JSOMP engine is built for extreme efficiency, offloading heavy logic from th
 
 ### Q: Do I need to rewrite my entire app?
 **A:** **No.** JSOMP follows the **"Progressive Adoption"** philosophy.
--   **Island Architecture**: Keep your App Shell in Next.js/Vue. Just mount `<JsompPage />` where you need AI-driven dynamic content.
+-   **Island Architecture**: Keep your App Shell in Next.js/Vue. Just mount `<JsompView />` where you need AI-driven dynamic content.
 -   **State Integration**: We provide direct adapters for **Zustand, Redux, Jotai, or Signals** (and more are coming soon). Your AI components can read/write to your existing app state seamlessly.
 
 ### Q: What do you mean by "Native Engine"?
