@@ -81,11 +81,9 @@
   "sideEffects": false,
   "dependencies": {
     "zod": "^4.3.6"
-  }
-  {
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/jsomp-dev/core.git"
   }
-}
 }
