@@ -1,35 +1,34 @@
 {
   "name": "@jsomp/core",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "JSOMP Core Runtime Container - A stateless, tree-shakable, and injectable JSON-to-Component engine.",
   "type": "module",
-  "main": "./dist/index.cjs",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "source": "./src/index.ts",
   "scripts": {
-    "dev": "tsup src/index.ts src/renderer/react/index.ts --format cjs,esm --watch --dts --splitting",
+    "dev": "tsup src/index.ts src/renderer/react/index.ts src/engine/compiler/plugins/*.ts --format esm --watch --dts --external zod --external react --external react-dom --splitting",
     "dev:ui": "vite",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "build": "tsup src/index.ts src/renderer/react/index.ts --format cjs,esm --clean --dts --splitting",
-    "lint": "tsc --noEmit"
+    "build": "tsup src/index.ts src/renderer/react/index.ts src/engine/compiler/plugins/*.ts --format esm --clean --dts --minify --external zod --external react --external react-dom --splitting",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "exports": {
     ".": {
-      "development": "./src/index.ts",
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     },
     "./react": {
-      "development": "./src/renderer/react/index.ts",
       "types": "./dist/renderer/react/index.d.ts",
-      "import": "./dist/renderer/react/index.js",
-      "require": "./dist/renderer/react/index.cjs"
+      "import": "./dist/renderer/react/index.js"
     },
     "./plugins": {
-      "development": "./src/engine/compiler/plugins/index.ts",
       "types": "./dist/engine/compiler/plugins/index.d.ts",
       "import": "./dist/engine/compiler/plugins/index.js"
     }
@@ -47,9 +46,19 @@
   ],
   "author": "WiseTheWizard",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsomp-dev/core.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jsomp-dev/core/issues"
+  },
+  "homepage": "https://github.com/jsomp-dev/core#readme",
   "peerDependencies": {
     "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react-dom": ">=18.0.0",
+    "tailwindcss": ">=3.0.0",
+    "zod": ">=3.0.0"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -57,9 +66,18 @@
     },
     "react-dom": {
       "optional": true
+    },
+    "tailwindcss": {
+      "optional": true
+    },
+    "zod": {
+      "optional": false
     }
   },
   "devDependencies": {
+    "@size-limit/preset-app": "^12.0.0",
+    "@size-limit/preset-big-lib": "^12.0.0",
+    "@size-limit/preset-small-lib": "^12.0.0",
     "@tailwindcss/vite": "^4.1.18",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -72,14 +90,26 @@
     "jsdom": "^28.1.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "size-limit": "^12.0.0",
     "tailwindcss": "^4.1.18",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
     "vite": "^7.3.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "zod": "^3.24.2"
   },
-  "sideEffects": false,
-  "dependencies": {
-    "zod": "^4.3.6"
-  }
+  "sideEffects": [
+    "./dist/**/*.js",
+    "*.css"
+  ],
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "15 kB"
+    },
+    {
+      "path": "dist/renderer/react/index.js",
+      "limit": "15 kB"
+    }
+  ]
 }

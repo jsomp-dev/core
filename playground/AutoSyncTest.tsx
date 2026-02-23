@@ -1,6 +1,6 @@
 import React, {useMemo, useState} from 'react';
-import {jsompEnv} from "../src";
-import {JsompView} from "../src/renderer/react";
+import {jsompEnv} from "@jsomp/core";
+import {JsompView} from "@jsomp/core/react";
 
 export const AutoSyncTest: React.FC = () => {
   // 1. Prepare local state registry for this test

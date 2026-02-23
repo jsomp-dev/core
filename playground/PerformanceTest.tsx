@@ -1,6 +1,6 @@
 import React, {useMemo, useState} from 'react';
-import {jsompEnv, PipelineStage} from "../src";
-import {JsompView} from "../src/renderer/react";
+import {jsompEnv, PipelineStage} from "@jsomp/core";
+import {JsompView} from "@jsomp/core/react";
 
 export const PerformanceTest: React.FC = () => {
   const [count, setCount] = useState(0);

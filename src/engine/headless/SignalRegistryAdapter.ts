@@ -113,4 +113,14 @@ export class SignalRegistryAdapter implements IAtomRegistry {
     }
     return 0;
   }
+
+  /**
+   * Clear all entries and listeners in the registry.
+   */
+  public clear(): void {
+    this._fallbackMap.clear();
+    if (this._externalFallback) {
+      this._externalFallback.clear();
+    }
+  }
 }

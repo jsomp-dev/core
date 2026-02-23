@@ -1,6 +1,6 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {JsompStream} from "../src";
-import {JsompView} from "../src/renderer/react";
+import {JsompStream} from "@jsomp/core";
+import {JsompView} from "@jsomp/core/react";
 
 type StreamMode = 'char' | 'chunk';
 

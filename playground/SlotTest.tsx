@@ -1,6 +1,6 @@
 import React, {useMemo, useState} from 'react';
-import {createLayoutManager} from "../src";
-import {JsompView} from "../src/renderer/react";
+import {createLayoutManager} from "@jsomp/core";
+import {JsompView} from "@jsomp/core/react";
 
 // 1. Define a Mock Component that uses Slots
 const CustomCard: React.FC<{

@@ -1,6 +1,6 @@
 import React, {useMemo} from 'react';
-import {createLayoutManager, } from '../src';
-import {JsompView} from "../src/renderer/react";
+import {createLayoutManager, } from '@jsomp/core';
+import {JsompView} from "@jsomp/core/react";
 
 /**
  * Static layout definition with 'as const' for type safety

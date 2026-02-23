@@ -4,8 +4,8 @@ import {SlotTest} from './SlotTest';
 import {AutoSyncTest} from './AutoSyncTest';
 import {PerformanceTest} from './PerformanceTest';
 import {StreamTest} from './StreamTest';
-import {HtmlRegistry, setupJsomp} from "../src";
-import {JsompView} from "../src/renderer/react";
+import {HtmlRegistry, setupJsomp} from "@jsomp/core";
+import {JsompView} from "@jsomp/core/react";
 
 
 const App: React.FC = () => {
