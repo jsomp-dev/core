@@ -47,46 +47,46 @@
 
 <br>
 
-## <a name="why-jsomp"></a>🤔 The Problem: UI for AI Agents
+## <a name="why-jsomp"></a>The Problem: UI for AI Agents
 
 When building AI Agents, developers often struggle with UI generation:
 
-[⚠️] **Generating React/Vue Code is Bad**:
-- 🐌 **Slow**: Generating JSX tokens is expensive and slow.
-- ⛔ **Unsafe**: Requires `eval()` or dangerous runtime compilation.
-- 🧨 **Fragile**: One missing brace breaks the entire UI.
-- 🌪️ **State Hell**: Hard to update a single button without re-generating the whole component.
+**Generating React/Vue Code is Bad**:
+- **Slow**: Generating JSX tokens is expensive and slow.
+- **Unsafe**: Requires `eval()` or dangerous runtime compilation.
+- **Fragile**: One missing brace breaks the entire UI.
+- **State Hell**: Hard to update a single button without re-generating the whole component.
 
-[🫠] **Deeply Nested JSON is Fragile**:
-- 💸 **Token Waste**: Deep indentation and endless closing brackets (`}}}}`) drain your budget.
-- 🏗️ **Structure Collapse**: LLMs often lose track of hierarchy in deep trees, leading to syntax errors.
-- 💤 **Latency**: Cannot render the UI incrementally until the entire nested structure is fully closed.
-- 🌫️ **Recall Loss**: Key attributes buried in deep structures are harder for LLMs to maintain consistently.
+**Deeply Nested JSON is Fragile**:
+- **Token Waste**: Deep indentation and endless closing brackets (`}}}}`) drain your budget.
+- **Structure Collapse**: LLMs often lose track of hierarchy in deep trees, leading to syntax errors.
+- **Latency**: Cannot render the UI incrementally until the entire nested structure is fully closed.
+- **Recall Loss**: Key attributes buried in deep structures are harder for LLMs to maintain consistently.
 
-## ✨ Introduce **JSOMP**
+## Introduce **JSOMP**
 
 **JSOMP** (JSON-Standard Object Mapping Protocol) is a **pure data protocol** and **runtime engine**.
 
-- 🌊 **Streaming Friendly**: Flat JSON structure designed for LLM token streaming.
-- ⚡ **Instant Updates**: Granular updates via Signal architecture. Change one prop, update one node.
-- 🛡️ **Safe**: Pure JSON. No code execution. No security risks.
+- **Streaming Friendly**: Flat JSON structure designed for LLM token streaming.
+- **Instant Updates**: Granular updates via Signal architecture. Change one prop, update one node.
+- **Safe**: Pure JSON. No code execution. No security risks.
 
 ---
 
-## <a name="features"></a>✨ features
+## <a name="features"></a>Features
 
 | Feature | Description |
 | :--- | :--- |
-| 🤖 **AI-Native Structure** | **Flat, Relational JSON**. No deep nesting hell. Designed for LLM stability and recall. |
-| ⚡ **Incremental Engine** | **<20ms Reconciliation**. Updates 2000 nodes instantly. Only diffs changed properties. |
-| 🧩 **Headless Core** | **Framework Agnostic**. The logic engine is decoupled from React. Adaptable to Vue, Canvas, or Native. |
-| 🔌 **Tree-Shakable** | **Plug & Play Architecture**. Replace native logic with your custom plugins. Unused native plugins are completely tree-shaken from your bundle. |
-| 🎨 **Design System Agnostic** | **Bring Your Own Components**. No enforced styling. |
-| 🧠 **Logic as Data** | **Action Tags & Signals**. Define complex logic via JSON configuration. No fragile code generation required. |
-| 🏝️ **Island Architecture** | **Progressive Adoption**. Mounts inside existing apps. Supports direct state adapters. |
-| 💰 **Token Efficient** | **Reference-Based Updates**. AI sends tiny patches (`{id, props}`) instead of re-generating full components. |
+| **AI-Native Structure** | **Flat, Relational JSON**. No deep nesting hell. Designed for LLM stability and recall. |
+| **Incremental Engine** | **<20ms Reconciliation**. Updates 2000 nodes instantly. Only diffs changed properties. |
+| **Headless Core** | **Framework Agnostic**. The logic engine is decoupled from React. Adaptable to Vue, Canvas, or Native. |
+| **Tree-Shakable** | **Plug & Play Architecture**. Replace native logic with your custom plugins. Unused native plugins are completely tree-shaken from your bundle. |
+| **Design System Agnostic** | **Bring Your Own Components**. No enforced styling. |
+| **Logic as Data** | **Action Tags & Signals**. Define complex logic via JSON configuration. No fragile code generation required. |
+| **Island Architecture** | **Progressive Adoption**. Mounts inside existing apps. Supports direct state adapters. |
+| **Token Efficient** | **Reference-Based Updates**. AI sends tiny patches (`{id, props}`) instead of re-generating full components. |
 
-### 📦 What's Included?
+### What's Included?
 
 *   ✅ **Core Engine**: The heart of the runtime.
 *   ✅ **Standard Plugins**: `AutoSync` (v-model), `ActionTags`, `Inheritance`.
@@ -95,7 +95,7 @@ When building AI Agents, developers often struggle with UI generation:
 
 ---
 
-## <a name="quick-start"></a>⚡ Quick Start
+## <a name="quick-start"></a>Quick Start
 
 ### 0. 🚀 Install
 
@@ -174,7 +174,7 @@ async function handleAiStream(response) {
   while (true) {
     const { done, value } = await reader.read();
     if (done) {
-      stream.end(); // 🚩 Flush & repair the final fragment
+      stream.end(); // Flush & repair the final fragment
       break;
     }
     stream.write(decoder.decode(value));
@@ -202,7 +202,7 @@ No need to write CSS. Use the `style_tw` array for full Tailwind V4 support with
 
 ---
 
-## 🧠 Architecture
+## Architecture
 
 JSOMP separates the **Logic Tree** (JsompRuntime) from the **Render Tree** (Modern UI Framework).
 
@@ -220,7 +220,7 @@ graph TD
 
 ---
 
-## <a name="perf"></a> 🚀 Performance Benchmark
+## <a name="perf"></a> Performance Benchmark
 
 The JSOMP engine is built for extreme efficiency, offloading heavy logic from the main UI thread.
 
@@ -233,7 +233,7 @@ The JSOMP engine is built for extreme efficiency, offloading heavy logic from th
 
 ---
 
-## <a name="roadmap"></a> 🗺️ Roadmap
+## <a name="roadmap"></a> Roadmap
 
 ### Phase 1: Foundation (Current)
 - ✅ **Core Engine**: Fully headless runtime with Signal reactivity.
@@ -244,7 +244,7 @@ The JSOMP engine is built for extreme efficiency, offloading heavy logic from th
 - ✅ **Standard Plugins**: Auto-Sync, Action Tags, and Inheritance.
 
 ### Phase 2: Ecosystem & Developer Experience (Soon)
-- 💎 **JSOMP Pro-Kit**: Premium, enterprise-ready UI components based on **Tailwind & Shadcn**.
+- **JSOMP Pro-Kit**: Premium, enterprise-ready UI components based on **Tailwind & Shadcn**.
 - 🚧 **Design System Schema (DSS)**: CVA-style variant matrices and semantic mapping.
 - 🚧 **Type-Safe DX**: Auto-generation of TypeScript interfaces from component manifests.
 - 🚧 **Framework Adapters (Official)**: 
@@ -261,7 +261,7 @@ The JSOMP engine is built for extreme efficiency, offloading heavy logic from th
 
 ---
 
-## <a name="faq"></a>❓ FAQ
+## <a name="faq"></a>FAQ
 
 ### Q: Why not just use React/Vue directly?
 **A:** React/Vue are excellent for *humans* writing code. JSOMP is designed for *AI Agents* streaming data.
