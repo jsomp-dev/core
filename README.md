@@ -52,24 +52,24 @@
 When building AI Agents, developers often struggle with UI generation:
 
 **Generating React/Vue Code is Bad**:
-- **Slow**: Generating JSX tokens is expensive and slow.
-- **Unsafe**: Requires `eval()` or dangerous runtime compilation.
-- **Fragile**: One missing brace breaks the entire UI.
-- **State Hell**: Hard to update a single button without re-generating the whole component.
+- 🐌 **Slow**: Generating JSX tokens is expensive and slow.
+- ⛔ **Unsafe**: Requires `eval()` or dangerous runtime compilation.
+- 🧨 **Fragile**: One missing brace breaks the entire UI.
+- 🌪️ **State Hell**: Hard to update a single button without re-generating the whole component.
 
 **Deeply Nested JSON is Fragile**:
-- **Token Waste**: Deep indentation and endless closing brackets (`}}}}`) drain your budget.
-- **Structure Collapse**: LLMs often lose track of hierarchy in deep trees, leading to syntax errors.
-- **Latency**: Cannot render the UI incrementally until the entire nested structure is fully closed.
-- **Recall Loss**: Key attributes buried in deep structures are harder for LLMs to maintain consistently.
+- 💸 **Token Waste**: Deep indentation and endless closing brackets (`}}}}`) drain your budget.
+- 🏗️ **Structure Collapse**: LLMs often lose track of hierarchy in deep trees, leading to syntax errors.
+- 💤 **Latency**: Cannot render the UI incrementally until the entire nested structure is fully closed.
+- 🌫️ **Recall Loss**: Key attributes buried in deep structures are harder for LLMs to maintain consistently.
 
 ## Introduce **JSOMP**
 
 **JSOMP** (JSON-Standard Object Mapping Protocol) is a **pure data protocol** and **runtime engine**.
 
-- **Streaming Friendly**: Flat JSON structure designed for LLM token streaming.
-- **Instant Updates**: Granular updates via Signal architecture. Change one prop, update one node.
-- **Safe**: Pure JSON. No code execution. No security risks.
+- 🌊 **Streaming Friendly**: Flat JSON structure designed for LLM token streaming.
+- ⚡ **Instant Updates**: Granular updates via Signal architecture. Change one prop, update one node.
+- 🛡️ **Safe**: Pure JSON. No code execution. No security risks.
 
 ---
 
