@@ -52,16 +52,16 @@
 When building AI Agents, developers often struggle with UI generation:
 
 **Generating React/Vue Code is Bad**:
-- 🐌 **Slow**: Generating JSX tokens is expensive and slow.
-- ⛔ **Unsafe**: Requires `eval()` or dangerous runtime compilation.
-- 🧨 **Fragile**: One missing brace breaks the entire UI.
-- 🌪️ **State Hell**: Hard to update a single button without re-generating the whole component.
+- ❌ **Slow**: Generating JSX tokens is expensive and slow.
+- ❌ **Unsafe**: Requires `eval()` or dangerous runtime compilation.
+- ❌ **Fragile**: One missing brace breaks the entire UI.
+- ❌ **State Hell**: Hard to update a single button without re-generating the whole component.
 
 **Deeply Nested JSON is Fragile**:
-- 💸 **Token Waste**: Deep indentation and endless closing brackets (`}}}}`) drain your budget.
-- 🏗️ **Structure Collapse**: LLMs often lose track of hierarchy in deep trees, leading to syntax errors.
-- 💤 **Latency**: Cannot render the UI incrementally until the entire nested structure is fully closed.
-- 🌫️ **Recall Loss**: Key attributes buried in deep structures are harder for LLMs to maintain consistently.
+- ❌ **Token Waste**: Deep indentation and endless closing brackets (`}}}}`) drain your budget.
+- ❌ **Structure Collapse**: LLMs often lose track of hierarchy in deep trees, leading to syntax errors.
+- ❌ **Latency**: Cannot render the UI incrementally until the entire nested structure is fully closed.
+- ❌ **Recall Loss**: Key attributes buried in deep structures are harder for LLMs to maintain consistently.
 
 ## Introduce **JSOMP**
 
