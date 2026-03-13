@@ -85,7 +85,7 @@ describe('JsompCompiler', () => {
       // Use a simple plugin to populate nodes map from entities
       compiler.use('populator', PipelineStage.PreProcess, {
         id: 'populator',
-        onNode: (id, entity, ctx) => {
+        onNode: (id: string, entity: any, ctx: ICompilerContext) => {
           ctx.nodes.set(id, {...entity} as any);
         }
       });
