@@ -42,7 +42,7 @@
   <br>
 
   <!-- Commercial Pro-Kit Teaser -->
-  <img src="./assets/banner/jsomp-pro-kit-center.png" alt="JSOMP Pro-Kit Coming Soon!" width="800" />
+  <!-- <img src="./assets/banner/jsomp-pro-kit-center.png" alt="JSOMP Pro-Kit Coming Soon!" width="800" /> -->
 </div>
 
 <br>
