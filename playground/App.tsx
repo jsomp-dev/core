@@ -4,13 +4,14 @@ import {SlotTest} from './SlotTest';
 import {AutoSyncTest} from './AutoSyncTest';
 import {PerformanceTest} from './PerformanceTest';
 import {StreamTest} from './StreamTest';
+import {BasicPresetsTest} from './BasicPresetsTest';
 import {HtmlRegistry, setupJsomp} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream'>('basic');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream'>('basic');
   const [entities] = useState<any[]>([
     {
       id: 'app_root',
@@ -281,6 +282,22 @@ const App: React.FC = () => {
         >
           Stream Lab
         </button>
+        <button
+          onClick={() => setCurrentTab('presets')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.25rem',
+            background: currentTab === 'presets' ? '#27272a' : 'transparent',
+            border: 'none',
+            color: currentTab === 'presets' ? '#fafafa' : '#a1a1aa',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s'
+          }}
+        >
+          Preset Lab
+        </button>
       </nav>
 
       {/* Main View Container */}
@@ -291,7 +308,9 @@ const App: React.FC = () => {
         alignItems: 'center',
         justifyContent: (currentTab === 'basic' || currentTab === 'perf') ? 'center' : 'flex-start'
       }}>
-        {currentTab === 'basic' ? (
+        {currentTab === 'presets' ? (
+          <BasicPresetsTest />
+        ) : currentTab === 'basic' ? (
           <JsompView entities={entities} rootId='app_root' />
         ) : currentTab === 'layout' ? (
           <LayoutTest />
