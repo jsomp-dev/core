@@ -1,12 +1,13 @@
 import {HtmlRegistry} from './html/HtmlRegistry';
+import {BasicRegistry} from './basic/BasicRegistry';
 
 // Re-export specific registries
-export {HtmlRegistry};
+export {HtmlRegistry, BasicRegistry};
 
 /**
- * Default preset that includes only basic HTML support.
- * This ensures the core library is usable out-of-the-box without extra dependencies.
+ * Default presets available in JSOMP.
  */
 export const presets = {
-  html: HtmlRegistry
+  html: HtmlRegistry,
+  basic: BasicRegistry
 };
