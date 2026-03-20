@@ -2,8 +2,12 @@ import {IComponentRegistry} from '../../types';
 import {Box, Text, Button, Input, Stack, Image} from './components';
 
 /**
- * Standard High-Level Component Registry (Shadcn Style)
- * Maps semantic terms to React components with sane default Tailwind styles.
+ * Basic Component Preset Registry (BasicRegistry)
+ * A standard high-level component registry that maps semantic UI terms to Shadcn-style React components with consistent styling and interactive behaviors.
+ * 
+ * @status Stable
+ * @scope Public
+ * @tags Preset, UI-Components, Shadcn
  */
 export class BasicRegistry {
   /**

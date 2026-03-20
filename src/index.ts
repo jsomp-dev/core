@@ -7,6 +7,7 @@ export {JsompEnv, jsompEnv} from './JsompEnv';
 
 export {JsompService} from './JsompService';
 export {AtomRegistry} from './state/AtomRegistry';
+export {ActionRegistry} from './registry/ActionRegistry';
 export {JsompAtom} from './state/JsompAtom';
 export {JsompStream} from './misc/JsompStream';
 export {BindingResolver} from './state/BindingResolver';

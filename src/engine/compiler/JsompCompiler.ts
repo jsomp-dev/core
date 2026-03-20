@@ -30,8 +30,12 @@ export interface CompilerOptions {
 }
 
 /**
- * JSOMP Compiler
- * Orchestrates the pipeline stages and runs registered plugins.
+ * JSOMP Compiler (JsompCompiler)
+ * The core compilation engine responsible for coordinating pipeline stages and running registered plugins. It processes flat entity maps and generates the final UI node tree through a series of transformation stages.
+ * 
+ * @status Stable
+ * @scope Public
+ * @tags Compiler, Core, Engine
  */
 export class JsompCompiler implements IJsompCompiler {
   private localRegistry: PipelineRegistry;

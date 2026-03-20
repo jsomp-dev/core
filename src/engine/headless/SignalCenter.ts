@@ -1,8 +1,12 @@
 import {ISignalCenter} from '../../types';
 
 /**
- * SignalCenter
- * Responsibility: Listen to Atom state, deduplicate signals, and batch processing.
+ * Signal Center (SignalCenter)
+ * The core dispatching hub responsible for signal deduplication and asynchronous batching. It acts as the performance gateway of the JSOMP engine, ensuring efficient signal distribution and preventing rendering overloads.
+ * 
+ * @status Stable
+ * @scope Internal
+ * @tags Engine, Headless, Reactive, Batching
  */
 export class SignalCenter implements ISignalCenter {
   private _dirtyIds = new Set<string>();

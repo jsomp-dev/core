@@ -15,8 +15,12 @@ import {BindingResolver} from '../../state';
 import {jsompEnv} from '../../JsompEnv';
 
 /**
- * JsompRuntime (Stateful Scheduler)
- * Responsibility: Maintain the logic tree state and schedule resources (e.g., Compiler) for incremental updates.
+ * JSOMP Runtime (JsompRuntime)
+ * The core hub of the JSOMP engine, responsible for maintaining logic tree states and coordinating incremental updates between the compiler and the visual pipeline.
+ * 
+ * @status Stable
+ * @scope Public
+ * @tags Runtime, Scheduler, Engine, Reactive
  */
 export class JsompRuntime implements IJsompRuntime {
   private _topologyMap = new Map<string, IJsompNode>();
