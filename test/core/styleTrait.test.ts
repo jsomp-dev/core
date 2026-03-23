@@ -23,6 +23,7 @@ describe('StyleTrait', () => {
           return undefined;
         }),
         set: vi.fn(),
+        patch: vi.fn(),
         batchSet: vi.fn(),
         subscribe: vi.fn(),
         subscribeAll: vi.fn(),

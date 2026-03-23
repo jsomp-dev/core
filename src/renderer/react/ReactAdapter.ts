@@ -12,7 +12,7 @@ export class ReactAdapter {
   private _cachedDescriptors: VisualDescriptor[] = [];
   private _listeners = new Set<() => void>();
 
-  constructor(runtime: JsompRuntime, signalCenter: ISignalCenter) {
+  constructor(runtime: JsompRuntime, public signalCenter: ISignalCenter) {
     this._runtime = runtime;
 
     // Listen to signal center. 

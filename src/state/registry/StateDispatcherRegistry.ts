@@ -99,10 +99,24 @@ export class StateDispatcherRegistry implements IStateDispatcherRegistry {
     return undefined;
   }
 
+  getSnapshot(key?: string): any {
+    if (!key) return this.defaultRegistry.getSnapshot?.();
+    const resolved = this.resolve(key);
+    if (resolved) return resolved.registry.getSnapshot?.(resolved.targetKey);
+    return undefined;
+  }
+
   set(key: string, value: IJsompAtom | IAtomValue | undefined): void {
     const resolved = this.resolve(key);
     if (resolved) {
       resolved.registry.set(resolved.targetKey, value);
+    }
+  }
+
+  patch(key: string, patchObj: any): void {
+    const resolved = this.resolve(key);
+    if (resolved) {
+      resolved.registry.patch(resolved.targetKey, patchObj);
     }
   }
 

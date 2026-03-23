@@ -42,9 +42,20 @@ export class PrefixDispatcherRegistry implements IAtomRegistry {
     return registry.get(targetKey);
   }
 
+  getSnapshot(key?: string): any {
+    if (key === undefined) return this.defaultRegistry.getSnapshot?.();
+    const {registry, targetKey} = this.resolve(key);
+    return registry.getSnapshot?.(targetKey);
+  }
+
   set(key: string, value: IJsompAtom | IAtomValue | undefined): void {
     const {registry, targetKey} = this.resolve(key);
     registry.set(targetKey, value);
+  }
+
+  patch(key: string, patchObj: any): void {
+    const {registry, targetKey} = this.resolve(key);
+    registry.patch(targetKey, patchObj);
   }
 
   batchSet(updates: Record<string, IJsompAtom | IAtomValue | undefined>): void {

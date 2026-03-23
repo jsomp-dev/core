@@ -15,7 +15,8 @@ export const mustacheTrait: TraitProcessor = (
 
   // 1. Recursive Resolution of all props
   // We resolve the descriptor.props which already contains base props from PropsTrait
-  const resolvedProps = BindingResolver.resolve(descriptor.props, registry);
+  // V1.1: Pass node._fullPath as pathPrefix for relative resolution
+  const resolvedProps = BindingResolver.resolve(descriptor.props, registry, node._fullPath);
   descriptor.props = resolvedProps;
 
   // 2. Auto-Sync Logic (Specific for Form Controls)

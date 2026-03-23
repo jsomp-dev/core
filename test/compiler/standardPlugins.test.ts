@@ -214,7 +214,7 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
 
       // Simulate input change
       node.onEvent.onChange({target: {value: 'Bob'}});
-      expect(atomRegistry.get('username')?.value).toBe('Bob');
+      expect((atomRegistry.get('username') as any)?.value).toBe('Bob');
     });
   });
 
@@ -229,7 +229,7 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
 
       const atom = atomRegistry.get('count');
       expect(atom).toBeDefined();
-      expect(atom?.value).toBe(10);
+      expect((atom as any)?.value).toBe(10);
     });
   });
 });

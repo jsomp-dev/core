@@ -38,9 +38,9 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
     pipeline.register('standard-inherit', PipelineStage.PreProcess, inheritPlugin, 'StandardInherit');
   }
 
-  if (!pipeline.getPlugins(PipelineStage.PreProcess).some((p: any) => p.id === 'standard-state')) {
+  if (!pipeline.getPlugins(PipelineStage.Hydrate).some((p: any) => p.id === 'standard-state')) {
     const {stateHydrationPlugin} = await import('./engine/compiler/plugins/StateHydrationPlugin');
-    pipeline.register('standard-state', PipelineStage.PreProcess, stateHydrationPlugin, 'StandardStateHydration');
+    pipeline.register('standard-state', PipelineStage.Hydrate, stateHydrationPlugin, 'StandardStateHydration');
   }
 
   if (!pipeline.getPlugins(PipelineStage.PreProcess).some((p: any) => p.id === 'standard-attribute-cache')) {

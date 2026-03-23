@@ -1,4 +1,6 @@
 import {IAtomRegistry, IAtomValue, IJsompAtom} from '../types';
+import {pathUtils} from '../utils/path';
+
 function isAtom(obj: any): obj is IJsompAtom {
   return obj && typeof obj.subscribe === 'function' && 'value' in obj;
 }
@@ -16,13 +18,26 @@ export class AtomRegistry implements IAtomRegistry {
 
   constructor(private parent?: IAtomRegistry) { }
 
-  /** Get named atom or value (supports bubbly lookup) */
+  /** Get named atom or value (supports bubbly lookup and deep path) */
   get(key: string): IJsompAtom | IAtomValue | undefined {
-    // 1. Check local level first
+    // 1. Check local level (Exact match)
     const local = this.atoms.get(key);
     if (local !== undefined) return local;
 
-    // 2. If not found locally, check parent level
+    // 2. Check local level (Deep path match) V1.1
+    // If key is 'a.b.c', try finding 'a' and traverse
+    if (key.includes('.')) {
+      const parts = key.split('.');
+      const rootKey = parts[0];
+      const rootVal = this.atoms.get(rootKey);
+      if (rootVal !== undefined) {
+        const baseValue = isAtom(rootVal) ? rootVal.value : rootVal;
+        const result = pathUtils.get(baseValue, parts.slice(1).join('.'));
+        if (result !== undefined) return result;
+      }
+    }
+
+    // 3. If not found locally, check parent level
     return this.parent?.get(key);
   }
 
@@ -40,6 +55,7 @@ export class AtomRegistry implements IAtomRegistry {
       prev.set(nextVal);
       // Note: atom.set triggers existing subscriptions; 
       // if mapped via atomUnsubs, it triggers local notify automatically.
+      this.notifyGlobal(key, nextVal);
       return;
     }
 
@@ -52,14 +68,73 @@ export class AtomRegistry implements IAtomRegistry {
     if (value === undefined) {
       this.atoms.delete(key);
     } else {
+      // V1.1: If it's a deep path (a.b), check if root (a) exists as a plain object.
+      // If so, update it directly via pathUtils to maintain structural consistency.
+      if (key.includes('.')) {
+        const parts = key.split('.');
+        const rootKey = parts[0];
+        const rootVal = this.atoms.get(rootKey);
+        if (rootVal !== undefined && !isAtom(rootVal) && !isAtom(value)) {
+          pathUtils.set(rootVal, parts.slice(1).join('.'), value);
+          this.notify(key);
+          this.notify(rootKey);
+          
+          this.notifyGlobal(key, value);
+          this.notifyGlobal(rootKey, rootVal);
+          return;
+        }
+      }
+
       this.atoms.set(key, value);
       // If it's an atom, establish cascading notification
       if (isAtom(value)) {
-        this.atomUnsubs.set(key, value.subscribe(() => this.notify(key)));
+        this.atomUnsubs.set(key, value.subscribe(() => {
+          this.notify(key);
+          this.notifyGlobal(key, value.value);
+        }));
       }
     }
     this.notify(key);
     this.notifyGlobal(key, value);
+  }
+
+  /** Patch an existing state */
+  patch(key: string, patchObj: any) {
+    const existing = this.get(key);
+    if (existing === undefined) {
+      this.set(key, patchObj);
+      return;
+    }
+
+    if (isAtom(existing)) {
+      const current = existing.value;
+      if (typeof current === 'object' && current !== null && typeof patchObj === 'object' && patchObj !== null) {
+        existing.set({...current, ...patchObj});
+      } else {
+        existing.set(patchObj);
+      }
+    } else {
+      if (typeof existing === 'object' && existing !== null && typeof patchObj === 'object' && patchObj !== null) {
+        this.set(key, {...existing, ...patchObj});
+      } else {
+        this.set(key, patchObj);
+      }
+    }
+  }
+
+  /** Get snapshot (plain object) of a specific path (V1.1) */
+  getSnapshot(key?: string): any {
+    if (!key) {
+      const result: any = {};
+      this.atoms.forEach((v, k) => {
+        result[k] = isAtom(v) ? v.value : (v && typeof v === 'object' && 'value' in v ? (v as any).value : v);
+      });
+      return result;
+    }
+
+    const val = this.get(key);
+    if (val === undefined) return undefined;
+    return isAtom(val) ? val.value : (val && typeof val === 'object' && 'value' in val ? (val as any).value : val);
   }
 
   /** Batch set */
@@ -96,7 +171,24 @@ export class AtomRegistry implements IAtomRegistry {
   }
 
   private notify(key: string) {
+    // 1. Notify exact match listeners
     this.listeners.get(key)?.forEach(cb => cb());
+
+    // 2. V1.1: Notify descendant paths (e.g., if 'user' changed, notify 'user.name')
+    this.listeners.forEach((callbacks, listenerKey) => {
+      if (listenerKey.startsWith(key + '.')) {
+        callbacks.forEach(cb => cb());
+      }
+    });
+
+    // 3. V1.1: Notify ancestor paths (e.g., if 'user.name' changed, notify 'user')
+    if (key.includes('.')) {
+      const parts = key.split('.');
+      for (let i = parts.length - 1; i > 0; i--) {
+        const parentKey = parts.slice(0, i).join('.');
+        this.listeners.get(parentKey)?.forEach(cb => cb());
+      }
+    }
   }
 
   private notifyGlobal(key: string, value: any) {

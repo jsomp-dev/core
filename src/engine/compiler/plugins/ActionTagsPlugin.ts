@@ -65,8 +65,12 @@ export const actionTagsPlugin: IJsompPluginDef = {
         if (def.require?.atoms && ctx.atomRegistry) {
           Object.entries(def.require.atoms).forEach(([alias, realPath]) => {
             const atom = ctx.atomRegistry!.get(realPath);
-            // Handle both IJsompAtom and IAtomValue
-            env.atoms[alias] = (atom && 'value' in atom) ? atom.value : atom;
+            // Handle IJsompAtom, IAtomValue and Primitives
+            if (atom && typeof atom === 'object') {
+              env.atoms[alias] = ('value' in atom) ? (atom as any).value : atom;
+            } else {
+              env.atoms[alias] = atom;
+            }
           });
         }
 

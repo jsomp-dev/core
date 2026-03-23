@@ -46,6 +46,13 @@ export interface ISignalCenter {
   subscribe(callback: (dirtyIds: string[]) => void): () => void;
   /** State change notification */
   onUpdate(id: string, newValue: any): void;
+  /** Patch update (Incremental) */
+  patch(id: string, patchObj: any): void;
+
+  /**
+   * Get the current snapshot (plain object) of the state or a specific path (V1.1).
+   */
+  getSnapshot(path?: string): any;
   /** Access the buffered/latest value */
   get(id: string): any;
   /** Get the version of a specific atom (incremented on update) */

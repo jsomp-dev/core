@@ -15,6 +15,7 @@ describe('TraitPipeline & StandardTraits', () => {
       registry: {
         get: vi.fn(() => undefined),
         set: vi.fn(),
+        patch: vi.fn(),
         batchSet: vi.fn(),
         subscribe: vi.fn(() => () => { }),
         subscribeAll: vi.fn(() => () => { }),

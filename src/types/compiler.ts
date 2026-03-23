@@ -187,6 +187,9 @@ export interface PipelineContext {
 
   /** Style presets map (name -> classNames or config) */
   stylePresets?: Record<string, string | string[] | {tw?: string[], css?: Record<string, string | number>}>;
+
+  /** Path prefix (automatically maintained during recursion) */
+  pathPrefix?: string;
 }
 
 /**

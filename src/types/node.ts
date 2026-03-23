@@ -59,6 +59,8 @@ export type IInjectionMap = Record<string, Partial<IJsompNode> | {onEvent?: Reco
 export interface VisualDescriptor {
   /** Unique identifier */
   id: string;
+  /** Final path for reactive resolution (V2) */
+  path?: string;
   /** Component type name (from registry) */
   componentType: string;
   /** Final props after trait processing */

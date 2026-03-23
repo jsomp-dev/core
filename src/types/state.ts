@@ -16,11 +16,16 @@ export interface IJsompAtom<T = any> {
 /**
  * Atomic state value type
  */
-export type IAtomValue = Partial<IJsompNode> & {
-  onEvent?: Record<string, Function>;
-  value?: any; // Used for simple value binding, e.g. {{isLoading}}
-  [key: string]: any;
-};
+export type IAtomValue = 
+  | (Partial<IJsompNode> & {
+      onEvent?: Record<string, Function>;
+      value?: any; // Used for simple value binding, e.g. {{isLoading}}
+      [key: string]: any;
+    })
+  | string 
+  | number 
+  | boolean 
+  | null;
 
 /**
  * Atomic state registry interface
@@ -28,6 +33,7 @@ export type IAtomValue = Partial<IJsompNode> & {
 export interface IAtomRegistry {
   get(key: string): IJsompAtom | IAtomValue | undefined;
   set(key: string, value: IJsompAtom | IAtomValue | undefined): void;
+  patch(key: string, patchObj: any): void;
   batchSet(updates: Record<string, IJsompAtom | IAtomValue | undefined>): void;
   subscribe(key: string, callback: () => void): () => void;
   subscribeAll(callback: (key: string, value: any) => void): () => void;
@@ -36,6 +42,11 @@ export interface IAtomRegistry {
    * Used for cache invalidation.
    */
   version?(key?: string): number;
+
+  /**
+   * Get the current snapshot (plain object) of a specific path (V1.1).
+   */
+  getSnapshot?(key?: string): any;
 
   // --- Dispatcher Extensions ---
   mount?(namespace: string, registry: IAtomRegistry): void;
@@ -92,6 +103,11 @@ export interface IStateAdapter {
    * If Store is read-only, this method can be not implemented
    */
   setValue?(path: string, val: any): void;
+
+  /**
+   * [Optional] Perform patch update
+   */
+  patch?(path: string, patchObj: any): void;
 
   /** 
    * Path-based subscription logic

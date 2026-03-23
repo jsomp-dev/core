@@ -12,7 +12,17 @@ const JsompNodesContext = createContext<Map<string, VisualDescriptor>>(new Map()
 /**
  * Context for local component overrides
  */
-const JsompComponentsContext = createContext<Record<string, any>>({});
+export const JsompComponentsContext = createContext<Record<string, any>>({});
+
+/**
+ * Context for path-based relative resolution (V2)
+ */
+export const JsompPathContext = createContext<string>('');
+
+/**
+ * Context for the runtime adapter (V2)
+ */
+export const JsompRuntimeContext = createContext<ReactAdapter | null>(null);
 
 /**
  * JsompNodeItem
@@ -21,11 +31,15 @@ const JsompComponentsContext = createContext<Record<string, any>>({});
 const JsompNodeItem = memo(({id}: {id: string}) => {
   const nodesMap = useContext(JsompNodesContext);
   const localComponents = useContext(JsompComponentsContext);
+  const parentPath = useContext(JsompPathContext);
   const descriptor = nodesMap.get(id);
 
   // Inner memoization to block re-render if descriptor reference is stable
   return useMemo(() => {
     if (!descriptor) return null;
+
+    // Resolve current path (use node's full path if available)
+    const currentPath = descriptor.path || parentPath;
 
     // 1. Resolve Component
     let Component: any = descriptor.componentType;
@@ -77,16 +91,17 @@ const JsompNodeItem = memo(({id}: {id: string}) => {
 
     // 3. Render
     // If children (nodes) is empty, we must fallback to props.children (e.g. text content)
-    // Otherwise, spreading props.children into Component while also passing undefined as child 
-    // will wipe out the text.
     const finalChildren = children.length > 0 ? children : descriptor.props.children;
 
+    // Wrap in PathContext for children/hooks
     return (
-      <Component {...descriptor.props} {...slotProps} style={descriptor.styles}>
-        {finalChildren}
-      </Component>
+      <JsompPathContext.Provider value={currentPath}>
+        <Component {...descriptor.props} {...slotProps} style={descriptor.styles}>
+          {finalChildren}
+        </Component>
+      </JsompPathContext.Provider>
     );
-  }, [descriptor, localComponents]);
+  }, [descriptor, localComponents, parentPath]);
 }, (prev, next) => prev.id === next.id);
 
 /**
@@ -130,10 +145,12 @@ export const ReactRenderer = memo(({
   }, [descriptors, rootId]);
 
   return (
-    <JsompNodesContext.Provider value={nodesMap}>
-      <JsompComponentsContext.Provider value={components}>
-        {roots.map(node => <JsompNodeItem key={node.id} id={node.id} />)}
-      </JsompComponentsContext.Provider>
-    </JsompNodesContext.Provider>
+    <JsompRuntimeContext.Provider value={adapter}>
+      <JsompNodesContext.Provider value={nodesMap}>
+        <JsompComponentsContext.Provider value={components}>
+          {roots.map(node => <JsompNodeItem key={node.id} id={node.id} />)}
+        </JsompComponentsContext.Provider>
+      </JsompNodesContext.Provider>
+    </JsompRuntimeContext.Provider>
   );
 });

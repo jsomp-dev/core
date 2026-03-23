@@ -58,6 +58,11 @@ export class ExternalStateRegistry implements IAtomRegistry {
     return atom;
   }
 
+  getSnapshot(key?: string): any {
+    if (!key) return undefined; // Cannot snapshot whole external store easily
+    return this.adapter.getValue(key);
+  }
+
   /**
    * Update state in the external store.
    * If value is a plain object or IAtomValue, it extracts the content and sets it via the adapter.
@@ -75,6 +80,22 @@ export class ExternalStateRegistry implements IAtomRegistry {
       // It's a plain value or IAtomValue
       const val = (value as any)?.value !== undefined ? (value as any).value : value;
       targetAtom.set(val);
+    }
+  }
+
+  /**
+   * Patch an existing state in the external store.
+   */
+  patch(key: string, patchObj: any): void {
+    if (this.adapter.patch) {
+      this.adapter.patch(key, patchObj);
+    } else {
+      const current = this.adapter.getValue(key);
+      if (typeof current === 'object' && current !== null && typeof patchObj === 'object' && patchObj !== null) {
+        this.set(key, {...current, ...patchObj});
+      } else {
+        this.set(key, patchObj);
+      }
     }
   }
 

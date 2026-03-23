@@ -46,6 +46,7 @@ export class TraitPipeline implements ITraitPipeline {
     // 3. Initialize Descriptor
     const descriptor: VisualDescriptor = {
       id: node.id,
+      path: node._fullPath,
       componentType: node.type,
       props: {},
       styles: {},

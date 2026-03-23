@@ -51,6 +51,21 @@ export class SignalRegistryAdapter implements IAtomRegistry {
     return this._fallbackMap.get(key);
   }
 
+  public getSnapshot(key?: string): any {
+    if (this._signalCenter) {
+      return this._signalCenter.getSnapshot(key);
+    }
+    // If no signal center, try external fallback
+    if (this._externalFallback) {
+      return this._externalFallback.getSnapshot?.(key);
+    }
+    // Fallback to internal map if key is provided
+    if (key) {
+      return this._fallbackMap.get(key);
+    }
+    return undefined; // Cannot snapshot the whole fallback map easily
+  }
+
   public set(key: string, value: any): void {
     const existing = this.get(key);
     let targetValue = value;
@@ -73,9 +88,6 @@ export class SignalRegistryAdapter implements IAtomRegistry {
     // update it directly so the source of truth is consistent.
     if (this._externalFallback && this._externalFallback.get(key) !== undefined) {
       this._externalFallback.set(key, targetValue);
-      // Note: No need to manually update signalCenter here if the fallback is 
-      // already subscribed by JsompRuntime (which it is).
-      return;
     }
 
     // Standard Runtime Update
@@ -83,6 +95,26 @@ export class SignalRegistryAdapter implements IAtomRegistry {
       this._signalCenter.onUpdate(key, targetValue);
     } else {
       this._fallbackMap.set(key, targetValue);
+    }
+  }
+
+  public patch(key: string, patchObj: any): void {
+    // 1. Try External Fallback first
+    if (this._externalFallback) {
+      this._externalFallback.patch(key, patchObj);
+    }
+
+    // 2. Standard Runtime Patch (V2 SignalCenter supports this)
+    if (this._signalCenter) {
+      this._signalCenter.patch(key, patchObj);
+    } else {
+      // Fallback: simple merge if it's already an object
+      const existing = this._fallbackMap.get(key);
+      if (existing && typeof existing === 'object' && typeof patchObj === 'object') {
+        this._fallbackMap.set(key, {...existing, ...patchObj});
+      } else {
+        this._fallbackMap.set(key, patchObj);
+      }
     }
   }
 
