@@ -1,6 +1,6 @@
 {
   "name": "@jsomp/core",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "JSOMP Core Runtime Container - A stateless, tree-shakable, and injectable JSON-to-Component engine.",
   "type": "module",
   "publishConfig": {
