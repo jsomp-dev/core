@@ -8,6 +8,8 @@ import {IAtomRegistry, IAtomValue, IJsompAtom, ISignalCenter} from '../../types'
 export class SignalRegistryAdapter implements IAtomRegistry {
   private _signalCenter: ISignalCenter | null = null;
   private _externalFallback: IAtomRegistry | null = null;
+  private _runtime: any = null; // Typing as any to avoid circular dependency in core
+
   /**
    * Fallback values or temporary storage if SignalCenter is not connected.
    * Useful for unit testing or fallback scenarios.
@@ -25,6 +27,14 @@ export class SignalRegistryAdapter implements IAtomRegistry {
    */
   public connect(signalCenter: ISignalCenter): void {
     this._signalCenter = signalCenter;
+  }
+
+  /**
+   * Bind runtime instance for synchronization coordination
+   */
+  public setRuntime(runtime: any): this {
+    this._runtime = runtime;
+    return this;
   }
 
   /**
@@ -87,7 +97,10 @@ export class SignalRegistryAdapter implements IAtomRegistry {
     // If there is an external fallback registry and it contains this key, 
     // update it directly so the source of truth is consistent.
     if (this._externalFallback && this._externalFallback.get(key) !== undefined) {
-      this._externalFallback.set(key, targetValue);
+      // Use the runtime bridge to safely sync without triggering infinite re-notification loops.
+      this._runtime?._performExternalSync(() => {
+        this._externalFallback!.set(key, targetValue);
+      });
     }
 
     // Standard Runtime Update
@@ -101,7 +114,9 @@ export class SignalRegistryAdapter implements IAtomRegistry {
   public patch(key: string, patchObj: any): void {
     // 1. Try External Fallback first
     if (this._externalFallback) {
-      this._externalFallback.patch(key, patchObj);
+      this._runtime?._performExternalSync(() => {
+        this._externalFallback!.patch(key, patchObj);
+      });
     }
 
     // 2. Standard Runtime Patch (V2 SignalCenter supports this)

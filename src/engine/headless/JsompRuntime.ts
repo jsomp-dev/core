@@ -56,7 +56,7 @@ export class JsompRuntime implements IJsompRuntime {
     // Initialize generic context
     // SignalRegistryAdapter starts disconnected (no data/version), will connect in 'use' method.
     this._pipelineContext = {
-      registry: new SignalRegistryAdapter(),
+      registry: new SignalRegistryAdapter().setRuntime(this),
       cache: new Map(),
       dirtyIds: new Set(),
       resolver: {
@@ -79,15 +79,44 @@ export class JsompRuntime implements IJsompRuntime {
    * Set an external AtomRegistry as a fallback for Mustache resolution.
    * Also binds the registry to the runtime to trigger updates on change.
    */
+  private _isSyncingExternal = false;
+
   public setRegistryFallback(registry: IAtomRegistry | null): void {
     if (this._pipelineContext.registry instanceof SignalRegistryAdapter) {
       this._pipelineContext.registry.setExternalFallback(registry);
     }
 
     if (registry) {
+      // [FIX] Initial Sync: Connect existing states from the external registry to the local SignalCenter.
+      const snapshot = registry.getSnapshot?.();
+      if (snapshot && this._signalCenter) {
+        Object.entries(snapshot).forEach(([key, value]) => {
+          // Sync all initially available keys to internal SignalCenter
+          this._signalCenter!.onUpdate(key, value);
+        });
+      }
+
       registry.subscribeAll((key: string, value: any) => {
+        // 💡 [LOCK] Infinity Loop Guard using re-entrancy lock.
+        // If the update originated from within this runtime (via SignalRegistryAdapter.set), ignore it.
+        if (this._isSyncingExternal) return;
+
+        // Propagate external changes to internal SignalCenter (even if reference is same due to mutation)
         this._signalCenter?.onUpdate(key, value);
       });
+    }
+  }
+
+  /**
+   * Internal bridge for SignalRegistryAdapter to mark sync state
+   * @internal
+   */
+  public _performExternalSync(action: () => void): void {
+    this._isSyncingExternal = true;
+    try {
+      action();
+    } finally {
+      this._isSyncingExternal = false;
     }
   }
 

@@ -4,6 +4,7 @@ import {ReactAdapter} from '../ReactAdapter';
 import {ReactRenderer} from '../ReactRenderer';
 import {useJsompRuntime} from '../hooks';
 import {IAtomRegistry} from '../../../types';
+import {jsompEnv} from '../../../JsompEnv';
 
 /**
  * JsompView Props Definition
@@ -72,10 +73,11 @@ export const JsompView: React.FC<JsompViewProps> = ({
       stylePresets
     });
 
-    // Connectivity: If an external registry (AtomRegistry) is provided, connect it as a fallback
-    // This allows sharing states across multiple JsompView instances.
-    if (registry) {
-      runtime.setRegistryFallback(registry);
+    // Connectivity: If an external registry (AtomRegistry) is provided, connect it as a fallback.
+    // If none provided, try connecting to the global registry from jsompEnv as default.
+    const fallbackRegistry = registry || jsompEnv.service?.globalRegistry;
+    if (fallbackRegistry) {
+      runtime.setRegistryFallback(fallbackRegistry);
     }
 
     const reactAdapter = new ReactAdapter(runtime, center);
@@ -88,7 +90,7 @@ export const JsompView: React.FC<JsompViewProps> = ({
 
     // Lifecycle: onMounted
     if (onMounted) {
-      onMounted(registry || center as any);
+      onMounted(fallbackRegistry || center as any);
     }
 
     return reactAdapter;
@@ -114,8 +116,9 @@ export const JsompView: React.FC<JsompViewProps> = ({
     });
 
     // Update registry fallback if changes
-    if (registry) {
-      runtimeRef.current?.setRegistryFallback(registry);
+    const fb = registry || jsompEnv.service?.globalRegistry;
+    if (fb) {
+      runtimeRef.current?.setRegistryFallback(fb);
     }
   }, [components, stylePresets, registry]);
 
