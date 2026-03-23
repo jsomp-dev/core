@@ -1,7 +1,7 @@
 import {describe, it, expect, beforeEach} from 'vitest';
 import {AtomRegistry, BindingResolver, ExternalStateRegistry, ObjectAdapter, setupJsomp} from "../../src";
 
-describe('BindingResolver (1.2)', () => {
+describe('BindingResolver', () => {
   let registry: AtomRegistry;
 
   beforeEach(async () => {
@@ -66,7 +66,7 @@ describe('BindingResolver (1.2)', () => {
     });
   });
 
-  describe('Deep Path Resolution (1.2.1) with ExternalStateRegistry', () => {
+  describe('Deep Path Resolution with ExternalStateRegistry', () => {
     it('should resolve deep paths via ObjectAdapter', () => {
       const store = {
         user: {
@@ -96,7 +96,7 @@ describe('BindingResolver (1.2)', () => {
     });
   });
 
-  describe('Type Boundaries (1.2.2)', () => {
+  describe('Type Boundaries', () => {
     it('should resolve when value type changes from string to object/null', () => {
       registry.set('data', {value: 'initial'});
       expect(BindingResolver.resolve('{{data}}', registry)).toBe('initial');
@@ -106,6 +106,43 @@ describe('BindingResolver (1.2)', () => {
 
       registry.set('data', {value: null});
       expect(BindingResolver.resolve('{{data}}', registry)).toBeNull();
+    });
+  });
+  describe('Path Stack Backtracking', () => {
+    it('should resolve relative keys using pathStack', () => {
+      registry.set('user.name', 'Alice');
+      registry.set('name', 'Global Alice');
+
+      // 1. Resolve within user scope
+      expect(BindingResolver.resolve('{{name}}', registry, ['user'])).toBe('Alice');
+
+      // 2. Resolve within global scope (empty stack)
+      expect(BindingResolver.resolve('{{name}}', registry, [])).toBe('Global Alice');
+    });
+
+    it('should backtrack through multiple levels', () => {
+      registry.set('app.settings.theme', 'dark');
+      registry.set('app.theme', 'light');
+      registry.set('theme', 'system');
+
+      // 1. Deepest level
+      expect(BindingResolver.resolve('{{theme}}', registry, ['app', 'settings'])).toBe('dark');
+
+      // 2. Intermediate level (settings doesn't have theme, but app does)
+      registry.set('app.settings.other', 'val');
+      expect(BindingResolver.resolve('{{theme}}', registry, ['app', 'settings'])).toBe('dark');
+      // Wait, if it's in app.settings.theme it should find it.
+
+      // Test missing at deep level
+      expect(BindingResolver.resolve('{{none}}', registry, ['app', 'settings'])).toBe('{{none}}'); // Interpolation returns original if not found (pure binding returns undefined)
+
+      // Test fallback to parent
+      expect(BindingResolver.resolve('{{theme}}', registry, ['app', 'missing'])).toBe('light');
+
+      // Test fallback to root
+      expect(BindingResolver.resolve('{{lang}}', registry, ['app', 'settings'])).toBe('{{lang}}');
+      registry.set('lang', 'en');
+      expect(BindingResolver.resolve('{{lang}}', registry, ['app', 'settings'])).toBe('en');
     });
   });
 });

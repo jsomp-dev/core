@@ -16,9 +16,9 @@ export class AtomRegistry implements IAtomRegistry {
   private listeners = new Map<string, Set<() => void>>();
   private globalListeners = new Set<(key: string, value: any) => void>();
 
-  constructor(private parent?: IAtomRegistry) { }
+  constructor() { }
 
-  /** Get named atom or value (supports bubbly lookup and deep path) */
+  /** Get named atom or value (supports deep path) */
   get(key: string): IJsompAtom | IAtomValue | undefined {
     // 1. Check local level (Exact match)
     const local = this.atoms.get(key);
@@ -37,8 +37,7 @@ export class AtomRegistry implements IAtomRegistry {
       }
     }
 
-    // 3. If not found locally, check parent level
-    return this.parent?.get(key);
+    return undefined;
   }
 
   private atomUnsubs = new Map<string, () => void>();
@@ -148,7 +147,7 @@ export class AtomRegistry implements IAtomRegistry {
     return () => this.globalListeners.delete(callback);
   }
 
-  /** Subscribe (supports hierarchical bubbling) */
+  /** Subscribe (Supports local path bubbling) */
   subscribe(key: string, callback: () => void): () => void {
     // 1. Subscribe to local listener
     let set = this.listeners.get(key);
@@ -158,18 +157,12 @@ export class AtomRegistry implements IAtomRegistry {
     }
     set.add(callback);
 
-    // 2. Recursively subscribe to parent (ensures parent updates trigger current listeners)
-    let unsubParent: (() => void) | undefined;
-    if (this.parent) {
-      unsubParent = this.parent.subscribe(key, callback);
-    }
-
     return () => {
       set?.delete(callback);
-      unsubParent?.();
     };
   }
 
+  // TODO: Perf Improve
   private notify(key: string) {
     // 1. Notify exact match listeners
     this.listeners.get(key)?.forEach(cb => cb());

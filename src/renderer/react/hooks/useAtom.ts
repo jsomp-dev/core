@@ -12,7 +12,7 @@ import {JsompPathContext, JsompRuntimeContext} from '../ReactRenderer';
  */
 export function useAtom<T = any>(path: string): [T, (val: T | ((prev: T) => T)) => void] {
   const adapter = useContext(JsompRuntimeContext);
-  const pathPrefix = useContext(JsompPathContext);
+  const pathStack = useContext(JsompPathContext);
 
   if (!adapter) {
     throw new Error('[Jsomp] useAtom must be used within JsompView or JsompRuntimeContext.Provider');
@@ -20,25 +20,23 @@ export function useAtom<T = any>(path: string): [T, (val: T | ((prev: T) => T)) 
 
   const {signalCenter} = adapter;
 
-  // Resolve final path with fallback logic (Scope Chain)
+  // Resolve final path with backtracking logic (Scope Chain)
   const resolvedPath = useMemo(() => {
-    // If it looks like an absolute path or no prefix, use as is
-    if (!pathPrefix) return path;
+    // 1. If no stack, use as is
+    if (!pathStack || pathStack.length === 0) return path;
     
-    // We only perform fallback if the path is a simple key (no dots)
-    // Or if the first part of the path is NOT found in the global root.
-    // For simplicity, follow the plan's scope chain logic:
+    // 2. We only perform backtracking if the path is a relative key
+    // Implementation: Try prefixed path from deep to shallow
     const key = path;
-    const parts = pathPrefix.split('.');
     
-    for (let i = parts.length; i >= 0; i--) {
-      const prefix = parts.slice(0, i).join('.');
+    for (let i = pathStack.length; i >= 0; i--) {
+      const prefix = pathStack.slice(0, i).join('.');
       const full = prefix ? `${prefix}.${key}` : key;
       if (signalCenter.get(full) !== undefined) return full;
     }
     
     return path;
-  }, [path, pathPrefix, signalCenter]);
+  }, [path, pathStack, signalCenter]);
 
   // Subscribe to changes via the SignalCenter
   const value = useSyncExternalStore(

@@ -53,10 +53,14 @@ export class TraitPipeline implements ITraitPipeline {
       slots: {} // To be populated by SlotTrait
     };
 
-    // 4. Prepare Context for next level
+    // 4. Prepare Context for next level (V1.1: Automatic Path Stack)
+    // We derive the pathStack from the current node's _fullPath to provide context for children
+    const currentPathStack = node._fullPath ? node._fullPath.split('.') : [];
+    
     const nextContext: PipelineContext = {
       ...context,
-      depth: currentDepth + 1
+      depth: currentDepth + 1,
+      pathStack: currentPathStack
     };
 
     // 5. Execution Pipeline

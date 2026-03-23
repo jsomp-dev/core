@@ -17,7 +17,7 @@ export const JsompComponentsContext = createContext<Record<string, any>>({});
 /**
  * Context for path-based relative resolution (V2)
  */
-export const JsompPathContext = createContext<string>('');
+export const JsompPathContext = createContext<string[]>([]);
 
 /**
  * Context for the runtime adapter (V2)
@@ -31,7 +31,7 @@ export const JsompRuntimeContext = createContext<ReactAdapter | null>(null);
 const JsompNodeItem = memo(({id}: {id: string}) => {
   const nodesMap = useContext(JsompNodesContext);
   const localComponents = useContext(JsompComponentsContext);
-  const parentPath = useContext(JsompPathContext);
+  const parentPathStack = useContext(JsompPathContext);
   const descriptor = nodesMap.get(id);
 
   // Inner memoization to block re-render if descriptor reference is stable
@@ -39,7 +39,7 @@ const JsompNodeItem = memo(({id}: {id: string}) => {
     if (!descriptor) return null;
 
     // Resolve current path (use node's full path if available)
-    const currentPath = descriptor.path || parentPath;
+    const currentPathStack = descriptor.path ? descriptor.path.split('.') : parentPathStack;
 
     // 1. Resolve Component
     let Component: any = descriptor.componentType;
@@ -95,13 +95,13 @@ const JsompNodeItem = memo(({id}: {id: string}) => {
 
     // Wrap in PathContext for children/hooks
     return (
-      <JsompPathContext.Provider value={currentPath}>
+      <JsompPathContext.Provider value={currentPathStack}>
         <Component {...descriptor.props} {...slotProps} style={descriptor.styles}>
           {finalChildren}
         </Component>
       </JsompPathContext.Provider>
     );
-  }, [descriptor, localComponents, parentPath]);
+  }, [descriptor, localComponents, parentPathStack]);
 }, (prev, next) => prev.id === next.id);
 
 /**

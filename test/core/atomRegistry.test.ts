@@ -48,27 +48,6 @@ describe('AtomRegistry', () => {
     });
   });
 
-  describe('Hierarchical Resolution', () => {
-    it('should support parent delegation', () => {
-      const parent = new AtomRegistry();
-      parent.set('parentKey', {value: 'parentVal'});
-
-      const child = new AtomRegistry(parent);
-      expect((child.get('parentKey') as any).value).toBe('parentVal');
-    });
-
-    it('should prefer local values over parent', () => {
-      const parent = new AtomRegistry();
-      parent.set('common', {value: 'parent'});
-
-      const child = new AtomRegistry(parent);
-      child.set('common', {value: 'child'});
-
-      expect((child.get('common') as any).value).toBe('child');
-      expect((parent.get('common') as any).value).toBe('parent');
-    });
-  });
-
   describe('Smart Update', () => {
     it('should update existing atom value instead of replacing instance', () => {
       const atom = new MockAtom('initial');
@@ -80,8 +59,7 @@ describe('AtomRegistry', () => {
       // Act: Set with a new object but same key, simulating an update
       registry.set('key', {value: 'updated'} as any);
 
-      // Assert: standard object set doesn't trigger atom.set usually unless implementation does?
-      // Wait, implementation checks if prev isAtom and value is NOT atom.
+      // Assert
       expect(atom.value).toBe('updated');
       expect(spy).toHaveBeenCalled(); // Should trigger subscription
       expect(registry.get('key')).toBe(atom); // Instance should be preserved
@@ -99,22 +77,11 @@ describe('AtomRegistry', () => {
   });
 
   describe('Subscriptions', () => {
-    it('should trigger listeners on set', () => {
+    it('should trigger listeners on local set', () => {
       const spy = vi.fn();
       registry.subscribe('foo', spy);
 
       registry.set('foo', {value: 'bar'});
-      expect(spy).toHaveBeenCalledTimes(1);
-    });
-
-    it('should bubble events from parent', () => {
-      const parent = new AtomRegistry();
-      const child = new AtomRegistry(parent);
-
-      const spy = vi.fn();
-      child.subscribe('foo', spy);
-
-      parent.set('foo', {value: 'bar'});
       expect(spy).toHaveBeenCalledTimes(1);
     });
 

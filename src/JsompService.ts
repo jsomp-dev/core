@@ -86,14 +86,6 @@ export class JsompService implements IJsompService {
   };
 
   /**
-   * Create a local state scope with parent association
-   * Recommended to be called when each independent page/large component is instantiated.
-   */
-  public createScope(): IAtomRegistry {
-    return new AtomRegistry(this.globalRegistry);
-  }
-
-  /**
    * Create a new atomic state managed by this service
    */
   public createAtom<T>(initialValue: T, schema?: any): IJsompAtom<T> {

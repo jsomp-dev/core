@@ -52,11 +52,6 @@ export interface IJsompService {
   createAtom<T>(initialValue: T, schema?: any): IJsompAtom<T>;
 
   /**
-   * Create a local state scope with parent association
-   */
-  createScope(): IAtomRegistry;
-
-  /**
    * Create a dispatcher registry for mixing multiple state sources.
    * Supports Namespace mapping and Ambient fallback.
    */

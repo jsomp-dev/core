@@ -47,7 +47,7 @@ export class BindingResolver {
   /**
    * Resolve values (pure function)
    */
-  static resolve(value: any, registry: IAtomRegistry, pathPrefix?: string): any {
+  static resolve(value: any, registry: IAtomRegistry, pathStack?: string[]): any {
     if (value === null || value === undefined) return value;
 
     // 0. Direct Atom object
@@ -57,7 +57,7 @@ export class BindingResolver {
 
     // 1. Array
     if (Array.isArray(value)) {
-      return value.map(item => this.resolve(item, registry, pathPrefix));
+      return value.map(item => this.resolve(item, registry, pathStack));
     }
 
     // 2. String
@@ -66,7 +66,7 @@ export class BindingResolver {
       const pureMatch = value.match(PURE_BINDING_REGEX);
       if (pureMatch) {
         const k = pureMatch[1].trim();
-        const atom = this.resolvePath(registry, k, pathPrefix);
+        const atom = this.resolvePath(registry, k, pathStack);
         if (isAtom(atom)) return atom.value;
         if (atom && typeof atom === 'object' && 'value' in atom) return atom.value;
         return atom ?? value;
@@ -74,7 +74,7 @@ export class BindingResolver {
 
       // Interpolation "text-{{color}}"
       return value.replace(BINDING_REGEX, (_, k) => {
-        const atom = this.resolvePath(registry, k.trim(), pathPrefix);
+        const atom = this.resolvePath(registry, k.trim(), pathStack);
         if (isAtom(atom)) return atom.value;
         if (atom && typeof atom === 'object' && 'value' in atom) return atom.value;
         return atom ?? '';
@@ -89,7 +89,7 @@ export class BindingResolver {
       const res: any = {};
       for (const k in value) {
         if (Object.prototype.hasOwnProperty.call(value, k)) {
-          res[k] = this.resolve(value[k], registry, pathPrefix);
+          res[k] = this.resolve(value[k], registry, pathStack);
         }
       }
       return res;
@@ -99,20 +99,21 @@ export class BindingResolver {
   }
 
   /**
-   * Resolve a key with pathPrefix fallback (Scope-like behavior)
+   * Resolve a key with pathStack backtracking (Scope-like behavior)
    */
-  private static resolvePath(registry: IAtomRegistry, key: string, pathPrefix?: string): any {
-    if (!pathPrefix) return registry.get(key);
-
-    const parts = pathPrefix.split('.');
-    for (let i = parts.length; i >= 0; i--) {
-      const prefix = parts.slice(0, i).join('.');
-      const fullPath = prefix ? `${prefix}.${key}` : key;
-      const val = registry.get(fullPath);
-      if (val !== undefined) return val;
+  private static resolvePath(registry: IAtomRegistry, key: string, pathStack?: string[]): any {
+    // 1. Try resolving against shrinking stack
+    if (pathStack && pathStack.length > 0) {
+      for (let i = pathStack.length; i >= 0; i--) {
+        const currentPath = pathStack.slice(0, i).join('.');
+        const fullPath = currentPath ? `${currentPath}.${key}` : key;
+        const val = registry.get(fullPath);
+        if (val !== undefined) return val;
+      }
     }
 
-    return undefined;
+    // 2. Resolve as global root path
+    return registry.get(key);
   }
 
   /**

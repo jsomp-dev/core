@@ -21,11 +21,11 @@ export interface JsompViewProps {
   /** Style presets mapping */
   stylePresets?: Record<string, string[]>;
 
-  /** Callback when the page is mounted and scope is created */
-  onMounted?: (scope: IAtomRegistry) => void;
+  /** Callback when the page is mounted and registry is created */
+  onMounted?: (registry: IAtomRegistry) => void;
 
-  /** Optional external scope (internal scope created if not provided) */
-  scope?: IAtomRegistry;
+  /** Optional external registry (internal signal registry created if not provided) */
+  registry?: IAtomRegistry;
 }
 
 /**
@@ -52,7 +52,7 @@ export const JsompView: React.FC<JsompViewProps> = ({
   components,
   stylePresets,
   onMounted,
-  scope
+  registry
 }) => {
   const isFirstRun = useRef(true);
   const runtimeRef = useRef<JsompRuntime | null>(null);
@@ -72,9 +72,10 @@ export const JsompView: React.FC<JsompViewProps> = ({
       stylePresets
     });
 
-    // Connectivity: If a scope (AtomRegistry) is provided, connect it as a fallback
-    if (scope) {
-      runtime.setRegistryFallback(scope);
+    // Connectivity: If an external registry (AtomRegistry) is provided, connect it as a fallback
+    // This allows sharing states across multiple JsompView instances.
+    if (registry) {
+      runtime.setRegistryFallback(registry);
     }
 
     const reactAdapter = new ReactAdapter(runtime, center);
@@ -87,7 +88,7 @@ export const JsompView: React.FC<JsompViewProps> = ({
 
     // Lifecycle: onMounted
     if (onMounted) {
-      onMounted(scope || center as any);
+      onMounted(registry || center as any);
     }
 
     return reactAdapter;
@@ -112,11 +113,11 @@ export const JsompView: React.FC<JsompViewProps> = ({
       stylePresets
     });
 
-    // Update registry fallback if scope changes
-    if (scope) {
-      runtimeRef.current?.setRegistryFallback(scope);
+    // Update registry fallback if changes
+    if (registry) {
+      runtimeRef.current?.setRegistryFallback(registry);
     }
-  }, [components, stylePresets, scope]);
+  }, [components, stylePresets, registry]);
 
   // 4. Connect to React Store
   const descriptors = useJsompRuntime(adapter);
