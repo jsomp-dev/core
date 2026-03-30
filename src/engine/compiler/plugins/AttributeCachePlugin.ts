@@ -33,6 +33,11 @@ export const attributeCachePlugin: IJsompPluginDef = {
         const depKeys = BindingResolver.extractKeys(value);
         if (depKeys.length === 0) continue;
 
+        // Report dependencies even if cached, so runtime/discovery can track them
+        if (ctx.onDependency) {
+          depKeys.forEach(k => ctx.onDependency!(id, k));
+        }
+
         // Calculate checksum based on atom values
         const checksum = depKeys.map(k => {
           const atom = ctx.atomRegistry!.get(k);

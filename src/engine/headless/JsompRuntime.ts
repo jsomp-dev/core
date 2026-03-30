@@ -217,7 +217,11 @@ export class JsompRuntime implements IJsompRuntime {
         nodeSet.add(nodeId);
       },
       // Pass the runtime's state to the compiler
-      nodes: this._topologyMap
+      nodes: this._topologyMap,
+      // Pass the internal registry (connected to SignalCenter) instead of the global one.
+      // This ensures that compiler plugins (like AttributeCache/ActionTags) use the correct instance.
+      atomRegistry: this._pipelineContext.registry,
+      actionRegistry: this._pipelineContext.actions
     });
 
     // 3. Topology Map is now updated in-place by the stateless compiler but we still execute the sync.

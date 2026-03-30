@@ -17,20 +17,19 @@ export const dependencyPlugin: IJsompPluginDef = {
     const scan = (val: any) => {
       if (typeof val === 'string') {
         // Regex for {{ key }} or {{key}}
-        // Global flag to find all occurrences
-        const regex = /\{\{\s*([a-zA-Z0-9_$.]+)\s*\}\}/g;
+        // Added support for hyphens '-' and more characters in atom keys.
+        // Also made regex globally searchable.
+        const regex = /\{\{\s*([a-zA-Z0-9_$.-]+)\s*\}\}/g;
         let match;
         while ((match = regex.exec(val)) !== null) {
           if (match[1]) {
-            ctx.onDependency!(id, match[1]);
+            ctx.onDependency!(id, match[1].trim());
           }
         }
       } else if (val && typeof val === 'object') {
-        // Shallow scan of props object values (recursive can be expensive)
-        // For V2 MVP, we scan direct string values in props.
-        // We can go 1 level deep if needed.
+        // [FIX] Recursive scan for lists (style_tw) and complex props.
         Object.values(val).forEach(v => {
-          if (typeof v === 'string') scan(v);
+          scan(v);
         });
       }
     };
@@ -40,7 +39,15 @@ export const dependencyPlugin: IJsompPluginDef = {
       scan(node.props);
     }
 
-    // 2. Scan Injection (if available in raw entity, though hydration merges it)
+    // 2. Scan Styles (Critical for reactive visual states)
+    if (node.style_tw) {
+      scan(node.style_tw);
+    }
+    if (node.style_css) {
+      scan(node.style_css);
+    }
+
+    // 3. Scan Injection (if available in raw entity, though hydration merges it)
     // Usually Props cover most cases after hydration.
   }
 };

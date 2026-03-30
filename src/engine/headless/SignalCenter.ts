@@ -28,10 +28,10 @@ export class SignalCenter implements ISignalCenter {
    */
   public onUpdate(path: string, newValue: any): void {
     pathUtils.set(this._state, path, newValue);
-    
+
     // Bubble up: a.b.c -> [a, a.b, a.b.c] are all dirty
     this._bubbleDirty(path);
-    
+
     this._triggerBatch();
   }
 
@@ -40,7 +40,7 @@ export class SignalCenter implements ISignalCenter {
    */
   public patch(path: string, patchObj: any): void {
     const modifiedPaths = pathUtils.patch(this._state, path, patchObj);
-    
+
     if (modifiedPaths.length > 0) {
       modifiedPaths.forEach(p => this._bubbleDirty(p));
       this._triggerBatch();
