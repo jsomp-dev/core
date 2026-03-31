@@ -7,3 +7,4 @@ export * from './AttributeCachePlugin';
 export * from './IncrementalDiscoveryPlugin';
 export * from './RecursionGuardPlugin';
 export * from './AutoSyncPlugin';
+export * from './OperatorExpressionPlugin';
