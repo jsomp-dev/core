@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useMemo} from 'react';
 import {jsompEnv} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
@@ -14,9 +14,58 @@ export const OperatorTest: React.FC = () => {
   }, []);
 
   const entities = useMemo(() => [
+    // --- TEMPLATES (UI Parts) ---
+    {
+      id: 'tpl_state_card',
+      type: 'div',
+      style_css: {padding: '0.75rem', background: '#18181b', borderRadius: '0.5rem', border: '1px solid #27272a', textAlign: 'center'}
+    },
+    {
+      id: 'tpl_state_card_title',
+      type: 'div',
+      style_css: {fontSize: '0.6rem', color: '#71717a', textTransform: 'uppercase', marginBottom: '0.25rem'}
+    },
+    {
+      id: 'tpl_state_card_value',
+      type: 'div',
+      style_css: {fontSize: '0.8rem', color: '#fafafa', fontFamily: 'monospace'}
+    },
+    {
+      id: 'tpl_section',
+      type: 'div',
+      style_css: {marginBottom: '2rem', padding: '1rem', background: '#18181b', borderRadius: '0.5rem', border: '1px solid #27272a'}
+    },
+    {
+      id: 'tpl_section_title',
+      type: 'div',
+      style_css: {fontSize: '0.75rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', fontWeight: 'bold'}
+    },
+    {
+      id: 'tpl_icon_btn',
+      type: 'button',
+      style_css: {width: '24px', height: '24px', borderRadius: '4px', border: '1px solid #3f3f46', background: '#27272a', color: '#fff', cursor: 'pointer'}
+    },
+    {
+      id: 'tpl_res_box',
+      type: 'div',
+      style_css: {padding: '0.5rem', background: '#09090b', borderRadius: '0.25rem', fontSize: '0.75rem', color: '#a1a1aa', border: '1px dashed #27272a'}
+    },
+
+    // --- LAYOUT ROOT ---
+    {
+      id: 'app_wrapper',
+      type: 'div',
+      style_css: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        width: '100%'
+      }
+    },
     {
       id: 'op_root',
       type: 'div',
+      parent: 'app_wrapper',
       style_css: {
         padding: '2rem',
         maxWidth: '600px',
@@ -38,15 +87,13 @@ export const OperatorTest: React.FC = () => {
     // --- SECTION 1: LOGIC & SYNC ---
     {
       id: 'section_1',
-      type: 'div',
-      parent: 'op_root',
-      style_css: {marginBottom: '2rem', padding: '1rem', background: '#18181b', borderRadius: '0.5rem', border: '1px solid #27272a'}
+      inherit: 'tpl_section',
+      parent: 'op_root'
     },
     {
       id: 'sec1_title',
-      type: 'div',
+      inherit: 'tpl_section_title',
       parent: 'section_1',
-      style_css: {fontSize: '0.75rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', fontWeight: 'bold'},
       props: {children: '1. Logic & Toggling'}
     },
     {
@@ -101,15 +148,13 @@ export const OperatorTest: React.FC = () => {
     // --- SECTION 2: ARITHMETIC ---
     {
       id: 'section_2',
-      type: 'div',
-      parent: 'op_root',
-      style_css: {marginBottom: '2rem', padding: '1rem', background: '#18181b', borderRadius: '0.5rem', border: '1px solid #27272a'}
+      inherit: 'tpl_section',
+      parent: 'op_root'
     },
     {
       id: 'sec2_title',
-      type: 'div',
+      inherit: 'tpl_section_title',
       parent: 'section_2',
-      style_css: {fontSize: '0.75rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', fontWeight: 'bold'},
       props: {children: '2. Arithmetic Derivation'}
     },
     {
@@ -126,9 +171,8 @@ export const OperatorTest: React.FC = () => {
     },
     {
       id: 'btn_minus',
-      type: 'button',
+      inherit: 'tpl_icon_btn',
       parent: 'counter_ctrl',
-      style_css: {width: '24px', height: '24px', borderRadius: '4px', border: '1px solid #3f3f46', background: '#27272a', color: '#fff', cursor: 'pointer'},
       actions: {
         'op.decrement': ['onClick']
       },
@@ -143,9 +187,8 @@ export const OperatorTest: React.FC = () => {
     },
     {
       id: 'btn_plus',
-      type: 'button',
+      inherit: 'tpl_icon_btn',
       parent: 'counter_ctrl',
-      style_css: {width: '24px', height: '24px', borderRadius: '4px', border: '1px solid #3f3f46', background: '#27272a', color: '#fff', cursor: 'pointer'},
       actions: {
         'op.increment': ['onClick']
       },
@@ -159,9 +202,8 @@ export const OperatorTest: React.FC = () => {
     },
     {
       id: 'res_1',
-      type: 'div',
+      inherit: 'tpl_res_box',
       parent: 'arith_results',
-      style_css: {padding: '0.5rem', background: '#09090b', borderRadius: '0.25rem', fontSize: '0.75rem', color: '#a1a1aa', border: '1px dashed #27272a'},
       props: {children: 'Add: {{count}} + 10 = {{op_add}}'}
     },
     {
@@ -174,9 +216,8 @@ export const OperatorTest: React.FC = () => {
     },
     {
       id: 'res_2',
-      type: 'div',
+      inherit: 'tpl_res_box',
       parent: 'arith_results',
-      style_css: {padding: '0.5rem', background: '#09090b', borderRadius: '0.25rem', fontSize: '0.75rem', color: '#a1a1aa', border: '1px dashed #27272a'},
       props: {
         children: {
           opType: 'pipeline',
@@ -192,15 +233,14 @@ export const OperatorTest: React.FC = () => {
     // --- SECTION 3: MATCH & PIPELINE ---
     {
       id: 'section_3',
-      type: 'div',
+      inherit: 'tpl_section',
       parent: 'op_root',
-      style_css: {padding: '1rem', background: '#18181b', borderRadius: '0.5rem', border: '1px solid #27272a'}
+      style_css: {marginBottom: 0} // Override margin for the last section
     },
     {
       id: 'sec3_title',
-      type: 'div',
+      inherit: 'tpl_section_title',
       parent: 'section_3',
-      style_css: {fontSize: '0.75rem', color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', fontWeight: 'bold'},
       props: {children: '3. Pattern Match & Pipeline'}
     },
     {
@@ -267,14 +307,55 @@ export const OperatorTest: React.FC = () => {
         // We name the operator so it can be referenced by {{op_add}} elsewhere
         'op_add': {opType: 'add', name: 'op_add', target: '{{count}}', value: 10}
       }
-    }
+    },
+
+    // --- SECTION 4: GLOBAL STATE CARDS (Using Inherit) ---
+    {
+      id: 'cards_container',
+      type: 'div',
+      parent: 'app_wrapper',
+      style_css: {
+        marginTop: '2rem',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '1rem',
+        width: '100%',
+        maxWidth: '600px'
+      }
+    },
+    // Count Card
+    { id: 'card_count', inherit: 'tpl_state_card', parent: 'cards_container' },
+    { id: 'card_count_title', inherit: 'tpl_state_card_title', parent: 'card_count', props: {children: 'count'} },
+    { id: 'card_count_val', inherit: 'tpl_state_card_value', parent: 'card_count', props: {children: '{{count}}'} },
+    
+    // isExpanded Card
+    { id: 'card_isExpanded', inherit: 'tpl_state_card', parent: 'cards_container' },
+    { id: 'card_isExpanded_title', inherit: 'tpl_state_card_title', parent: 'card_isExpanded', props: {children: 'isExpanded'} },
+    { 
+      id: 'card_isExpanded_val', 
+      inherit: 'tpl_state_card_value', 
+      parent: 'card_isExpanded', 
+      props: {
+        children: { opType: 'if', target: '{{isExpanded}}', then: 'true', else: 'false' }
+      } 
+    },
+
+    // userRole Card
+    { id: 'card_userRole', inherit: 'tpl_state_card', parent: 'cards_container' },
+    { id: 'card_userRole_title', inherit: 'tpl_state_card_title', parent: 'card_userRole', props: {children: 'userRole'} },
+    { id: 'card_userRole_val', inherit: 'tpl_state_card_value', parent: 'card_userRole', props: {children: '{{userRole}}'} },
+
+    // price Card
+    { id: 'card_price', inherit: 'tpl_state_card', parent: 'cards_container' },
+    { id: 'card_price_title', inherit: 'tpl_state_card_title', parent: 'card_price', props: {children: 'price'} },
+    { id: 'card_price_val', inherit: 'tpl_state_card_value', parent: 'card_price', props: {children: '{{price}}'} }
   ], []);
 
   return (
     <div style={{padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
       <JsompView
         entities={entities}
-        rootId="op_root"
+        rootId="app_wrapper"
         registry={registry}
         beforeMount={(localRegistry) => {
           // 2. Register Actions (Successfully resolved after timing fix)
@@ -305,20 +386,6 @@ export const OperatorTest: React.FC = () => {
           });
         }}
       />
-
-      <div style={{marginTop: '2rem', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', width: '100%', maxWidth: '600px'}}>
-        <StateCard title="count" value={(registry.get('count') as any).value} />
-        <StateCard title="isExpanded" value={String((registry.get('isExpanded') as any).value)} />
-        <StateCard title="userRole" value={(registry.get('userRole') as any).value} />
-        <StateCard title="price" value={(registry.get('price') as any).value} />
-      </div>
     </div>
   );
 };
-
-const StateCard = ({title, value}: {title: string, value: any}) => (
-  <div style={{padding: '0.75rem', background: '#18181b', borderRadius: '0.5rem', border: '1px solid #27272a', textAlign: 'center'}}>
-    <div style={{fontSize: '0.6rem', color: '#71717a', textTransform: 'uppercase', marginBottom: '0.25rem'}}>{title}</div>
-    <div style={{fontSize: '0.8rem', color: '#fafafa', fontFamily: 'monospace'}}>{value}</div>
-  </div>
-);
