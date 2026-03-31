@@ -20,7 +20,11 @@ export const actionTagsPlugin: IJsompPluginDef = {
       return;
     }
 
-    // 2. Iterate through action tags
+    // 2. Create a local buffer for THIS pass on THIS node
+    // This allows composing multiple actions in one run while preventing pass-to-pass accumulation.
+    const localHandlers: Record<string, Function> = {};
+
+    // 3. Iterate through action tags
     Object.entries(node.actions as Record<string, string[]>).forEach(([tagName, eventNames]) => {
       const def = actionRegistry.getDefinition(tagName);
       if (!def) {
@@ -28,15 +32,19 @@ export const actionTagsPlugin: IJsompPluginDef = {
         return;
       }
 
-      // 3. Contract Audit (Optional but recommended)
+      // 4. Contract Audit (Optional but recommended)
       if (def.require) {
         // Atoms check
         if (def.require.atoms && ctx.atomRegistry) {
           const missingAtoms = Object.entries(def.require.atoms)
-            .filter(([_, realKey]) => !ctx.atomRegistry!.get(realKey));
+            .filter(([_, realKey]) => ctx.atomRegistry!.get(realKey) === undefined);
 
           if (missingAtoms.length > 0) {
-            ctx.logger.warn(`[ActionTags] Node "${id}" (tag: ${tagName}) missing required atoms: ${missingAtoms.map(a => a[1]).join(', ')}`);
+            // Only warn if the registry is actually ready/connected
+            // This avoids spam during initial partial hydration
+            if (ctx.atomRegistry?.getSnapshot?.()) {
+              ctx.logger.warn(`[ActionTags] Node "${id}" (tag: ${tagName}) missing required atoms: ${missingAtoms.map(a => a[1]).join(', ')}`);
+            }
           }
         }
 
@@ -50,7 +58,7 @@ export const actionTagsPlugin: IJsompPluginDef = {
         }
       }
 
-      // 4. Create Runtime Handler (Environment Injection)
+      // 5. Create Runtime Handler (Environment Injection)
       const actionHandler = async (eventPayload: any) => {
         const env = {
           // A. Aliased Atoms
@@ -77,21 +85,28 @@ export const actionTagsPlugin: IJsompPluginDef = {
         await def.handler(env);
       };
 
-      // 5. Bind to onEvent slots
-      node.onEvent = node.onEvent || {};
+      // 6. Populate Local Buffer (Composition within pass)
       eventNames.forEach(evtName => {
-        // If there's already a handler, we compose them (sequential execution)
-        const existing = node.onEvent![evtName];
+        const existing = localHandlers[evtName];
         if (existing) {
-          const prevHandler = existing;
-          node.onEvent![evtName] = async (payload: any) => {
-            await prevHandler(payload);
+          // If we have multiple tags for the same event in the SAME PASS, compose them
+          localHandlers[evtName] = async (payload: any) => {
+            await existing(payload);
             await actionHandler(payload);
           };
         } else {
-          node.onEvent![evtName] = actionHandler;
+          localHandlers[evtName] = actionHandler;
         }
       });
     });
+
+    // 7. Atomic Overwrite back to node.onEvent
+    // This wipes previous action-tag-bound handlers across passes while keeping other event types.
+    if (Object.keys(localHandlers).length > 0) {
+      node.onEvent = {
+        ...node.onEvent,
+        ...localHandlers
+      };
+    }
   }
 };

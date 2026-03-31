@@ -55,12 +55,14 @@ export class JsompRuntime implements IJsompRuntime {
 
     // Initialize generic context
     // SignalRegistryAdapter starts disconnected (no data/version), will connect in 'use' method.
+    const registry = new SignalRegistryAdapter().setRuntime(this);
     this._pipelineContext = {
-      registry: new SignalRegistryAdapter().setRuntime(this),
+      registry,
+      actions: jsompEnv.service.actions,
       cache: new Map(),
       dirtyIds: new Set(),
       resolver: {
-        resolve: (content: string) => BindingResolver.resolve(content, this._pipelineContext.registry)
+        resolve: (content: string) => BindingResolver.resolve(content, registry)
       }
     };
   }

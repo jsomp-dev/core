@@ -17,4 +17,12 @@ export const propsTrait: TraitProcessor = (
       ...node.props
     };
   }
+
+  // Pass generated event handlers to the renderer
+  if (node.onEvent) {
+    descriptor.props = {
+      ...descriptor.props,
+      ...node.onEvent
+    };
+  }
 };
