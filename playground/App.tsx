@@ -5,13 +5,14 @@ import {AutoSyncTest} from './AutoSyncTest';
 import {PerformanceTest} from './PerformanceTest';
 import {StreamTest} from './StreamTest';
 import {BasicPresetsTest} from './BasicPresetsTest';
+import {OperatorTest} from './OperatorTest';
 import {HtmlRegistry, setupJsomp} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream'>('basic');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator'>('operator');
   const [entities] = useState<any[]>([
     {
       id: 'app_root',
@@ -298,6 +299,22 @@ const App: React.FC = () => {
         >
           Preset Lab
         </button>
+        <button
+          onClick={() => setCurrentTab('operator')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.25rem',
+            background: currentTab === 'operator' ? '#27272a' : 'transparent',
+            border: 'none',
+            color: currentTab === 'operator' ? '#fafafa' : '#a1a1aa',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s'
+          }}
+        >
+          Operator Lab
+        </button>
       </nav>
 
       {/* Main View Container */}
@@ -320,6 +337,8 @@ const App: React.FC = () => {
           <AutoSyncTest />
         ) : currentTab === 'perf' ? (
           <PerformanceTest />
+        ) : currentTab === 'operator' ? (
+          <OperatorTest />
         ) : (
           <StreamTest />
         )}
