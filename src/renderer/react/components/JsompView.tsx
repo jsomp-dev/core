@@ -22,7 +22,19 @@ export interface JsompViewProps {
   /** Style presets mapping */
   stylePresets?: Record<string, string[]>;
 
-  /** Callback when the page is mounted and registry is created */
+  /** 
+   * Callback before component mounting (before context injection and initial data feed). 
+   * Usually used for registering custom Actions or global extensions.
+   */
+  beforeMount?: (registry: IAtomRegistry) => void;
+
+  /** Callback after component mounting (before initial data feed). */
+  onMount?: (registry: IAtomRegistry) => void;
+
+  /** 
+   * @deprecated will be removed in next version, please migrate to onMount.
+   * Callback after component mounting (before initial data feed).
+   */
   onMounted?: (registry: IAtomRegistry) => void;
 
   /** Optional external registry (internal signal registry created if not provided) */
@@ -52,6 +64,8 @@ export const JsompView: React.FC<JsompViewProps> = ({
   rootId,
   components,
   stylePresets,
+  beforeMount,
+  onMount,
   onMounted,
   registry
 }) => {
@@ -67,6 +81,16 @@ export const JsompView: React.FC<JsompViewProps> = ({
     const center = new SignalCenter();
     runtime.use(center);
 
+    const reactAdapter = new ReactAdapter(runtime, center);
+
+    // Lifecycle: beforeMount (Call before context/feed)
+    const fallbackRegistry = registry || jsompEnv.service?.globalRegistry;
+    const contextRegistry = fallbackRegistry || center as any;
+
+    if (beforeMount) {
+      beforeMount(contextRegistry);
+    }
+
     // Initial Context Injection
     runtime.updateContext({
       components: components as any,
@@ -75,22 +99,22 @@ export const JsompView: React.FC<JsompViewProps> = ({
 
     // Connectivity: If an external registry (AtomRegistry) is provided, connect it as a fallback.
     // If none provided, try connecting to the global registry from jsompEnv as default.
-    const fallbackRegistry = registry || jsompEnv.service?.globalRegistry;
     if (fallbackRegistry) {
       runtime.setRegistryFallback(fallbackRegistry);
     }
 
-    const reactAdapter = new ReactAdapter(runtime, center);
+    // Lifecycle: onMount / onMounted (Call before feed so user can register actions/etc.)
+    if (onMount) {
+      onMount(contextRegistry);
+    }
+    if (onMounted) {
+      onMounted(contextRegistry);
+    }
 
     // Initial Sync Feed for SSR support
     if (entities) {
       const map = normalizeToMap(entities);
       reactAdapter.feed(map);
-    }
-
-    // Lifecycle: onMounted
-    if (onMounted) {
-      onMounted(fallbackRegistry || center as any);
     }
 
     return reactAdapter;
