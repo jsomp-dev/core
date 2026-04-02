@@ -19,7 +19,7 @@ export function useAtomProxy<T = any>(path: string): T {
   const pathStack = useContext(JsompPathContext);
   
   // Resolve reactive source (SignalCenter for local, GlobalRegistry for global)
-  const source = adapter?.signalCenter || jsompEnv.service?.globalRegistry;
+  const source = adapter?.signalCenter || jsompEnv.service?.atoms;
 
   if (!source) {
     throw new Error('[Jsomp] useAtomProxy must be used within JsompView or after setupJsomp().');

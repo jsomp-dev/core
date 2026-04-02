@@ -16,10 +16,10 @@ export const autoSyncPlugin: IJsompPluginDef = {
     if (!node || !node.type) return;
 
     // 2. Lookup component metadata for sync traits
-    const componentRegistry = jsompEnv.service?.componentRegistry;
-    if (!componentRegistry) return;
+    const components = jsompEnv.service?.components;
+    if (!components) return;
 
-    const meta = componentRegistry.getMeta(node.type);
+    const meta = components.getMeta(node.type);
 
     // 3. Handle Mandatory No-op Injection (to prevent crash)
     // Some controlled components will crash if 'value' is provided without 'onChange'.

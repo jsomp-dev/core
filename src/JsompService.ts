@@ -42,13 +42,29 @@ export class JsompService implements IJsompService {
   /**
    * Component registry
    */
-  public readonly componentRegistry: IComponentRegistry = new ComponentRegistry();
+  public readonly components: IComponentRegistry = new ComponentRegistry();
+
+  /**
+   * Component registry
+   * @deprecated Use 'components' instead.
+   */
+  public get componentRegistry() {
+    return this.components;
+  }
 
   /**
    * Global state registry
    * Business layers should inject long-term shared state here.
    */
-  public readonly globalRegistry: IStateDispatcherRegistry;
+  public readonly atoms: IStateDispatcherRegistry;
+
+  /**
+   * Global state registry
+   * @deprecated Use 'atoms' instead.
+   */
+  public get globalRegistry() {
+    return this.atoms;
+  }
 
   /**
    * Schema Registry for typed atoms
@@ -71,7 +87,7 @@ export class JsompService implements IJsompService {
   public readonly traitPipeline: ITraitPipeline;
 
   constructor() {
-    this.globalRegistry = new StateDispatcherRegistry(new AtomRegistry());
+    this.atoms = new StateDispatcherRegistry(new AtomRegistry());
     this.pipeline = PipelineRegistry.global.clone();
     this.traitPipeline = new TraitPipeline();
     this.schemas = SchemaRegistry.global;
@@ -86,7 +102,7 @@ export class JsompService implements IJsompService {
       const targetStore = isAutoMount ? store : nsOrStore;
       const registry = new ExternalStateRegistry(new ZustandAdapter(targetStore));
       if (isAutoMount) {
-        this.globalRegistry.mount(nsOrStore, registry);
+        this.atoms.mount(nsOrStore, registry);
       }
       return registry;
     },
@@ -95,7 +111,7 @@ export class JsompService implements IJsompService {
       const targetStore = isAutoMount ? store : nsOrStore;
       const registry = new ExternalStateRegistry(new ObjectAdapter(targetStore));
       if (isAutoMount) {
-        this.globalRegistry.mount(nsOrStore, registry);
+        this.atoms.mount(nsOrStore, registry);
       }
       return registry;
     }
@@ -113,7 +129,7 @@ export class JsompService implements IJsompService {
    * Prefix usage example: "external://zustand/user.name"
    */
   public createStateDispatcher(defaultRegistry?: IAtomRegistry): IStateDispatcherRegistry {
-    return new StateDispatcherRegistry(defaultRegistry || this.globalRegistry);
+    return new StateDispatcherRegistry(defaultRegistry || this.atoms);
   }
 
   /**
@@ -121,7 +137,7 @@ export class JsompService implements IJsompService {
    */
   public createStream(options: StreamOptions = {}): IJsompStream {
     return new JsompStream({
-      atomRegistry: this.globalRegistry, // Use global by default
+      atomRegistry: this.atoms, // Use global by default
       ...options
     });
   }
@@ -175,8 +191,8 @@ export class JsompService implements IJsompService {
    * Reset the service state.
    */
   public reset(): void {
-    this.globalRegistry.clear();
+    this.atoms.clear();
     this._compiler = undefined;
-    // We don't clear registries like componentRegistry as they are usually static definitions.
+    // We don't clear registries like components as they are usually static definitions.
   }
 }

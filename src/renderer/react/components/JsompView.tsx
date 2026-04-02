@@ -84,7 +84,7 @@ export const JsompView: React.FC<JsompViewProps> = ({
     const reactAdapter = new ReactAdapter(runtime, center);
 
     // Lifecycle: beforeMount (Call before context/feed)
-    const fallbackRegistry = registry || jsompEnv.service?.globalRegistry;
+    const fallbackRegistry = registry || jsompEnv.service?.atoms;
     const contextRegistry = fallbackRegistry || center as any;
 
     if (beforeMount) {
@@ -140,7 +140,7 @@ export const JsompView: React.FC<JsompViewProps> = ({
     });
 
     // Update registry fallback if changes
-    const fb = registry || jsompEnv.service?.globalRegistry;
+    const fb = registry || jsompEnv.service?.atoms;
     if (fb) {
       runtimeRef.current?.setRegistryFallback(fb);
     }

@@ -17,12 +17,24 @@ export interface IJsompService {
   readonly env: IJsompEnv;
 
   /**
-   * Component registry (Public for plugins to register presets)
+   * Component registry
+   */
+  readonly components: IComponentRegistry;
+
+  /**
+   * Component registry
+   * @deprecated Use 'components' instead.
    */
   readonly componentRegistry: IComponentRegistry;
 
   /**
    * Global state registry (Hybrid Dispatcher)
+   */
+  readonly atoms: IStateDispatcherRegistry;
+
+  /**
+   * Global state registry (Hybrid Dispatcher)
+   * @deprecated Use 'atoms' instead.
    */
   readonly globalRegistry: IStateDispatcherRegistry;
 
@@ -59,7 +71,7 @@ export interface IJsompService {
 
   /**
    * State adapter factories (for external state synergy)
-   * If namespace is provided, it will be automatically mounted to globalRegistry.
+   * If namespace is provided, it will be automatically mounted to atoms.
    */
   adapters: {
     zustand(store: any): IAtomRegistry;

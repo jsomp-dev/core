@@ -16,7 +16,7 @@ export function useAtom<T = any>(path: string): [T, (val: T | ((prev: T) => T)) 
   const pathStack = useContext(JsompPathContext);
 
   // 1. Resolve reactive source (Primary: Runtime SignalCenter, Fallback: Global Registry)
-  const source = adapter?.signalCenter || jsompEnv.service?.globalRegistry;
+  const source = adapter?.signalCenter || jsompEnv.service?.atoms;
 
   if (!source) {
     throw new Error('[Jsomp] useAtom must be used within JsompView or after setupJsomp() (Global Context).');

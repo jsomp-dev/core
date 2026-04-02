@@ -51,7 +51,7 @@ const JsompNodeItem = memo(({id}: {id: string}) => {
         Component = localComponents[descriptor.componentType];
       } else {
         // Step 2: Try global registry
-        const registered = jsompEnv.service?.componentRegistry.get(descriptor.componentType);
+        const registered = jsompEnv.service?.components.get(descriptor.componentType);
         if (registered) {
           Component = registered;
         }
