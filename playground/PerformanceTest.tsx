@@ -5,13 +5,7 @@ import {JsompView} from "@jsomp/core/react";
 export const PerformanceTest: React.FC = () => {
   const [count, setCount] = useState(0);
 
-  // 1. Prepare registry
-  const registry = useMemo(() => {
-    const reg = jsompEnv.service.createScope();
-    reg.set('status', {value: 'System Ready'});
-    reg.set('taskCount', {value: 0});
-    return reg;
-  }, []);
+  // Registry and state initialization now happens inside beforeMount of JsompView
 
   // 2. Define entities (Memoized to prevent unnecessary JSOMP updates during React re-renders)
   const entities = useMemo(() => [
@@ -65,15 +59,10 @@ export const PerformanceTest: React.FC = () => {
       parent: 'btn_group',
       style_tw: ['px-4', 'py-1.5', 'bg-zinc-50', 'hover:bg-zinc-200', 'text-zinc-950', 'rounded', 'text-xs', 'font-medium', 'transition-colors'],
       props: {
-        children: 'Normal Update (Fast)',
-        onClick: () => {
-          // Clear any malicious logic manually (hacky way for test)
-          (jsompEnv.service.compiler as any).localRegistry.unregister?.('malicious_lag');
-
-          registry.set('status', {value: 'Fast Click'});
-          const currentCount = (registry.get('taskCount') as any)?.value || 0;
-          registry.set('taskCount', {value: currentCount + 1});
-        }
+        children: 'Normal Update (Fast)'
+      },
+      actions: {
+        'perf.fast': ['onClick']
       }
     },
     {
@@ -82,25 +71,13 @@ export const PerformanceTest: React.FC = () => {
       parent: 'btn_group',
       style_tw: ['px-4', 'py-1.5', 'bg-rose-600', 'hover:bg-rose-500', 'text-white', 'rounded', 'text-xs', 'font-medium', 'transition-colors'],
       props: {
-        children: 'Trigger Jank (Slow)',
-        onClick: () => {
-          const randomLag = Math.floor(Math.random() * 40) + 40; // 40ms ~ 80ms
-
-          jsompEnv.service.compiler.use('malicious_lag', PipelineStage.PreProcess, () => {
-            const start = performance.now();
-            while (performance.now() - start < randomLag) {
-              // Forced blocking
-            }
-            return undefined;
-          }, 'LagGenerator');
-
-          registry.set('status', {value: `⚠️ Lag: ${randomLag}ms ⚠️`});
-          const currentCount = (registry.get('taskCount') as any)?.value || 0;
-          registry.set('taskCount', {value: currentCount + 1});
-        }
+        children: 'Trigger Jank (Slow)'
+      },
+      actions: {
+        'perf.slow': ['onClick']
       }
     }
-  ], [registry]);
+  ], []);
 
   return (
     <div style={{padding: '20px', width: '100%', maxWidth: '800px'}}>
@@ -110,7 +87,53 @@ export const PerformanceTest: React.FC = () => {
           <JsompView
             entities={entities}
             rootId="perf_root"
-            scope={registry}
+            beforeMount={(reg) => {
+              const jsomp = jsompEnv.service;
+
+              // 1. Initial States
+              reg.set('status', {value: 'System Ready'});
+              reg.set('taskCount', {value: 0});
+
+              // 2. Actions
+              jsomp.actions.register('perf.fast', {
+                require: {
+                  atoms: {
+                    status: 'status.value',
+                    taskCount: 'taskCount.value'
+                  }
+                },
+                handler: ({atoms}) => {
+                  // [CLEANUP] Remove any compiler lag plugin if exists
+                  jsomp.pipeline.unregister('malicious_lag');
+
+                  // Direct assignment as per V1.2 design
+                  atoms.status = 'Fast Click';
+                  atoms.taskCount = (Number(atoms.taskCount) || 0) + 1;
+                }
+              });
+
+              jsomp.actions.register('perf.slow', {
+                require: {
+                  atoms: {
+                    status: 'status.value',
+                    taskCount: 'taskCount.value'
+                  }
+                },
+                handler: ({atoms}) => {
+                  const randomLag = Math.floor(Math.random() * 40) + 40;
+
+                  // Inject temporary lag plugin
+                  jsomp.pipeline.register('malicious_lag', PipelineStage.PreProcess, () => {
+                    const start = performance.now();
+                    while (performance.now() - start < randomLag) { /* Lag... */ }
+                    return undefined;
+                  }, 'LagGenerator');
+
+                  atoms.status = `⚠️ Lag: ${randomLag}ms ⚠️`;
+                  atoms.taskCount = (Number(atoms.taskCount) || 0) + 1;
+                }
+              });
+            }}
           />
         </div>
 

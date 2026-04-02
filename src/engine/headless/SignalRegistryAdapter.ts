@@ -139,13 +139,13 @@ export class SignalRegistryAdapter implements IAtomRegistry {
     }
   }
 
-  public subscribe(key: string, callback: () => void): () => void {
+  public subscribe<T = any>(key: string, callback: (value: T, set: (newValue: T) => void, patch?: (partial: Partial<T>) => void) => void): () => void {
     // Subscription is not supported in this adapter version.
     // Use SignalCenter.subscribe() for bulk updates instead.
     return () => { };
   }
 
-  public subscribeAll(callback: (key: string, value: any) => void): () => void {
+  public subscribeAll(callback: (key: string, value: any, set: (newValue: any) => void, patch?: (partial: any) => void) => void): () => void {
     // Similar to above.
     return () => { };
   }

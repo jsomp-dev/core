@@ -153,21 +153,17 @@ export const BasicPresetsTest: React.FC = () => {
     }
   ]);
 
-  const scope = useMemo(() => {
-    const jsomp = jsompEnv.service!;
-    BasicRegistry.registerAll(jsomp.componentRegistry);
-
-    const newScope = jsomp.createScope();
-    newScope.set('testInput', {value: 'Hello JSOMP'});
-    return newScope;
-  }, []);
-
   return (
     <div className="w-full flex justify-center py-10">
       <JsompView
         entities={entities}
         rootId="root"
-        scope={scope}
+        beforeMount={() => {
+          const jsomp = jsompEnv.service!;
+          BasicRegistry.registerAll(jsomp.components);
+
+          jsomp.atoms.set('testInput', {value: 'Hello JSOMP'});
+        }}
       />
     </div>
   );

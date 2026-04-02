@@ -3,16 +3,6 @@ import {jsompEnv} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
 export const OperatorTest: React.FC = () => {
-  // 1. Prepare local state
-  const registry = useMemo(() => {
-    const reg = jsompEnv.service!.globalRegistry;
-    reg.set('count', {value: 5});
-    reg.set('isExpanded', {value: false});
-    reg.set('userRole', {value: 'user'});
-    reg.set('price', {value: 120});
-    return reg;
-  }, []);
-
   const entities = useMemo(() => [
     // --- TEMPLATES (UI Parts) ---
     {
@@ -356,8 +346,14 @@ export const OperatorTest: React.FC = () => {
       <JsompView
         entities={entities}
         rootId="app_wrapper"
-        registry={registry}
-        beforeMount={(localRegistry) => {
+        beforeMount={() => {
+          // 1. Prepare Local States
+          const reg = jsompEnv.service!.atoms;
+          reg.set('count', {value: 5});
+          reg.set('isExpanded', {value: false});
+          reg.set('userRole', {value: 'user'});
+          reg.set('price', {value: 120});
+
           // 2. Register Actions (Successfully resolved after timing fix)
           const actions = jsompEnv.service!.actions;
           actions.register('op.toggleExpanded', {

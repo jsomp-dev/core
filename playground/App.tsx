@@ -142,7 +142,7 @@ const App: React.FC = () => {
       const jsomp = await setupJsomp();
 
       // 2. Register native HTML elements
-      HtmlRegistry.registerAll(jsomp.componentRegistry);
+      HtmlRegistry.registerAll(jsomp.components);
 
       setIsReady(true);
     };

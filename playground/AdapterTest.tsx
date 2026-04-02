@@ -255,14 +255,14 @@ export const AdapterTest: React.FC = () => {
       <JsompView
         beforeMount={() => {
           const jsomp = jsompEnv.service!;
-          HtmlRegistry.registerAll(jsomp.componentRegistry);
+          HtmlRegistry.registerAll(jsomp.components);
 
           // 1. Create and Mount Registries in one go (Simplified V1.2 API)
           jsomp.adapters.zustand('z', zustandStore);
           jsomp.adapters.object('obj', legacyPlainObject);
 
           // 3. Initial States for diagnostics
-          jsomp.globalRegistry.set('diagnosis_result', 'Press a diagnostic button to begin...');
+          jsomp.atoms.set('diagnosis_result', 'Press a diagnostic button to begin...');
 
           // 4. Register Actions
           jsomp.actions.register('toggle_theme', {
@@ -287,28 +287,28 @@ export const AdapterTest: React.FC = () => {
           jsomp.actions.register('take_snapshot', {
             handler: () => {
               // Get FULL root snapshot
-              const fullSnapshot = jsomp.globalRegistry.getSnapshot!();
+              const fullSnapshot = jsomp.atoms.getSnapshot!();
               // Exclude the diagnostic field from its own output to avoid recursive nesting
               const {diagnosis_result, ...cleanSnapshot} = fullSnapshot;
-              jsomp.globalRegistry.set('diagnosis_result', JSON.stringify(cleanSnapshot, null, 2));
+              jsomp.atoms.set('diagnosis_result', JSON.stringify(cleanSnapshot, null, 2));
             }
           });
 
           jsomp.actions.register('patch_zustand', {
             handler: () => {
               // Deep patch via namespace
-              jsomp.globalRegistry.patch('z.app', {
+              jsomp.atoms.patch('z.app', {
                 title: 'Patched Title!',
                 version: 'V1.2-PATCHED'
               });
-              jsomp.globalRegistry.set('diagnosis_result', 'Zustand app patched. Verify above card.');
+              jsomp.atoms.set('diagnosis_result', 'Zustand app patched. Verify above card.');
             }
           });
 
           jsomp.actions.register('cross_batch', {
             handler: () => {
               // Cross-registry batch update
-              jsomp.globalRegistry.batchSet({
+              jsomp.atoms.batchSet({
                 'z.settings.theme': 'Light',
                 'obj.user.nick': 'Batch Master',
                 'obj.user.score': 77777,

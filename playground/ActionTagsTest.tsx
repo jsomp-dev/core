@@ -185,10 +185,10 @@ export const ActionTagsTest: React.FC = () => {
       <JsompView
         beforeMount={() => {
           const jsomp = jsompEnv.service!;
-          HtmlRegistry.registerAll(jsomp.componentRegistry);
+          HtmlRegistry.registerAll(jsomp.components);
 
           // 1. Setup Initial States
-          jsomp.globalRegistry.batchSet({
+          jsomp.atoms.batchSet({
             'magic_count': 0,
             'user_profile': {
               name: 'Landing Wizard',

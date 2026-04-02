@@ -99,7 +99,7 @@ const ExternalCounter: React.FC = () => {
         </div>
       </div>
       <p style={{marginTop: '1rem', fontSize: '0.75rem', color: '#52525b'}}>
-        This component accesses <code>global_counter</code> via fallback to <code>jsompEnv.service.globalRegistry</code>.
+        This component accesses <code>global_counter</code> via fallback to <code>jsompEnv.service.atoms</code>.
       </p>
     </div>
   );
@@ -138,13 +138,13 @@ export const UseAtomTest: React.FC = () => {
     if (!jsomp) return;
 
     // Bootstrap global counter
-    if (jsomp.globalRegistry.get('global_counter') === undefined) {
-      jsomp.globalRegistry.set('global_counter', 10);
+    if (jsomp.atoms.get('global_counter') === undefined) {
+      jsomp.atoms.set('global_counter', 10);
     }
 
     // Bootstrap global user for proxy test (V1.2 Magic)
-    if (jsomp.globalRegistry.get('global_user') === undefined) {
-      jsomp.globalRegistry.set('global_user', {
+    if (jsomp.atoms.get('global_user') === undefined) {
+      jsomp.atoms.set('global_user', {
         name: 'Grand Magician',
         stats: {
           level: 1,
@@ -247,10 +247,10 @@ export const UseAtomTest: React.FC = () => {
         beforeMount={() => {
           const jsomp = jsompEnv.service!;
           // Note: Use HtmlRegistry instead of BasicRegistry to ensure basic tag support
-          HtmlRegistry.registerAll(jsomp.componentRegistry);
+          HtmlRegistry.registerAll(jsomp.components);
 
           // Register custom component
-          jsomp.componentRegistry.register('PathWatcher', InternalPathWatcher);
+          jsomp.components.register('PathWatcher', InternalPathWatcher);
         }}
         entities={entities}
         rootId="root"

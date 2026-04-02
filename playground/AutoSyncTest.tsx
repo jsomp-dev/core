@@ -1,25 +1,27 @@
-import React, {useMemo, useState} from 'react';
+import React, {useMemo} from 'react';
 import {jsompEnv} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
 export const AutoSyncTest: React.FC = () => {
-  // 1. Prepare local state registry for this test
-  const registry = useMemo(() => {
-    const reg = jsompEnv.service!.createScope();
-    reg.set('userName', {value: 'Jsomp Bob'});
-    reg.set('bio', {value: 'Exploring JSOMP core magic.'});
-    reg.set('userRole', {value: 'admin'});
-    reg.set('isAgreed', {value: true});
-    return reg;
-  }, []);
-
-  const [savedData, setSavedData] = useState<any>(null);
-
-  // 2. Define entities utilizing Mustache + Auto-Sync
-  const entities = [
+  // 1. Define entities utilizing Mustache + Auto-Sync + Action Tags
+  const entities = useMemo(() => [
+    {
+      id: 'sync_root_wrapper',
+      type: 'div',
+      style_css: {
+        padding: '20px',
+        display: 'flex',
+        gap: '2rem',
+        justifyContent: 'center',
+        width: '100%',
+        maxWidth: '900px',
+        margin: '0 auto'
+      }
+    },
     {
       id: 'sync_root',
       type: 'div',
+      parent: 'sync_root_wrapper',
       style_css: {
         padding: '2.5rem',
         maxWidth: '500px',
@@ -146,57 +148,109 @@ export const AutoSyncTest: React.FC = () => {
       type: 'button',
       parent: 'sync_root',
       style_tw: ['w-full', 'py-2', 'rounded', 'font-medium', 'text-sm', 'transition-colors', 'bg-zinc-50', 'hover:bg-zinc-200', 'text-zinc-950', 'mt-4'],
+      actions: {
+        'lab.saveProfile': ['onClick']
+      },
       props: {
-        children: 'Save Profile ({{userName}})',
-        onClick: () => {
-          const data = {
-            name: registry.get('userName')?.value,
-            role: registry.get('userRole')?.value,
-            agreed: registry.get('isAgreed')?.value,
-            timestamp: new Date().toLocaleTimeString()
-          };
-          setSavedData(data);
+        children: 'Save Profile ({{userName}})'
+      }
+    },
+
+    // --- SAVED DATA DISPLAY ---
+    {
+      id: 'saved_data_card',
+      type: 'div',
+      parent: 'sync_root_wrapper',
+      style_css: {
+        width: '300px',
+        padding: '1.5rem',
+        background: '#18181b',
+        borderRadius: '0.5rem',
+        border: '1px solid #27272a',
+        alignSelf: 'start',
+        // animation: 'fadeIn 0.3s ease-out', // animation can stay if CSS is defined, but for simplicity we use inline match for display
+        display: {
+          opType: 'if',
+          target: '{{savedData}}',
+          then: 'block',
+          else: 'none'
         }
       }
+    },
+    {
+      id: 'saved_data_title',
+      type: 'h4',
+      parent: 'saved_data_card',
+      style_css: {margin: '0 0 1rem 0', color: '#71717a', fontSize: '0.625rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em'},
+      props: {children: 'Saved Profile Data'}
+    },
+    {
+      id: 'saved_data_content',
+      type: 'pre',
+      parent: 'saved_data_card',
+      style_css: {
+        margin: 0,
+        fontSize: '0.75rem',
+        color: '#a1a1aa',
+        whiteSpace: 'pre-wrap',
+        fontFamily: 'monospace',
+        lineHeight: '1.5'
+      },
+      props: {
+        children: '{{savedDataJson}}'
+      }
+    },
+    {
+      id: 'saved_data_footer',
+      type: 'div',
+      parent: 'saved_data_card',
+      style_css: {marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #27272a', fontSize: '0.625rem', color: '#10b981', fontFamily: 'monospace'},
+      props: {children: '✓ DISPATCHED TO MOCK SERVER'}
     }
-  ];
+  ], []);
 
   return (
-    <div style={{padding: '20px', display: 'flex', gap: '2rem', justifyContent: 'center', width: '100%', maxWidth: '900px'}}>
-      <div style={{flex: 1, maxWidth: '500px'}}>
-        <JsompView
-          entities={entities}
-          rootId="sync_root"
-          scope={registry}
-        />
-      </div>
+    <div style={{padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
+      <JsompView
+        entities={entities}
+        rootId="sync_root_wrapper"
+        beforeMount={() => {
+          // 1. Prepare Local States
+          const reg = jsompEnv.service!.atoms;
+          reg.set('userName', 'Jsomp Bob');
+          reg.set('bio', 'Exploring JSOMP core magic.');
+          reg.set('userRole', 'admin');
+          reg.set('isAgreed', true);
+          reg.set('savedData', null);
+          reg.set('savedDataJson', '');
 
-      {savedData && (
-        <div style={{
-          width: '300px',
-          padding: '1.5rem',
-          background: '#18181b',
-          borderRadius: '0.5rem',
-          border: '1px solid #27272a',
-          alignSelf: 'start',
-          animation: 'fadeIn 0.3s ease-out'
-        }}>
-          <h4 style={{margin: '0 0 1rem 0', color: '#71717a', fontSize: '0.625rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em'}}>Saved Profile Data</h4>
-          <pre style={{
-            margin: 0,
-            fontSize: '0.75rem',
-            color: '#a1a1aa',
-            whiteSpace: 'pre-wrap',
-            fontFamily: 'monospace',
-            lineHeight: '1.5'
-          }}>
-            {JSON.stringify(savedData, null, 2)}
-          </pre>
-          <div style={{marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #27272a', fontSize: '0.625rem', color: '#10b981', fontFamily: 'monospace'}}>
-            ✓ DISPATCHED TO MOCK SERVER
-          </div>
-        </div>
-      )}
+          // 2. Register Actions
+          const actions = jsompEnv.service!.actions;
+          actions.register('lab.saveProfile', {
+            require: {
+              atoms: {
+                userName: 'userName',
+                userRole: 'userRole',
+                isAgreed: 'isAgreed',
+                savedData: 'savedData',
+                savedDataJson: 'savedDataJson'
+              }
+            },
+            handler: ({atoms}) => {
+              const data = {
+                name: atoms.userName,
+                role: atoms.userRole,
+                agreed: !!atoms.isAgreed,
+                timestamp: new Date().toLocaleTimeString()
+              };
+              atoms.savedData = data;
+              atoms.savedDataJson = JSON.stringify(data, null, 2);
+              console.log('Profile saved:', data);
+            }
+          });
+        }}
+      />
     </div>
   );
 };
+

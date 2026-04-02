@@ -1,5 +1,5 @@
 import React, {useMemo} from 'react';
-import {createLayoutManager, } from '@jsomp/core';
+import {createLayoutManager} from '@jsomp/core';
 import {JsompView} from "@jsomp/core/react";
 
 /**

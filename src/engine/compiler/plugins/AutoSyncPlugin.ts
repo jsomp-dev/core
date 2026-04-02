@@ -75,7 +75,7 @@ export const autoSyncPlugin: IJsompPluginDef = {
           if (atom && typeof (atom as any).set === 'function') {
             (atom as any).set(actualValue);
           } else {
-            atomRegistry.set(atomKey, {value: actualValue});
+            atomRegistry.set(atomKey, actualValue);
           }
         };
 
