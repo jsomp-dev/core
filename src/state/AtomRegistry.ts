@@ -13,8 +13,8 @@ function isAtom(obj: any): obj is IJsompAtom {
  */
 export class AtomRegistry implements IAtomRegistry {
   private atoms = new Map<string, IJsompAtom | IAtomValue>();
-  private listeners = new Map<string, Set<() => void>>();
-  private globalListeners = new Set<(key: string, value: any) => void>();
+  private listeners = new Map<string, Set<(value: any, set: (newValue: any) => void, patch?: (partial: any) => void) => void>>();
+  private globalListeners = new Set<(key: string, value: any, set: (newValue: any) => void, patch?: (partial: any) => void) => void>();
 
   constructor() { }
 
@@ -77,7 +77,7 @@ export class AtomRegistry implements IAtomRegistry {
           pathUtils.set(rootVal, parts.slice(1).join('.'), value);
           this.notify(key);
           this.notify(rootKey);
-          
+
           this.notifyGlobal(key, value);
           this.notifyGlobal(rootKey, rootVal);
           return;
@@ -142,13 +142,13 @@ export class AtomRegistry implements IAtomRegistry {
   }
 
   /** Subscribe to all changes */
-  subscribeAll(callback: (key: string, value: any) => void): () => void {
+  subscribeAll(callback: (key: string, value: any, set: (newValue: any) => void, patch?: (partial: any) => void) => void): () => void {
     this.globalListeners.add(callback);
     return () => this.globalListeners.delete(callback);
   }
 
   /** Subscribe (Supports local path bubbling) */
-  subscribe(key: string, callback: () => void): () => void {
+  subscribe<T = any>(key: string, callback: (value: T, set: (newValue: T) => void, patch?: (partial: Partial<T>) => void) => void): () => void {
     // 1. Subscribe to local listener
     let set = this.listeners.get(key);
     if (!set) {
@@ -164,13 +164,24 @@ export class AtomRegistry implements IAtomRegistry {
 
   // TODO: Perf Improve
   private notify(key: string) {
+    const notifyPath = (k: string) => {
+      const callbacks = this.listeners.get(k);
+      if (!callbacks) return;
+
+      const value = this.getSnapshot(k);
+      const setter = (nv: any) => this.set(k, nv);
+      const patcher = (pv: any) => this.patch(k, pv);
+
+      callbacks.forEach(cb => cb(value, setter, typeof value === 'object' ? patcher : undefined));
+    };
+
     // 1. Notify exact match listeners
-    this.listeners.get(key)?.forEach(cb => cb());
+    notifyPath(key);
 
     // 2. V1.1: Notify descendant paths (e.g., if 'user' changed, notify 'user.name')
-    this.listeners.forEach((callbacks, listenerKey) => {
+    this.listeners.forEach((_, listenerKey) => {
       if (listenerKey.startsWith(key + '.')) {
-        callbacks.forEach(cb => cb());
+        notifyPath(listenerKey);
       }
     });
 
@@ -179,13 +190,16 @@ export class AtomRegistry implements IAtomRegistry {
       const parts = key.split('.');
       for (let i = parts.length - 1; i > 0; i--) {
         const parentKey = parts.slice(0, i).join('.');
-        this.listeners.get(parentKey)?.forEach(cb => cb());
+        notifyPath(parentKey);
       }
     }
   }
 
   private notifyGlobal(key: string, value: any) {
-    this.globalListeners.forEach(cb => cb(key, value));
+    const setter = (nv: any) => this.set(key, nv);
+    const patcher = (pv: any) => this.patch(key, pv);
+    
+    this.globalListeners.forEach(cb => cb(key, value, setter, typeof value === 'object' ? patcher : undefined));
   }
 
   /**

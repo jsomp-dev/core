@@ -3,7 +3,7 @@ import {AtomRegistry, setupJsomp} from "../../src";
 
 // Mock IJsompAtom for testing
 class MockAtom {
-  private callbacks = new Set<() => void>();
+  private callbacks = new Set<(value: any, set: (v: any) => void) => void>();
   constructor(public value: any) { }
 
   // Conform to IJsompAtom interface loosely for test
@@ -14,11 +14,11 @@ class MockAtom {
       this.notify();
     }
   }
-  subscribe(cb: () => void) {
+  subscribe(cb: (value: any, set: (v: any) => void) => void) {
     this.callbacks.add(cb);
     return () => this.callbacks.delete(cb);
   }
-  private notify() {this.callbacks.forEach(cb => cb());}
+  private notify() {this.callbacks.forEach(cb => cb(this.value, this.set.bind(this)));}
 }
 
 describe('AtomRegistry', () => {
@@ -90,7 +90,7 @@ describe('AtomRegistry', () => {
       registry.subscribeAll(spy);
 
       registry.set('a', {value: 1});
-      expect(spy).toHaveBeenCalledWith('a', {value: 1});
+      expect(spy).toHaveBeenCalledWith('a', {value: 1}, expect.any(Function), expect.any(Function));
     });
   });
 

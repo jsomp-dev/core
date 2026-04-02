@@ -9,7 +9,7 @@ import {jsompEnv} from '../JsompEnv';
  */
 export class JsompAtom<T = any> implements IJsompAtom<T> {
   private _value: T;
-  private listeners = new Set<() => void>();
+  private listeners = new Set<(value: T, set: (newValue: T) => void, patch?: (partial: Partial<T>) => void) => void>();
   public schema?: ZodType | any;
 
   constructor(initialValue: T, schema?: ZodType | any) {
@@ -56,13 +56,21 @@ export class JsompAtom<T = any> implements IJsompAtom<T> {
   }
 
   /** Subscribe to changes */
-  subscribe(callback: () => void): () => void {
+  subscribe(callback: (value: T, set: (newValue: T) => void, patch?: (partial: Partial<T>) => void) => void): () => void {
     this.listeners.add(callback);
     return () => this.listeners.delete(callback);
   }
 
   private notify() {
-    this.listeners.forEach(cb => cb());
+    const value = this._value;
+    const setter = this.set.bind(this);
+    const patcher = (partial: Partial<T>) => {
+      if (typeof value === 'object' && value !== null) {
+        this.set({...value, ...partial});
+      }
+    };
+
+    this.listeners.forEach(cb => cb(value, setter, typeof value === 'object' ? patcher : undefined));
   }
 
   /** Compatibility method: returns snapshot for direct usage as plain object */

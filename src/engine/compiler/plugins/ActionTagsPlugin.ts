@@ -1,9 +1,12 @@
 import {IActionRegistry, IJsompPluginDef, PipelineStage} from '../../../types';
+import {createActionAtomsProxy} from '../../../utils/proxy';
 
 /**
  * ActionTagsPlugin
  * Responsibility: Resolve semantic action tags and bind them to runtime event handlers.
  * Stage: Hydrate (Runs after paths and state are ready)
+ * 
+ * Update V1.2: Added support for Proxy-based "Atoms Mutation" within handlers.
  */
 export const actionTagsPlugin: IJsompPluginDef = {
   id: 'standard-actions',
@@ -36,14 +39,13 @@ export const actionTagsPlugin: IJsompPluginDef = {
       if (def.require) {
         // Atoms check
         if (def.require.atoms && ctx.atomRegistry) {
-          const missingAtoms = Object.entries(def.require.atoms)
+          const missingKeyPaths = Object.entries(def.require.atoms)
             .filter(([_, realKey]) => ctx.atomRegistry!.get(realKey) === undefined);
 
-          if (missingAtoms.length > 0) {
+          if (missingKeyPaths.length > 0) {
             // Only warn if the registry is actually ready/connected
-            // This avoids spam during initial partial hydration
             if (ctx.atomRegistry?.getSnapshot?.()) {
-              ctx.logger.warn(`[ActionTags] Node "${id}" (tag: ${tagName}) missing required atoms: ${missingAtoms.map(a => a[1]).join(', ')}`);
+              ctx.logger.warn(`[ActionTags] Node "${id}" (tag: ${tagName}) missing required atoms: ${missingKeyPaths.map(a => a[1]).join(', ')}`);
             }
           }
         }
@@ -61,26 +63,15 @@ export const actionTagsPlugin: IJsompPluginDef = {
       // 5. Create Runtime Handler (Environment Injection)
       const actionHandler = async (eventPayload: any) => {
         const env = {
-          // A. Aliased Atoms
-          atoms: {} as Record<string, any>,
+          // A. Aliased Atoms (V1.2: Proxy Support)
+          atoms: (def.require?.atoms && ctx.atomRegistry) ?
+            createActionAtomsProxy(ctx.atomRegistry, def.require.atoms) :
+            {} as Record<string, any>,
           // B. Props Snapshot
           props: node.props || {},
           // C. Event Payload
           event: eventPayload
         };
-
-        // Resolve atoms if required
-        if (def.require?.atoms && ctx.atomRegistry) {
-          Object.entries(def.require.atoms).forEach(([alias, realPath]) => {
-            const atom = ctx.atomRegistry!.get(realPath);
-            // Handle IJsompAtom, IAtomValue and Primitives
-            if (atom && typeof atom === 'object') {
-              env.atoms[alias] = ('value' in atom) ? (atom as any).value : atom;
-            } else {
-              env.atoms[alias] = atom;
-            }
-          });
-        }
 
         await def.handler(env);
       };

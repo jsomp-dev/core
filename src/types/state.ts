@@ -7,7 +7,7 @@ import {IJsompNode} from './node';
 export interface IJsompAtom<T = any> {
   value: T;
   schema?: ZodType | any; // Storage for Zod or other validators
-  subscribe(callback: () => void): () => void;
+  subscribe(callback: (value: T, set: (newValue: T) => void, patch?: (partial: Partial<T>) => void) => void): () => void;
   set(newValue: T): void;
   /** Execute manual validation and return result */
   validate?(value: any): {success: boolean; error?: any};
@@ -16,15 +16,15 @@ export interface IJsompAtom<T = any> {
 /**
  * Atomic state value type
  */
-export type IAtomValue = 
+export type IAtomValue =
   | (Partial<IJsompNode> & {
-      onEvent?: Record<string, Function>;
-      value?: any; // Used for simple value binding, e.g. {{isLoading}}
-      [key: string]: any;
-    })
-  | string 
-  | number 
-  | boolean 
+    onEvent?: Record<string, Function>;
+    value?: any; // Used for simple value binding, e.g. {{isLoading}}
+    [key: string]: any;
+  })
+  | string
+  | number
+  | boolean
   | null;
 
 /**
@@ -35,8 +35,8 @@ export interface IAtomRegistry {
   set(key: string, value: IJsompAtom | IAtomValue | undefined): void;
   patch(key: string, patchObj: any): void;
   batchSet(updates: Record<string, IJsompAtom | IAtomValue | undefined>): void;
-  subscribe(key: string, callback: () => void): () => void;
-  subscribeAll(callback: (key: string, value: any) => void): () => void;
+  subscribe<T = any>(key: string, callback: (value: T, set: (newValue: T) => void, patch?: (partial: Partial<T>) => void) => void): () => void;
+  subscribeAll(callback: (key: string, value: any, set: (newValue: any) => void, patch?: (partial: any) => void) => void): () => void;
   /**
    * Get the current version of the registry or a specific atom
    * Used for cache invalidation.
@@ -113,10 +113,10 @@ export interface IStateAdapter {
    * Path-based subscription logic
    * Ensure only the target Path or its sub-path change triggers callback
    */
-  subscribe(path: string, callback: () => void): () => void;
+  subscribe<T = any>(path: string, callback: (value: T, set: (newValue: T) => void, patch?: (partial: Partial<T>) => void) => void): () => void;
 
   /**
    * [Optional] Subscribe to all changes in the store
    */
-  subscribeAll?(callback: (path: string, value: any) => void): () => void;
+  subscribeAll?(callback: (path: string, value: any, set: (newValue: any) => void, patch?: (partial: any) => void) => void): () => void;
 }

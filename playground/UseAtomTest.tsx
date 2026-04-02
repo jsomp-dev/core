@@ -1,6 +1,63 @@
 import React, {useState, useEffect} from 'react';
 import {jsompEnv, HtmlRegistry} from '../src';
-import {JsompView, useAtom} from '../src/renderer/react';
+import {JsompView, useAtom, useAtomProxy} from '../src/renderer/react';
+
+/**
+ * Proxy-based React Subscriber
+ * Tests deep mutation and property tracking
+ */
+const ProxyCounter: React.FC = () => {
+  // Accesses 'global_user' as a Proxy
+  const store = useAtomProxy<any>('global_user');
+
+  if (!store || !store.stats) return null;
+
+  return (
+    <div style={{
+      padding: '1.5rem',
+      background: 'linear-gradient(135deg, #09090b 0%, #1e1b4b 100%)',
+      borderRadius: '0.75rem',
+      border: '1px solid #4338ca',
+      marginBottom: '2rem',
+      width: '100%',
+      maxWidth: '500px',
+      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
+    }}>
+      <h3 style={{fontSize: '0.875rem', fontWeight: '800', color: '#818cf8', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.1em'}}>
+        useAtomProxy (V1.2 Magic)
+      </h3>
+      <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+          <span style={{color: '#e0e7ff', fontSize: '1.1rem'}}>{store.name}</span>
+          <span style={{color: '#6366f1', fontFamily: 'monospace', fontWeight: 'bold'}}>LV.{store.stats.level}</span>
+        </div>
+
+        <div style={{height: '8px', background: '#1e1b4b', borderRadius: '4px', overflow: 'hidden'}}>
+          <div style={{
+            height: '100%',
+            width: `${(store.stats.exp % 100)}%`,
+            background: '#818cf8',
+            transition: 'width 0.3s ease'
+          }} />
+        </div>
+
+        <div style={{display: 'flex', gap: '0.75rem'}}>
+          <button
+            onClick={() => {
+              store.stats.exp += 25;
+              if (store.stats.exp >= 100 && (store.stats.exp % 100 < 25)) {
+                store.stats.level++;
+              }
+            }}
+            style={{flex: 1, padding: '0.6rem', background: '#4338ca', color: 'white', border: 'none', borderRadius: '0.375rem', cursor: 'pointer', fontWeight: 'bold'}}
+          >
+            Gain +25 EXP (Proxy Mutate)
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 /**
  * External Subscriber Component
@@ -75,6 +132,28 @@ const InternalPathWatcher: React.FC<{label: string}> = ({label}) => {
 };
 
 export const UseAtomTest: React.FC = () => {
+  // 1. Initialize Global States via Effect (Before JsompView mounts)
+  useEffect(() => {
+    const jsomp = jsompEnv.service;
+    if (!jsomp) return;
+
+    // Bootstrap global counter
+    if (jsomp.globalRegistry.get('global_counter') === undefined) {
+      jsomp.globalRegistry.set('global_counter', 10);
+    }
+
+    // Bootstrap global user for proxy test (V1.2 Magic)
+    if (jsomp.globalRegistry.get('global_user') === undefined) {
+      jsomp.globalRegistry.set('global_user', {
+        name: 'Grand Magician',
+        stats: {
+          level: 1,
+          exp: 0
+        }
+      });
+    }
+  }, []);
+
   const [entities] = useState<any[]>([
     // 1. Templates (Base Styles) - Using inherit for reuse
     {
@@ -129,7 +208,7 @@ export const UseAtomTest: React.FC = () => {
       parent: 'local_section',
       props: {children: 'Local State & Path Resolution'}
     },
-    
+
     // Explicit State Declaration (type: "state" is a logic-only node)
     // ID used as the path for useAtom
     {
@@ -157,6 +236,9 @@ export const UseAtomTest: React.FC = () => {
     <div className="w-full flex flex-col items-center py-10 px-4 bg-[#09090b] min-h-screen">
       <h1 className="text-3xl font-bold text-white mb-8 tracking-tight">useAtom Reactive Test</h1>
 
+      {/* 0. Test Proxy Subscriber (V1.2 Magic) */}
+      <ProxyCounter />
+
       {/* 1. Test External Subscriber (Global Fallback) */}
       <ExternalCounter />
 
@@ -169,11 +251,6 @@ export const UseAtomTest: React.FC = () => {
 
           // Register custom component
           jsomp.componentRegistry.register('PathWatcher', InternalPathWatcher);
-
-          // Bootstrap global counter if not exists
-          if (jsomp.globalRegistry.get('global_counter') === undefined) {
-            jsomp.globalRegistry.set('global_counter', 10);
-          }
         }}
         entities={entities}
         rootId="root"
@@ -182,10 +259,10 @@ export const UseAtomTest: React.FC = () => {
       <div className="mt-12 p-6 bg-zinc-900/40 border border-zinc-800/60 rounded-xl text-xs text-zinc-500 max-w-xl leading-relaxed">
         <p className="font-semibold text-zinc-400 mb-2">Lab Test Cases:</p>
         <ul className="list-disc pl-5 space-y-2">
-          <li><strong>External Fallback</strong>: The top card is a standard React component accessing <code>global_counter</code> via <code>useAtom</code>. Since it's outside <code>JsompView</code>, the fallback mechanism to Global Registry is triggered.</li>
-          <li><strong>Internal Mustache</strong>: The JSON view uses <code>{"{{global_counter}}"}</code> to reference the same variable, verifying full synchronization between the local and global registry systems.</li>
-          <li><strong>Logic Nodes</strong>: An isolated <code>local_val</code> is defined via <code>type: "state"</code>. It is a headless node that exists only in the state registry and is not rendered as a DOM element.</li>
-          <li><strong>Inherit Reuse</strong>: Both <code>global_section</code> and <code>local_section</code> inherit from <code>tpl_card</code>, verifying that style templates can be successfully reused across different nodes.</li>
+          <li><strong>Proxy (V1.2)</strong>: Topmost card uses <code>useAtomProxy</code> for deep tracking and magic mutation. It's reactive to <code>global_user.stats.level</code>.</li>
+          <li><strong>External Fallback</strong>: Standard React component accessing <code>global_counter</code> via <code>useAtom</code> outside <code>JsompView</code>.</li>
+          <li><strong>Internal Mustache</strong>: JSON view uses <code>{"{{global_counter}}"}</code> referencing the same variable.</li>
+          <li><strong>Logic Nodes</strong>: Isolated <code>local_val</code> headless node.</li>
         </ul>
       </div>
     </div>
