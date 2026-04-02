@@ -6,13 +6,14 @@ import {PerformanceTest} from './PerformanceTest';
 import {StreamTest} from './StreamTest';
 import {BasicPresetsTest} from './BasicPresetsTest';
 import {OperatorTest} from './OperatorTest';
+import {UseAtomTest} from './UseAtomTest';
 import {HtmlRegistry, setupJsomp} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator'>('operator');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom'>('useatom');
   const [entities] = useState<any[]>([
     {
       id: 'app_root',
@@ -315,6 +316,22 @@ const App: React.FC = () => {
         >
           Operator Lab
         </button>
+        <button
+          onClick={() => setCurrentTab('useatom')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.25rem',
+            background: currentTab === 'useatom' ? '#27272a' : 'transparent',
+            border: 'none',
+            color: currentTab === 'useatom' ? '#fafafa' : '#a1a1aa',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s'
+          }}
+        >
+          useAtom Lab
+        </button>
       </nav>
 
       {/* Main View Container */}
@@ -339,6 +356,8 @@ const App: React.FC = () => {
           <PerformanceTest />
         ) : currentTab === 'operator' ? (
           <OperatorTest />
+        ) : currentTab === 'useatom' ? (
+          <UseAtomTest />
         ) : (
           <StreamTest />
         )}
