@@ -3,7 +3,7 @@ import {SchemaRegistry} from '../../../registry';
 import {ICompilerContext, IJsompPluginDef, PipelineStage} from "../../../types";
 
 /**
- * Handles 'State' type entities and initializes them in the AtomRegistry.
+ * Handles 'state' type entities and initializes them in the AtomRegistry.
  * Also supports implicit typed atoms based on SchemaRegistry matching.
  */
 export const stateHydrationPlugin: IJsompPluginDef = {
@@ -12,8 +12,8 @@ export const stateHydrationPlugin: IJsompPluginDef = {
   onNode: (id: string, entity: any, ctx: ICompilerContext) => {
     if (!ctx.atomRegistry) return;
 
-    // 1. Explicit State type OR 2. Implicit matching via SchemaRegistry (ID or Type)
-    const isExplicitState = entity.type === 'State';
+    // 1. Explicit state type OR 2. Implicit matching via SchemaRegistry (ID or Type)
+    const isExplicitState = entity.type === 'state';
     const schema = SchemaRegistry.global.get(id) || SchemaRegistry.global.get(entity.type);
 
     if (isExplicitState || schema) {

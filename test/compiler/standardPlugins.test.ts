@@ -219,9 +219,9 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
   });
 
   describe('StateHydrationPlugin', () => {
-    it('should initialize atoms from State type entities', () => {
+    it('should initialize atoms from state type entities', () => {
       const entities = new Map<string, any>([
-        ['count', {id: 'count', type: 'State', props: {initial: 10}}]
+        ['count', {id: 'count', type: 'state', props: {initial: 10}}]
       ]);
 
       const atomRegistry = jsompEnv.service!.globalRegistry;
