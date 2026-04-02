@@ -95,28 +95,34 @@ export const PerformanceTest: React.FC = () => {
               reg.set('taskCount', {value: 0});
 
               // 2. Actions
-              jsomp.actions.register('perf.fast', {
+              // 2. Actions
+              jsomp.actions.register<{
+                status: string;
+                taskCount: number;
+              }>('perf.fast', {
                 require: {
                   atoms: {
-                    status: 'status.value',
-                    taskCount: 'taskCount.value'
+                    status: {path: 'status.value', default: 'System Ready'},
+                    taskCount: {path: 'taskCount.value', default: 0}
                   }
                 },
                 handler: ({atoms}) => {
-                  // [CLEANUP] Remove any compiler lag plugin if exists
                   jsomp.pipeline.unregister('malicious_lag');
 
-                  // Direct assignment as per V1.2 design
+                  // Type-safe access!
                   atoms.status = 'Fast Click';
-                  atoms.taskCount = (Number(atoms.taskCount) || 0) + 1;
+                  atoms.taskCount++;
                 }
               });
 
-              jsomp.actions.register('perf.slow', {
+              jsomp.actions.register<{
+                status: string;
+                taskCount: number;
+              }>('perf.slow', {
                 require: {
                   atoms: {
-                    status: 'status.value',
-                    taskCount: 'taskCount.value'
+                    status: {path: 'status.value', default: 'System Ready'},
+                    taskCount: {path: 'taskCount.value', default: 0}
                   }
                 },
                 handler: ({atoms}) => {
@@ -125,12 +131,12 @@ export const PerformanceTest: React.FC = () => {
                   // Inject temporary lag plugin
                   jsomp.pipeline.register('malicious_lag', PipelineStage.PreProcess, () => {
                     const start = performance.now();
-                    while (performance.now() - start < randomLag) { /* Lag... */ }
+                    while (performance.now() - start < randomLag) { /* Lag... */}
                     return undefined;
                   }, 'LagGenerator');
 
                   atoms.status = `⚠️ Lag: ${randomLag}ms ⚠️`;
-                  atoms.taskCount = (Number(atoms.taskCount) || 0) + 1;
+                  atoms.taskCount++;
                 }
               });
             }}

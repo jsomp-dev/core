@@ -40,12 +40,16 @@ export const actionTagsPlugin: IJsompPluginDef = {
         // Atoms check
         if (def.require.atoms && ctx.atomRegistry) {
           const missingKeyPaths = Object.entries(def.require.atoms)
-            .filter(([_, realKey]) => ctx.atomRegistry!.get(realKey) === undefined);
+            .filter(([_, entry]) => {
+              const realPath = typeof entry === 'string' ? entry : (entry as any).path;
+              return ctx.atomRegistry!.get(realPath) === undefined;
+            })
+            .map(([_, entry]) => typeof entry === 'string' ? entry : (entry as any).path);
 
           if (missingKeyPaths.length > 0) {
             // Only warn if the registry is actually ready/connected
             if (ctx.atomRegistry?.getSnapshot?.()) {
-              ctx.logger.warn(`[ActionTags] Node "${id}" (tag: ${tagName}) missing required atoms: ${missingKeyPaths.map(a => a[1]).join(', ')}`);
+              ctx.logger.warn(`[ActionTags] Node "${id}" (tag: ${tagName}) missing required atoms: ${missingKeyPaths.join(', ')}`);
             }
           }
         }

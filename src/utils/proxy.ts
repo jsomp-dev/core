@@ -19,6 +19,9 @@ export function createPathAwareProxy(
         // Custom properties for internal use
         if (key === '__isProxy') return true;
         if (key === '__path') return path;
+        if (key === 'toJSON' || key === 'toJS') return () => registry.getSnapshot!(path);
+        if (key === 'toString') return () => String(registry.getSnapshot!(path));
+        if (key === 'valueOf') return () => registry.getSnapshot!(path);
 
         const fullPath = `${path}.${key}`;
         if (onAccess) onAccess(fullPath);
@@ -67,18 +70,28 @@ export function createPathAwareProxy(
  * Creates the root atoms proxy for Action handlers.
  * Maps local aliases to registry paths and wraps them in path-aware proxies.
  */
-export function createActionAtomsProxy(registry: IAtomRegistry, mapping: Record<string, string>) {
+export function createActionAtomsProxy(registry: IAtomRegistry, mapping: Record<string, string | {path: string, default?: any}>) {
   return new Proxy({}, {
     get(_, key) {
       if (typeof key !== 'string') return undefined;
-      const realPath = mapping[key];
-      if (!realPath) return undefined;
-      return createPathAwareProxy(registry, realPath);
+      const entry = mapping[key];
+      if (!entry) return undefined;
+
+      const realPath = typeof entry === 'string' ? entry : entry.path;
+      const defaultValue = typeof entry === 'string' ? undefined : entry.default;
+
+      const val = createPathAwareProxy(registry, realPath);
+      
+      // If result is undefined and we have a default value, return the default
+      if (val === undefined) return defaultValue;
+      return val;
     },
     set(_, key, val) {
       if (typeof key !== 'string') return false;
-      const realPath = mapping[key];
-      if (!realPath) return false;
+      const entry = mapping[key];
+      if (!entry) return false;
+      
+      const realPath = typeof entry === 'string' ? entry : entry.path;
       
       // Direct set on the aliased path
       registry.set(realPath, val);

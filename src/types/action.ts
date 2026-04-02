@@ -1,11 +1,19 @@
 /**
+ * Action Requirement Type for Atoms (supports path and default value for inference)
+ */
+export interface IActionAtomRequirement<T = any> {
+  path: string;
+  default?: T;
+}
+
+/**
  * Action Definition (Schema + Handler)
  */
-export interface IActionDef {
+export interface IActionDef<TAtoms extends Record<string, any> = any> {
   /** Environmental requirements (Atoms, Props, Event Params) */
   require?: {
-    /** Alias mapping for atom access: { "localName": "actual.atom.path" } */
-    atoms?: Record<string, string>;
+    /** Alias mapping for atom access: { "localName": "path" or {path: "...", default: 0} } */
+    atoms?: { [K in keyof TAtoms]: string | IActionAtomRequirement<TAtoms[K]> };
     /** Property requirements (with Zod or simple string keys) */
     props?: Record<string, any>;
     /** Event parameter expectations */
@@ -14,7 +22,7 @@ export interface IActionDef {
   /** Logic execution body */
   handler: (env: {
     /** Resolved atoms (mapped via aliases) */
-    atoms: Record<string, any>;
+    atoms: TAtoms;
     /** Original node props */
     props: Record<string, any>;
     /** Payload from the triggered event */
@@ -31,15 +39,11 @@ export interface IActionRegistry {
    * @param name Action tag name
    * @param def Action definition object or shorthand handler function
    */
-  register(
+  register<TAtoms extends Record<string, any> = any>(
     name: string,
-    def: IActionDef | ((env: {
-      atoms: Record<string, any>;
-      props: Record<string, any>;
-      event: any
-    }) => void | Promise<void>)
+    def: IActionDef<TAtoms> | IActionDef<TAtoms>['handler']
   ): void;
 
   /** Get an action definition by name */
-  getDefinition(name: string): IActionDef | undefined;
+  getDefinition(name: string): IActionDef<any> | undefined;
 }
