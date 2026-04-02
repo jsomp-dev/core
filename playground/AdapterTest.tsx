@@ -253,8 +253,7 @@ export const AdapterTest: React.FC = () => {
       </div>
 
       <JsompView
-        beforeMount={() => {
-          const jsomp = jsompEnv.service!;
+        beforeMount={(jsomp) => {
           HtmlRegistry.registerAll(jsomp.components);
 
           // 1. Create and Mount Registries in one go (Simplified V1.2 API)

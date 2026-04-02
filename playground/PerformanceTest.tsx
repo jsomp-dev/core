@@ -87,14 +87,11 @@ export const PerformanceTest: React.FC = () => {
           <JsompView
             entities={entities}
             rootId="perf_root"
-            beforeMount={(reg) => {
-              const jsomp = jsompEnv.service;
-
+            beforeMount={(jsomp) => {
               // 1. Initial States
-              reg.set('status', {value: 'System Ready'});
-              reg.set('taskCount', {value: 0});
+              jsomp.atoms.set('status', {value: 'System Ready'});
+              jsomp.atoms.set('taskCount', {value: 0});
 
-              // 2. Actions
               // 2. Actions
               jsomp.actions.register<{
                 status: string;

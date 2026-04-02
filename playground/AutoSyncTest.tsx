@@ -214,9 +214,9 @@ export const AutoSyncTest: React.FC = () => {
       <JsompView
         entities={entities}
         rootId="sync_root_wrapper"
-        beforeMount={() => {
+        beforeMount={(jsomp) => {
           // 1. Prepare Local States
-          const reg = jsompEnv.service!.atoms;
+          const reg = jsomp.atoms;
           reg.set('userName', 'Jsomp Bob');
           reg.set('bio', 'Exploring JSOMP core magic.');
           reg.set('userRole', 'admin');
@@ -225,7 +225,7 @@ export const AutoSyncTest: React.FC = () => {
           reg.set('savedDataJson', '');
 
           // 2. Register Actions
-          const actions = jsompEnv.service!.actions;
+          const actions = jsomp.actions;
           actions.register('lab.saveProfile', {
             require: {
               atoms: {

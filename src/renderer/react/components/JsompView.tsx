@@ -3,7 +3,7 @@ import {JsompRuntime, SignalCenter} from '../../../engine';
 import {ReactAdapter} from '../ReactAdapter';
 import {ReactRenderer} from '../ReactRenderer';
 import {useJsompRuntime} from '../hooks';
-import {IAtomRegistry} from '../../../types';
+import {IAtomRegistry, IJsompService} from '../../../types';
 import {jsompEnv} from '../../../JsompEnv';
 
 /**
@@ -26,16 +26,16 @@ export interface JsompViewProps {
    * Callback before component mounting (before context injection and initial data feed). 
    * Usually used for registering custom Actions or global extensions.
    */
-  beforeMount?: (registry: IAtomRegistry) => void;
+  beforeMount?: (service: IJsompService) => void;
 
   /** Callback after component mounting (before initial data feed). */
-  onMount?: (registry: IAtomRegistry) => void;
+  onMount?: (service: IJsompService) => void;
 
   /** 
    * @deprecated will be removed in next version, please migrate to onMount.
    * Callback after component mounting (before initial data feed).
    */
-  onMounted?: (registry: IAtomRegistry) => void;
+  onMounted?: (service: IJsompService) => void;
 
   /** Optional external registry (internal signal registry created if not provided) */
   registry?: IAtomRegistry;
@@ -84,11 +84,8 @@ export const JsompView: React.FC<JsompViewProps> = ({
     const reactAdapter = new ReactAdapter(runtime, center);
 
     // Lifecycle: beforeMount (Call before context/feed)
-    const fallbackRegistry = registry || jsompEnv.service?.atoms;
-    const contextRegistry = fallbackRegistry || center as any;
-
     if (beforeMount) {
-      beforeMount(contextRegistry);
+      beforeMount(jsompEnv.service);
     }
 
     // Initial Context Injection
@@ -99,16 +96,17 @@ export const JsompView: React.FC<JsompViewProps> = ({
 
     // Connectivity: If an external registry (AtomRegistry) is provided, connect it as a fallback.
     // If none provided, try connecting to the global registry from jsompEnv as default.
+    const fallbackRegistry = registry || jsompEnv.service?.atoms;
     if (fallbackRegistry) {
       runtime.setRegistryFallback(fallbackRegistry);
     }
 
     // Lifecycle: onMount / onMounted (Call before feed so user can register actions/etc.)
     if (onMount) {
-      onMount(contextRegistry);
+      onMount(jsompEnv.service);
     }
     if (onMounted) {
-      onMounted(contextRegistry);
+      onMounted(jsompEnv.service);
     }
 
     // Initial Sync Feed for SSR support
