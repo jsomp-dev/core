@@ -8,13 +8,14 @@ import {BasicPresetsTest} from './BasicPresetsTest';
 import {OperatorTest} from './OperatorTest';
 import {UseAtomTest} from './UseAtomTest';
 import {ActionTagsTest} from './ActionTagsTest';
+import {AdapterTest} from './AdapterTest';
 import {HtmlRegistry, setupJsomp} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions'>('actions');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters'>('adapters');
   const [entities] = useState<any[]>([
     {
       id: 'app_root',
@@ -349,6 +350,22 @@ const App: React.FC = () => {
         >
           Action Lab
         </button>
+        <button
+          onClick={() => setCurrentTab('adapters')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.25rem',
+            background: currentTab === 'adapters' ? '#27272a' : 'transparent',
+            border: 'none',
+            color: currentTab === 'adapters' ? '#fafafa' : '#a1a1aa',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s'
+          }}
+        >
+          Adapter Lab
+        </button>
       </nav>
 
       {/* Main View Container */}
@@ -377,6 +394,8 @@ const App: React.FC = () => {
           <UseAtomTest />
         ) : currentTab === 'actions' ? (
           <ActionTagsTest />
+        ) : currentTab === 'adapters' ? (
+          <AdapterTest />
         ) : (
           <StreamTest />
         )}

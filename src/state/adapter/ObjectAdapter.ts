@@ -7,8 +7,8 @@ import {pathUtils} from '../../utils/path';
  * It uses a simple listener-based system to track changes by path.
  */
 export class ObjectAdapter implements IStateAdapter {
-  private listeners = new Map<string, Set<() => void>>();
-  private allListeners = new Set<(path: string, value: any) => void>();
+  private listeners = new Map<string, Set<(value: any, set: (nv: any) => void, patch?: (pv: any) => void) => void>>();
+  private allListeners = new Set<(path: string, value: any, set: (nv: any) => void, patch?: (pv: any) => void) => void>();
 
   constructor(private store: any) { }
 
@@ -20,11 +20,20 @@ export class ObjectAdapter implements IStateAdapter {
     const prev = this.getValue(path);
     if (prev === val) return;
 
-    pathUtils.set(this.store, path, val);
+    this.store = pathUtils.set(this.store, path, val);
     this.notify(path, val);
   }
 
-  subscribe(path: string, callback: () => void): () => void {
+  patch(path: string, patchObj: any): void {
+    const {nextState, modifiedPaths} = pathUtils.patch(this.store, path, patchObj);
+    this.store = nextState;
+    
+    modifiedPaths.forEach(p => {
+      this.notify(p, this.getValue(p));
+    });
+  }
+
+  subscribe(path: string, callback: (value: any, set: (nv: any) => void, patch?: (pv: any) => void) => void): () => void {
     let set = this.listeners.get(path);
     if (!set) {
       set = new Set();
@@ -36,7 +45,7 @@ export class ObjectAdapter implements IStateAdapter {
     };
   }
 
-  subscribeAll(callback: (path: string, value: any) => void): () => void {
+  subscribeAll(callback: (path: string, value: any, set: (nv: any) => void, patch?: (pv: any) => void) => void): () => void {
     this.allListeners.add(callback);
     return () => {
       this.allListeners.delete(callback);
@@ -44,25 +53,33 @@ export class ObjectAdapter implements IStateAdapter {
   }
 
   private notify(path: string, value: any) {
+    const setter = (nv: any) => this.setValue(path, nv);
+    const patcher = (pv: any) => this.patch(path, pv);
+    const helpers: [(nv: any) => void, ((pv: any) => void) | undefined] = [setter, typeof value === 'object' ? patcher : undefined];
+
     // 0. Notify global listeners
-    this.allListeners.forEach(cb => cb(path, value));
+    this.allListeners.forEach(cb => cb(path, value, ...helpers));
 
     // 1. Notify exact path listeners
-    this.listeners.get(path)?.forEach(cb => cb());
+    this.listeners.get(path)?.forEach(cb => cb(value, ...helpers));
 
     // 2. Notify parent paths (bubbling)
-    // If a.b.c changed, a.b and a also "changed" technically
     let currentPath = path;
     while (currentPath.includes('.')) {
       currentPath = currentPath.substring(0, currentPath.lastIndexOf('.'));
-      this.listeners.get(currentPath)?.forEach(cb => cb());
+      const val = this.getValue(currentPath);
+      const s = (nv: any) => this.setValue(currentPath, nv);
+      const p = (pv: any) => this.patch(currentPath, pv);
+      this.listeners.get(currentPath)?.forEach(cb => cb(val, s, typeof val === 'object' ? p : undefined));
     }
 
     // 3. Notify children (cascading)
-    // If 'a' changed, 'a.b' and 'a.b.c' might have changed.
     for (const [registeredPath, set] of this.listeners.entries()) {
       if (registeredPath.startsWith(path + '.')) {
-        set.forEach(cb => cb());
+        const val = this.getValue(registeredPath);
+        const s = (nv: any) => this.setValue(registeredPath, nv);
+        const p = (pv: any) => this.patch(registeredPath, pv);
+        set.forEach(cb => cb(val, s, typeof val === 'object' ? p : undefined));
       }
     }
   }

@@ -324,31 +324,31 @@ export const OperatorTest: React.FC = () => {
       }
     },
     // Count Card
-    { id: 'card_count', inherit: 'tpl_state_card', parent: 'cards_container' },
-    { id: 'card_count_title', inherit: 'tpl_state_card_title', parent: 'card_count', props: {children: 'count'} },
-    { id: 'card_count_val', inherit: 'tpl_state_card_value', parent: 'card_count', props: {children: '{{count}}'} },
-    
+    {id: 'card_count', inherit: 'tpl_state_card', parent: 'cards_container'},
+    {id: 'card_count_title', inherit: 'tpl_state_card_title', parent: 'card_count', props: {children: 'count'}},
+    {id: 'card_count_val', inherit: 'tpl_state_card_value', parent: 'card_count', props: {children: '{{count}}'}},
+
     // isExpanded Card
-    { id: 'card_isExpanded', inherit: 'tpl_state_card', parent: 'cards_container' },
-    { id: 'card_isExpanded_title', inherit: 'tpl_state_card_title', parent: 'card_isExpanded', props: {children: 'isExpanded'} },
-    { 
-      id: 'card_isExpanded_val', 
-      inherit: 'tpl_state_card_value', 
-      parent: 'card_isExpanded', 
+    {id: 'card_isExpanded', inherit: 'tpl_state_card', parent: 'cards_container'},
+    {id: 'card_isExpanded_title', inherit: 'tpl_state_card_title', parent: 'card_isExpanded', props: {children: 'isExpanded'}},
+    {
+      id: 'card_isExpanded_val',
+      inherit: 'tpl_state_card_value',
+      parent: 'card_isExpanded',
       props: {
-        children: { opType: 'if', target: '{{isExpanded}}', then: 'true', else: 'false' }
-      } 
+        children: {opType: 'if', target: '{{isExpanded}}', then: 'true', else: 'false'}
+      }
     },
 
     // userRole Card
-    { id: 'card_userRole', inherit: 'tpl_state_card', parent: 'cards_container' },
-    { id: 'card_userRole_title', inherit: 'tpl_state_card_title', parent: 'card_userRole', props: {children: 'userRole'} },
-    { id: 'card_userRole_val', inherit: 'tpl_state_card_value', parent: 'card_userRole', props: {children: '{{userRole}}'} },
+    {id: 'card_userRole', inherit: 'tpl_state_card', parent: 'cards_container'},
+    {id: 'card_userRole_title', inherit: 'tpl_state_card_title', parent: 'card_userRole', props: {children: 'userRole'}},
+    {id: 'card_userRole_val', inherit: 'tpl_state_card_value', parent: 'card_userRole', props: {children: '{{userRole}}'}},
 
     // price Card
-    { id: 'card_price', inherit: 'tpl_state_card', parent: 'cards_container' },
-    { id: 'card_price_title', inherit: 'tpl_state_card_title', parent: 'card_price', props: {children: 'price'} },
-    { id: 'card_price_val', inherit: 'tpl_state_card_value', parent: 'card_price', props: {children: '{{price}}'} }
+    {id: 'card_price', inherit: 'tpl_state_card', parent: 'cards_container'},
+    {id: 'card_price_title', inherit: 'tpl_state_card_title', parent: 'card_price', props: {children: 'price'}},
+    {id: 'card_price_val', inherit: 'tpl_state_card_value', parent: 'card_price', props: {children: '{{price}}'}}
   ], []);
 
   return (
@@ -363,25 +363,25 @@ export const OperatorTest: React.FC = () => {
           actions.register('op.toggleExpanded', {
             require: {atoms: {isExpanded: 'isExpanded'}},
             handler: ({atoms}) => {
-              localRegistry.set('isExpanded', {value: !(atoms.isExpanded)});
-              console.log('toggleExpanded', atoms.isExpanded, 'to', !(atoms.isExpanded));
+              atoms.isExpanded = !atoms.isExpanded;
+              console.log('toggleExpanded', String(atoms.isExpanded), 'to', String(!(atoms.isExpanded)));
             }
           });
           actions.register('op.increment', {
             require: {atoms: {count: 'count'}},
             handler: ({atoms}) => {
-              localRegistry.set('count', {value: Number(atoms.count) + 1});
+              atoms.count = Number(atoms.count) + 1;
             }
           });
           actions.register('op.decrement', {
             require: {atoms: {count: 'count'}},
             handler: ({atoms}) => {
-              localRegistry.set('count', {value: Number(atoms.count) - 1});
+              atoms.count = Number(atoms.count) - 1;
             }
           });
           actions.register('op.setRole', {
-            handler: ({event}) => {
-              localRegistry.set('userRole', {value: event.target.value});
+            handler: ({atoms, event}) => {
+              atoms.userRole = event.target.value;
             }
           });
         }}

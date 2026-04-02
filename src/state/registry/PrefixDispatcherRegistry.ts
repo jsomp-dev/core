@@ -63,19 +63,24 @@ export class PrefixDispatcherRegistry implements IAtomRegistry {
     Object.entries(updates).forEach(([k, v]) => this.set(k, v));
   }
 
-  subscribe(key: string, callback: () => void): () => void {
+  subscribe(key: string, callback: (value: any, set: (newValue: any) => void, patch?: (partial: any) => void) => void): () => void {
     const {registry, targetKey} = this.resolve(key);
     return registry.subscribe(targetKey, callback);
   }
 
-  /**
-   * Subscribe to all changes from all managed registries
-   */
-  subscribeAll(callback: (key: string, value: any) => void): () => void {
+  subscribeAll(callback: (key: string, value: any, set: (newValue: any) => void, patch?: (partial: any) => void) => void): () => void {
     const unsubs: (() => void)[] = [];
+    
+    // Default registry handles non-prefixed keys
     unsubs.push(this.defaultRegistry.subscribeAll(callback));
-    for (const registry of this.registries.values()) {
-      unsubs.push(registry.subscribeAll(callback));
+    
+    // Sub-registries handle prefixed keys
+    for (const [prefix, registry] of this.registries.entries()) {
+      unsubs.push(registry.subscribeAll((subKey, value, set, patch) => {
+        // Transparently map subKey back to prefixed key for the user
+        const fullKey = `${prefix}://${subKey}`;
+        callback(fullKey, value, set, patch);
+      }));
     }
     return () => unsubs.forEach(unsub => unsub());
   }

@@ -17,51 +17,54 @@ export const pathUtils = {
   },
 
   /**
-   * Set value in object by path
+   * Set value in object by path (Immutable Update)
    */
-  set(obj: any, path: string, value: any): void {
-    if (!path) return;
+  set(obj: any, path: string, value: any): any {
+    if (!path || path === '*') return value;
     const parts = path.split('.');
-    let current = obj;
-    for (let i = 0; i < parts.length - 1; i++) {
-      const part = parts[i];
-      if (!(part in current) || current[part] === null || typeof current[part] !== 'object') {
-        current[part] = {};
+
+    const setRecursive = (o: any, pIdx: number): any => {
+      const part = parts[pIdx];
+      const isLast = pIdx === parts.length - 1;
+
+      // Create new container
+      const current = Array.isArray(o) ? [...o] : (o && typeof o === 'object' ? {...o} : {});
+
+      if (isLast) {
+        current[part] = value;
+      } else {
+        current[part] = setRecursive(current[part], pIdx + 1);
       }
-      current = current[part];
-    }
-    current[parts[parts.length - 1]] = value;
+      return current;
+    };
+
+    return setRecursive(obj, 0);
   },
 
   /**
-   * Patch an object at a path with a partial object.
+   * Patch an object at a path with a partial object (Immutable Update).
    * Returns a list of paths that were modified.
    */
-  patch(obj: any, path: string, patchObj: any): string[] {
+  patch(obj: any, path: string, patchObj: any): {nextState: any, modifiedPaths: string[]} {
     const root = this.get(obj, path);
     if (!root || typeof root !== 'object' || typeof patchObj !== 'object') {
-      this.set(obj, path, patchObj);
-      return [path];
+      const nextState = this.set(obj, path, patchObj);
+      return {nextState, modifiedPaths: [path]};
     }
 
     const modifiedPaths: string[] = [path];
-    const walk = (target: any, patch: any, currentPath: string) => {
-      Object.keys(patch).forEach(key => {
-        const val = patch[key];
-        const nextPath = currentPath ? `${currentPath}.${key}` : key;
-        
-        if (val !== null && typeof val === 'object' && !Array.isArray(val) && 
-            target[key] !== null && typeof target[key] === 'object' && !Array.isArray(target[key])) {
-          walk(target[key], val, nextPath);
-        } else if (target[key] !== val) {
-          target[key] = val;
-          modifiedPaths.push(nextPath);
-        }
-      });
-    };
+    const newRoot = Array.isArray(root) ? [...root] : {...root};
 
-    walk(root, patchObj, path);
-    return modifiedPaths;
+    Object.keys(patchObj).forEach(key => {
+      const val = patchObj[key];
+      if (newRoot[key] !== val) {
+        newRoot[key] = val;
+        modifiedPaths.push(path ? `${path}.${key}` : key);
+      }
+    });
+
+    const nextState = this.set(obj, path, newRoot);
+    return {nextState, modifiedPaths};
   },
 
   /**

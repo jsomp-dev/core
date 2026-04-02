@@ -30,7 +30,7 @@ export class ExternalStateAtom<T = any> implements IJsompAtom<T> {
   /**
    * Subscribe to changes for this specific path in the external store.
    */
-  subscribe(callback: () => void): () => void {
+  subscribe(callback: (value: T, set: (newValue: T) => void, patch?: (partial: Partial<T>) => void) => void): () => void {
     return this.adapter.subscribe(this.path, callback);
   }
 }
@@ -59,8 +59,7 @@ export class ExternalStateRegistry implements IAtomRegistry {
   }
 
   getSnapshot(key?: string): any {
-    if (!key) return undefined; // Cannot snapshot whole external store easily
-    return this.adapter.getValue(key);
+    return this.adapter.getValue(key || '');
   }
 
   /**
@@ -107,7 +106,7 @@ export class ExternalStateRegistry implements IAtomRegistry {
   /**
    * Subscribe to a path in the external store.
    */
-  subscribe(key: string, callback: () => void): () => void {
+  subscribe(key: string, callback: (value: any, set: (newValue: any) => void, patch?: (partial: any) => void) => void): () => void {
     return this.adapter.subscribe(key, callback);
   }
 
@@ -115,7 +114,7 @@ export class ExternalStateRegistry implements IAtomRegistry {
    * Subscribe to all changes in the external store.
    * This is crucial for dynamic node discovery in JsompView.
    */
-  subscribeAll(callback: (key: string, value: any) => void): () => void {
+  subscribeAll(callback: (key: string, value: any, set: (newValue: any) => void, patch?: (partial: any) => void) => void): () => void {
     if (this.adapter.subscribeAll) {
       return this.adapter.subscribeAll(callback);
     }

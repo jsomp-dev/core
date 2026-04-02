@@ -100,9 +100,34 @@ export class StateDispatcherRegistry implements IStateDispatcherRegistry {
   }
 
   getSnapshot(key?: string): any {
-    if (!key) return this.defaultRegistry.getSnapshot?.();
+    if (!key) {
+      // Aggregate snapshots from all registries
+      let res = this.defaultRegistry.getSnapshot?.() || {};
+      for (const [ns, reg] of this.namespaces.entries()) {
+        res[ns] = reg.getSnapshot?.();
+      }
+      for (const reg of this.ambients) {
+        res = {...res, ...(reg.getSnapshot?.() || {})};
+      }
+      return res;
+    }
+
+    // 1. Try Namespace (Plan A)
     const resolved = this.resolve(key);
-    if (resolved) return resolved.registry.getSnapshot?.(resolved.targetKey);
+    if (resolved && resolved.registry !== this.defaultRegistry) {
+      return resolved.registry.getSnapshot?.(resolved.targetKey);
+    }
+
+    // 2. Try Default Local
+    const local = this.defaultRegistry.getSnapshot?.(key);
+    if (local !== undefined) return local;
+
+    // 3. Try Ambient Cascade (Plan B)
+    for (const reg of this.ambients) {
+      const val = reg.getSnapshot?.(key);
+      if (val !== undefined) return val;
+    }
+
     return undefined;
   }
 
@@ -124,7 +149,7 @@ export class StateDispatcherRegistry implements IStateDispatcherRegistry {
     Object.entries(updates).forEach(([k, v]) => this.set(k, v));
   }
 
-  subscribe(key: string, callback: () => void): () => void {
+  subscribe(key: string, callback: (value: any, set: (newValue: any) => void, patch?: (partial: any) => void) => void): () => void {
     const resolved = this.resolve(key);
 
     // We subscribe to the resolved registry
@@ -146,12 +171,14 @@ export class StateDispatcherRegistry implements IStateDispatcherRegistry {
   /**
    * Subscribe to all mounted registries
    */
-  subscribeAll(callback: (key: string, value: any) => void): () => void {
+  subscribeAll(callback: (key: string, value: any, set: (newValue: any) => void, patch?: (partial: any) => void) => void): () => void {
     const unsubs: (() => void)[] = [];
     unsubs.push(this.defaultRegistry.subscribeAll(callback));
 
-    for (const registry of this.namespaces.values()) {
-      unsubs.push(registry.subscribeAll(callback));
+    for (const [ns, registry] of this.namespaces.entries()) {
+      unsubs.push(registry.subscribeAll((subKey, value, set, patch) => {
+        callback(`${ns}.${subKey}`, value, set, patch);
+      }));
     }
     for (const registry of this.ambients) {
       unsubs.push(registry.subscribeAll(callback));

@@ -27,10 +27,13 @@ export class SignalCenter implements ISignalCenter {
    * State change notification (Full Update)
    */
   public onUpdate(path: string, newValue: any): void {
-    pathUtils.set(this._state, path, newValue);
+    this._state = pathUtils.set(this._state, path, newValue);
 
-    // Bubble up: a.b.c -> [a, a.b, a.b.c] are all dirty
+    // 1. Bubble up: a.b.c -> [a, a.b, a.b.c] are all dirty
     this._bubbleDirty(path);
+
+    // 2. Cascade down: if 'a.b' changed, 'a.b.c' might also have changed structurally
+    this._cascadeDirty(path);
 
     this._triggerBatch();
   }
@@ -39,10 +42,14 @@ export class SignalCenter implements ISignalCenter {
    * Patch update (Incremental)
    */
   public patch(path: string, patchObj: any): void {
-    const modifiedPaths = pathUtils.patch(this._state, path, patchObj);
+    const {nextState, modifiedPaths} = pathUtils.patch(this._state, path, patchObj);
+    this._state = nextState;
 
     if (modifiedPaths.length > 0) {
-      modifiedPaths.forEach(p => this._bubbleDirty(p));
+      modifiedPaths.forEach(p => {
+        this._bubbleDirty(p);
+        this._cascadeDirty(p); // V1.2: Patch also needs downward cascading
+      });
       this._triggerBatch();
     }
   }
@@ -51,6 +58,10 @@ export class SignalCenter implements ISignalCenter {
    * Access value by path
    */
   public get(path: string): any {
+    // V1.2: Touch path to ensure it exists in _versions for cascading
+    if (!this._versions.has(path)) {
+      this._versions.set(path, 0);
+    }
     return pathUtils.get(this._state, path);
   }
 
@@ -88,6 +99,18 @@ export class SignalCenter implements ISignalCenter {
     pathUtils.segments(path).forEach(p => {
       this._dirtyIds.add(p);
       this._versions.set(p, (this._versions.get(p) || 0) + 1);
+    });
+  }
+
+  /**
+   * Mark all tracked descendants as dirty (V1.2 Cascading updates)
+   */
+  private _cascadeDirty(path: string) {
+    this._versions.forEach((_, p) => {
+      if (p.startsWith(path + '.')) {
+        this._dirtyIds.add(p);
+        this._versions.set(p, (this._versions.get(p) || 0) + 1);
+      }
     });
   }
 

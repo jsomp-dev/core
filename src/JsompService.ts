@@ -48,7 +48,7 @@ export class JsompService implements IJsompService {
    * Global state registry
    * Business layers should inject long-term shared state here.
    */
-  public readonly globalRegistry: IAtomRegistry;
+  public readonly globalRegistry: IStateDispatcherRegistry;
 
   /**
    * Schema Registry for typed atoms
@@ -71,7 +71,7 @@ export class JsompService implements IJsompService {
   public readonly traitPipeline: ITraitPipeline;
 
   constructor() {
-    this.globalRegistry = new AtomRegistry();
+    this.globalRegistry = new StateDispatcherRegistry(new AtomRegistry());
     this.pipeline = PipelineRegistry.global.clone();
     this.traitPipeline = new TraitPipeline();
     this.schemas = SchemaRegistry.global;
@@ -81,8 +81,24 @@ export class JsompService implements IJsompService {
    * State adapter factories
    */
   public readonly adapters = {
-    zustand: (store: any) => new ExternalStateRegistry(new ZustandAdapter(store)),
-    object: (store: any) => new ExternalStateRegistry(new ObjectAdapter(store))
+    zustand: (nsOrStore: any, store?: any) => {
+      const isAutoMount = typeof nsOrStore === 'string';
+      const targetStore = isAutoMount ? store : nsOrStore;
+      const registry = new ExternalStateRegistry(new ZustandAdapter(targetStore));
+      if (isAutoMount) {
+        this.globalRegistry.mount(nsOrStore, registry);
+      }
+      return registry;
+    },
+    object: (nsOrStore: any, store?: any) => {
+      const isAutoMount = typeof nsOrStore === 'string';
+      const targetStore = isAutoMount ? store : nsOrStore;
+      const registry = new ExternalStateRegistry(new ObjectAdapter(targetStore));
+      if (isAutoMount) {
+        this.globalRegistry.mount(nsOrStore, registry);
+      }
+      return registry;
+    }
   };
 
   /**

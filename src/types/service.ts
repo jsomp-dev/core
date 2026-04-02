@@ -22,9 +22,9 @@ export interface IJsompService {
   readonly componentRegistry: IComponentRegistry;
 
   /**
-   * Global state registry
+   * Global state registry (Hybrid Dispatcher)
    */
-  readonly globalRegistry: IAtomRegistry;
+  readonly globalRegistry: IStateDispatcherRegistry;
 
   /**
    * Global compiler pipeline registry
@@ -59,10 +59,13 @@ export interface IJsompService {
 
   /**
    * State adapter factories (for external state synergy)
+   * If namespace is provided, it will be automatically mounted to globalRegistry.
    */
   adapters: {
     zustand(store: any): IAtomRegistry;
+    zustand(namespace: string, store: any): IAtomRegistry;
     object(store: any): IAtomRegistry;
+    object(namespace: string, store: any): IAtomRegistry;
   };
 
   /**

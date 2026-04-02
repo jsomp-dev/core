@@ -33,9 +33,18 @@ export class ZustandAdapter implements IStateAdapter {
   setValue(path: string, val: any): void {
     if (this.store && typeof this.store.setState === 'function') {
       this.store.setState((state: any) => {
-        // Create a copy of the state to maintain immutability (shallow)
-        const nextState = Array.isArray(state) ? [...state] : {...state};
-        pathUtils.set(nextState, path, val);
+        return pathUtils.set(state, path, val);
+      });
+    }
+  }
+
+  /**
+   * Patch an existing state in the Zustand store.
+   */
+  patch(path: string, patchObj: any): void {
+    if (this.store && typeof this.store.setState === 'function') {
+      this.store.setState((state: any) => {
+        const {nextState} = pathUtils.patch(state, path, patchObj);
         return nextState;
       });
     }
@@ -45,15 +54,18 @@ export class ZustandAdapter implements IStateAdapter {
    * Subscribe to changes for a specific path in the Zustand store.
    * Uses dirty checking to ensure the callback only runs when the specific path's value changes.
    */
-  subscribe(path: string, callback: () => void): () => void {
+  subscribe(path: string, callback: (value: any, set: (nv: any) => void, patch?: (pv: any) => void) => void): () => void {
     let lastValue = this.getValue(path);
+
+    const setter = (nv: any) => this.setValue(path, nv);
+    const patcher = (pv: any) => this.patch(path, pv);
 
     // Subscribe to the whole store and perform a dirty check based on the path.
     return this.store.subscribe((state: any) => {
       const currentValue = pathUtils.get(state, path);
       if (currentValue !== lastValue) {
         lastValue = currentValue;
-        callback();
+        callback(currentValue, setter, typeof currentValue === 'object' ? patcher : undefined);
       }
     });
   }
@@ -62,14 +74,16 @@ export class ZustandAdapter implements IStateAdapter {
    * Subscribe to all changes in the Zustand store.
    * Note: This detects changes in top-level keys to support JSOMP node discovery.
    */
-  subscribeAll(callback: (key: string, value: any) => void): () => void {
+  subscribeAll(callback: (key: string, value: any, set: (nv: any) => void, patch?: (pv: any) => void) => void): () => void {
     let lastState = this.store.getState();
 
     return this.store.subscribe((state: any) => {
       // Basic Diff for top-level keys
       Object.keys(state).forEach(key => {
         if (state[key] !== lastState[key]) {
-          callback(key, state[key]);
+          const setter = (nv: any) => this.setValue(key, nv);
+          const patcher = (pv: any) => this.patch(key, pv);
+          callback(key, state[key], setter, typeof state[key] === 'object' ? patcher : undefined);
         }
       });
       lastState = state;

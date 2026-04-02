@@ -74,12 +74,14 @@ export class AtomRegistry implements IAtomRegistry {
         const rootKey = parts[0];
         const rootVal = this.atoms.get(rootKey);
         if (rootVal !== undefined && !isAtom(rootVal) && !isAtom(value)) {
-          pathUtils.set(rootVal, parts.slice(1).join('.'), value);
+          const nextRoot = pathUtils.set(rootVal, parts.slice(1).join('.'), value);
+          this.atoms.set(rootKey, nextRoot); // Update root with new immutable reference
+
           this.notify(key);
           this.notify(rootKey);
 
           this.notifyGlobal(key, value);
-          this.notifyGlobal(rootKey, rootVal);
+          this.notifyGlobal(rootKey, nextRoot);
           return;
         }
       }
@@ -198,7 +200,7 @@ export class AtomRegistry implements IAtomRegistry {
   private notifyGlobal(key: string, value: any) {
     const setter = (nv: any) => this.set(key, nv);
     const patcher = (pv: any) => this.patch(key, pv);
-    
+
     this.globalListeners.forEach(cb => cb(key, value, setter, typeof value === 'object' ? patcher : undefined));
   }
 
