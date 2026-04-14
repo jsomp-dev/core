@@ -248,7 +248,10 @@ export class JsompCompiler implements IJsompCompiler {
 
     const result: IJsompNode[] = [];
     ctx.nodes.forEach(node => {
-      // Fallback for when no assembly plugin was used
+      // 1. Only extract UI nodes (exclude state nodes etc.)
+      if (!ctx.isUiNode(node)) return;
+
+      // 2. Identify roots: no parent, dead parent reference, or explicit rootId
       if (!node.parent || (node.parent === 'root' && !ctx.nodes.has('root')) || node.id === ctx.rootId) {
         result.push(node);
       }

@@ -19,4 +19,8 @@ export class ActionRegistry implements IActionRegistry {
   public getDefinition(name: string): IActionDef | undefined {
     return this._actions.get(name);
   }
+
+  public clear(): void {
+    this._actions.clear();
+  }
 }

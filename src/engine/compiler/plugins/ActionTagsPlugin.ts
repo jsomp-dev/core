@@ -1,5 +1,6 @@
 import {IActionRegistry, IJsompPluginDef, PipelineStage} from '../../../types';
 import {createActionAtomsProxy} from '../../../utils/proxy';
+import {KeyboardUtils} from '../../../utils/keyboard';
 
 /**
  * ActionTagsPlugin
@@ -7,6 +8,7 @@ import {createActionAtomsProxy} from '../../../utils/proxy';
  * Stage: Hydrate (Runs after paths and state are ready)
  * 
  * Update V1.2: Added support for Proxy-based "Atoms Mutation" within handlers.
+ * Update V1.2: Added native keyboard trigger support (key: prefix).
  */
 export const actionTagsPlugin: IJsompPluginDef = {
   id: 'standard-actions',
@@ -23,85 +25,114 @@ export const actionTagsPlugin: IJsompPluginDef = {
       return;
     }
 
-    // 2. Create a local buffer for THIS pass on THIS node
-    // This allows composing multiple actions in one run while preventing pass-to-pass accumulation.
+    // 2. Create local buffers
     const localHandlers: Record<string, Function> = {};
 
     // 3. Iterate through action tags
-    Object.entries(node.actions as Record<string, string[]>).forEach(([tagName, eventNames]) => {
-      const def = actionRegistry.getDefinition(tagName);
-      if (!def) {
-        ctx.logger.warn(`[ActionTags] Action definition for tag "${tagName}" not found. skipping.`);
-        return;
-      }
+    Object.entries(node.actions as Record<string, string[]>).forEach(([tagName, triggers]) => {
 
-      // 4. Contract Audit (Optional but recommended)
-      if (def.require) {
-        // Atoms check
-        if (def.require.atoms && ctx.atomRegistry) {
-          const missingKeyPaths = Object.entries(def.require.atoms)
-            .filter(([_, entry]) => {
-              const realPath = typeof entry === 'string' ? entry : (entry as any).path;
-              return ctx.atomRegistry!.get(realPath) === undefined;
-            })
-            .map(([_, entry]) => typeof entry === 'string' ? entry : (entry as any).path);
+      let actionHandler: Function;
 
-          if (missingKeyPaths.length > 0) {
-            // Only warn if the registry is actually ready/connected
-            if (ctx.atomRegistry?.getSnapshot?.()) {
+      // A. Handle System Tags
+      if (tagName === 'system:ignore') {
+        actionHandler = async (e: any) => {
+          // If it's a DOM event, prevent default
+          if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        };
+      } else {
+        // B. Handle Standard Tags
+        const def = actionRegistry.getDefinition(tagName);
+        if (!def) {
+          ctx.logger.warn(`[ActionTags] Action definition for tag "${tagName}" not found. skipping.`);
+          return;
+        }
+
+        // 4. Contract Audit (Atoms & Props check)
+        if (def.require) {
+          // Atoms check
+          if (def.require.atoms && ctx.atomRegistry) {
+            const missingKeyPaths = Object.entries(def.require.atoms)
+              .filter(([_, entry]) => {
+                const realPath = typeof entry === 'string' ? entry : (entry as any).path;
+                return ctx.atomRegistry!.get(realPath) === undefined;
+              })
+              .map(([_, entry]) => typeof entry === 'string' ? entry : (entry as any).path);
+
+            if (missingKeyPaths.length > 0 && ctx.atomRegistry?.getSnapshot?.()) {
               ctx.logger.warn(`[ActionTags] Node "${id}" (tag: ${tagName}) missing required atoms: ${missingKeyPaths.join(', ')}`);
+            }
+          }
+
+          // Props check
+          if (def.require.props) {
+            const missingProps = Object.keys(def.require.props)
+              .filter(p => !node.props || !(p in node.props));
+            if (missingProps.length > 0) {
+              ctx.logger.warn(`[ActionTags] Node "${id}" (tag: ${tagName}) missing required props: ${missingProps.join(', ')}`);
             }
           }
         }
 
-        // Props check
-        if (def.require.props) {
-          const missingProps = Object.keys(def.require.props)
-            .filter(p => !node.props || !(p in node.props));
-          if (missingProps.length > 0) {
-            ctx.logger.warn(`[ActionTags] Node "${id}" (tag: ${tagName}) missing required props: ${missingProps.join(', ')}`);
-          }
-        }
+        // 5. Create Runtime Handler (Environment Injection)
+        actionHandler = async (eventPayload: any) => {
+          const env = {
+            // A. Aliased Atoms (V1.2: Proxy Support)
+            atoms: (def.require?.atoms && ctx.atomRegistry) ?
+              createActionAtomsProxy(ctx.atomRegistry, def.require.atoms) :
+              {} as Record<string, any>,
+            // B. Props Snapshot
+            props: node.props || {},
+            // C. Event Payload
+            event: eventPayload
+          };
+
+          await def.handler(env);
+        };
       }
 
-      // 5. Create Runtime Handler (Environment Injection)
-      const actionHandler = async (eventPayload: any) => {
-        const env = {
-          // A. Aliased Atoms (V1.2: Proxy Support)
-          atoms: (def.require?.atoms && ctx.atomRegistry) ?
-            createActionAtomsProxy(ctx.atomRegistry, def.require.atoms) :
-            {} as Record<string, any>,
-          // B. Props Snapshot
-          props: node.props || {},
-          // C. Event Payload
-          event: eventPayload
-        };
+      // 6. Populate Local Event Handlers
+      const triggerList = Array.isArray(triggers) ? triggers : [triggers];
+      triggerList.forEach(trigger => {
+        if (typeof trigger !== 'string') return;
 
-        await def.handler(env);
-      };
+        let targetEvent = trigger;
+        let finalHandler = actionHandler;
 
-      // 6. Populate Local Buffer (Composition within pass)
-      eventNames.forEach(evtName => {
-        const existing = localHandlers[evtName];
+        // Keyboard Trigger Logic: 'key:ctrl+s' -> map to onKeyDown with filtering
+        if (trigger.startsWith('key:')) {
+          targetEvent = 'onKeyDown';
+          const keyConstraint = trigger.substring(4);
+
+          finalHandler = async (e: KeyboardEvent) => {
+            if (KeyboardUtils.isMatch(e, keyConstraint)) {
+              // Standard behavior for matched shortcut: consume event
+              if (typeof e.preventDefault === 'function') {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+              await actionHandler(e);
+            }
+          };
+        }
+
+        const existing = localHandlers[targetEvent];
         if (existing) {
-          // If we have multiple tags for the same event in the SAME PASS, compose them
-          localHandlers[evtName] = async (payload: any) => {
+          localHandlers[targetEvent] = async (payload: any) => {
             await existing(payload);
-            await actionHandler(payload);
+            await finalHandler(payload);
           };
         } else {
-          localHandlers[evtName] = actionHandler;
+          localHandlers[targetEvent] = finalHandler;
         }
       });
     });
 
-    // 7. Atomic Overwrite back to node.onEvent
-    // This wipes previous action-tag-bound handlers across passes while keeping other event types.
+    // 7. Overwrite back to node.onEvent
     if (Object.keys(localHandlers).length > 0) {
-      node.onEvent = {
-        ...node.onEvent,
-        ...localHandlers
-      };
+      node.onEvent = {...node.onEvent, ...localHandlers};
     }
   }
 };

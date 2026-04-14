@@ -59,11 +59,10 @@ const JsompNodeItem = memo(({id}: {id: string}) => {
     }
 
     if (!Component) {
-      // noinspection SuspiciousTypeOfGuard
       if (typeof descriptor.componentType === 'string') {
         console.warn(`[JsompRenderer] Component not found: ${descriptor.componentType}`);
-        return null;
       }
+      return null;
     }
 
     // FINAL SAFETY: If Component is still a string and starts with Uppercase, but not in registry/local,

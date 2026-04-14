@@ -62,6 +62,7 @@ export const incrementalDiscoveryPlugin: IJsompPluginDef = {
     // 4. Promote/Refresh logic node
     node.type = entity.type;
     node.props = entity.props ? {...entity.props} : (node.props || {});
+    node.actions = entity.actions ? {...entity.actions} : (node.actions || {});
     node.parent = newParent;
 
     // Sync styles

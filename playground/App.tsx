@@ -10,13 +10,14 @@ import {UseAtomTest} from './UseAtomTest';
 import {ActionTagsTest} from './ActionTagsTest';
 import {AdapterTest} from './AdapterTest';
 import {EntityPoolTest} from './EntityPoolTest';
+import {ShortcutTest} from './ShortcutTest';
 import {HtmlRegistry, setupJsomp} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool'>('pool');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool' | 'shortcuts'>('shortcuts');
   const [entities] = useState<any[]>([
     {
       id: 'app_root',
@@ -383,6 +384,22 @@ const App: React.FC = () => {
         >
           Entity Pool Lab
         </button>
+        <button
+          onClick={() => setCurrentTab('shortcuts')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.25rem',
+            background: currentTab === 'shortcuts' ? '#27272a' : 'transparent',
+            border: 'none',
+            color: currentTab === 'shortcuts' ? '#fafafa' : '#a1a1aa',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s'
+          }}
+        >
+          Shortcut Lab
+        </button>
       </nav>
 
       {/* Main View Container */}
@@ -415,6 +432,8 @@ const App: React.FC = () => {
           <AdapterTest />
         ) : currentTab === 'pool' ? (
           <EntityPoolTest />
+        ) : currentTab === 'shortcuts' ? (
+          <ShortcutTest />
         ) : (
           <StreamTest />
         )}
