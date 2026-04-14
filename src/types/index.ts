@@ -4,6 +4,7 @@ export * from './compiler';
 export * from './component';
 export * from './action';
 export * from './service';
+export * from './entity';
 export * from './runtime';
 export * from './layout';
 export * from './stream';

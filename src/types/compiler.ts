@@ -3,6 +3,7 @@ import {IAtomRegistry} from './state';
 import {IComponentRegistry} from './component';
 import {IActionRegistry} from './action';
 import {JsompLogger} from "./service";
+import {IEntityRegistry} from './entity';
 
 /**
  * JSOMP Compiler Pipeline Stages
@@ -110,6 +111,12 @@ export interface ICompilerContext {
 
   /** Action Registry for semantic interaction resolving */
   actionRegistry?: any; // Use any to avoid circular dependency
+  
+  /** Entity pool for global template resolution */
+  entityPool?: IEntityRegistry;
+
+  /** Check if a raw entity is a UI node (has 'type' property) */
+  isUiNode(entity: any): entity is IJsompNode;
 }
 
 /**

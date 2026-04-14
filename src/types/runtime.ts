@@ -71,6 +71,8 @@ export interface IJsompRuntime {
   getSnapshot(): TopologySnapshot;
   /** Internal reconciliation logic */
   reconcile(dirtyIds: string[]): void;
+  /** Set the primary root ID for the runtime */
+  setRootId(id: string | undefined): void;
   /** Optional: Fallback registry for state lookup */
   setRegistryFallback?(registry: IAtomRegistry): void;
 }

@@ -78,8 +78,18 @@ export const inheritPlugin: IJsompPluginDef = {
       // Return cached result if already processed in this pass
       if (resolved.has(id)) return resolved.get(id);
 
-      const entity = ctx.entities.get(id);
-      if (!entity || !entity.inherit) {
+      const entity = ctx.entities.get(id) || ctx.entityPool?.get(id);
+      if (!entity) {
+        resolved.set(id, undefined);
+        return undefined;
+      }
+
+      // 1. Conflict Detection: Warn if local entity overrides a pooled entity
+      if (ctx.entities.has(id) && ctx.entityPool?.get(id)) {
+        ctx.logger.warn(`[Inherit] ID conflict detected: Local entity "${id}" is overriding an entity in the global pool.`);
+      }
+
+      if (!entity.inherit) {
         resolved.set(id, entity);
         return entity;
       }
@@ -110,6 +120,12 @@ export const inheritPlugin: IJsompPluginDef = {
 
     // Process all entities (or only dirty ones if available)
     const targetIds = ctx.dirtyIds ? Array.from(ctx.dirtyIds) : Array.from(ctx.entities.keys());
+    
+    // Support pooled root processing
+    if (ctx.rootId && !targetIds.includes(ctx.rootId)) {
+        targetIds.push(ctx.rootId);
+    }
+
     targetIds.forEach(id => {
       resolve(id, new Set());
     });

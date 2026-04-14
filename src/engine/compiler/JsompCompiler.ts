@@ -1,4 +1,4 @@
-import {IAtomRegistry, ICompilerContext, IJsompCompiler, IJsompNode, IJsompPluginDef, PipelineStage} from '../../types';
+import {IAtomRegistry, ICompilerContext, IJsompCompiler, IJsompNode, IJsompPluginDef, IEntityRegistry, PipelineStage} from '../../types';
 import {PipelineRegistry} from './PipelineRegistry';
 import {jsompEnv} from "../../JsompEnv";
 
@@ -27,6 +27,11 @@ export interface CompilerOptions {
    * If not, a new map is created.
    */
   nodes?: Map<string, IJsompNode>;
+
+  /**
+   * Entity pool for resolving external templates and fragments.
+   */
+  entityPool?: IEntityRegistry;
 }
 
 /**
@@ -81,9 +86,13 @@ export class JsompCompiler implements IJsompCompiler {
       rootId: options.rootId,
       atomRegistry: options.atomRegistry,
       actionRegistry: options.actionRegistry,
+      entityPool: options.entityPool || jsompEnv.service?.entities,
       onDependency: options.onDependency,
       options: {},
-      logger: jsompEnv.logger
+      logger: jsompEnv.logger,
+      isUiNode: (entity: any): entity is IJsompNode => {
+        return entity && typeof entity === 'object' && !Array.isArray(entity) && 'type' in entity && entity.type !== 'state';
+      }
     };
 
     // Execute stages sequentially
@@ -133,6 +142,14 @@ export class JsompCompiler implements IJsompCompiler {
       const isIncremental = !!ctx.dirtyIds;
       const targetIds = isIncremental ? Array.from(ctx.dirtyIds!) : Array.from(ctx.entities.keys());
 
+      // --- ROOT PULLING LOGIC ---
+      // If rootId is specified but not in local entities, pull it from the pool if available
+      if (ctx.rootId && !ctx.entities.has(ctx.rootId) && ctx.entityPool?.get(ctx.rootId)) {
+        if (!targetIds.includes(ctx.rootId)) {
+          targetIds.push(ctx.rootId);
+        }
+      }
+
       const processed = new Set<string>();
       const queue = [...targetIds];
 
@@ -143,11 +160,24 @@ export class JsompCompiler implements IJsompCompiler {
         processed.add(id);
 
         const rawEntity = ctx.entities.get(id);
-        if (!rawEntity) continue;
+
+        // --- POOL DISCOVERY LOGIC ---
+        // If entity is missing in local map, try resolving from the global entity pool
+        let discoveryResult = rawEntity;
+        if (ctx.entityPool?.get(id)) {
+          if (discoveryResult) {
+            // Conflict Detection
+            ctx.logger.warn(`[Compiler] ID conflict detected: Local entity "${id}" is overriding an entity in the global pool.`);
+          } else {
+            discoveryResult = ctx.entityPool.get(id);
+          }
+        }
+
+        if (!discoveryResult) continue;
 
         // Resolve entity with local updates (Inherited props etc.)
         const entityUpdate = ctx.entityUpdates?.get(id);
-        const entity = entityUpdate ? {...rawEntity, ...entityUpdate} : rawEntity;
+        const entity = entityUpdate ? {...discoveryResult, ...entityUpdate} : discoveryResult;
 
         // Keep track of old parent for incremental impact analysis
         const oldParent = ctx.nodes.get(id)?.parent;
@@ -173,6 +203,20 @@ export class JsompCompiler implements IJsompCompiler {
             }
           } catch (err: any) {
             ctx.logger.error(`[Compiler][${stage}][Batch] Plugin ${plugin.name || 'anonymous'} failed on node ${id}: ${err.message}`, err);
+          }
+        }
+
+        // --- POOL CHILD DISCOVERY ---
+        // If we are processing a node, all its children in the pool must also be processed
+        if (ctx.entityPool) {
+          const pooledChildren = ctx.entityPool.getChildren(id);
+          for (const childNode of pooledChildren) {
+            if (!processed.has(childNode.id)) {
+              queue.push(childNode.id);
+              if (isIncremental && ctx.dirtyIds) {
+                ctx.dirtyIds.add(childNode.id);
+              }
+            }
           }
         }
 

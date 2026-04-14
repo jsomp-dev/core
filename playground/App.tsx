@@ -9,13 +9,14 @@ import {OperatorTest} from './OperatorTest';
 import {UseAtomTest} from './UseAtomTest';
 import {ActionTagsTest} from './ActionTagsTest';
 import {AdapterTest} from './AdapterTest';
+import {EntityPoolTest} from './EntityPoolTest';
 import {HtmlRegistry, setupJsomp} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters'>('adapters');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool'>('pool');
   const [entities] = useState<any[]>([
     {
       id: 'app_root',
@@ -366,6 +367,22 @@ const App: React.FC = () => {
         >
           Adapter Lab
         </button>
+        <button
+          onClick={() => setCurrentTab('pool')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.25rem',
+            background: currentTab === 'pool' ? '#27272a' : 'transparent',
+            border: 'none',
+            color: currentTab === 'pool' ? '#fafafa' : '#a1a1aa',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s'
+          }}
+        >
+          Entity Pool Lab
+        </button>
       </nav>
 
       {/* Main View Container */}
@@ -396,6 +413,8 @@ const App: React.FC = () => {
           <ActionTagsTest />
         ) : currentTab === 'adapters' ? (
           <AdapterTest />
+        ) : currentTab === 'pool' ? (
+          <EntityPoolTest />
         ) : (
           <StreamTest />
         )}

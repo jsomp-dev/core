@@ -5,6 +5,7 @@ import {IActionRegistry} from './action';
 import {IJsompStream, StreamOptions} from './stream';
 import {IJsompLayoutManager} from './layout';
 import {IJsompNode} from './node';
+import {IEntityRegistry} from './entity';
 
 /**
  * JSOMP Service Interface
@@ -20,6 +21,11 @@ export interface IJsompService {
    * Component registry
    */
   readonly components: IComponentRegistry;
+
+  /**
+   * Entity pool for reusable templates and fragments
+   */
+  readonly entities: IEntityRegistry;
 
   /**
    * Component registry

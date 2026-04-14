@@ -38,6 +38,11 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
     pipeline.register('standard-inherit', PipelineStage.PreProcess, inheritPlugin, 'StandardInherit');
   }
 
+  if (!pipeline.getPlugins(PipelineStage.PreProcess).some((p: any) => p.id === 'standard-id-validation')) {
+    const {idValidationPlugin} = await import('./engine/compiler/plugins/IdValidationPlugin');
+    pipeline.register('standard-id-validation', PipelineStage.PreProcess, idValidationPlugin, 'StandardIdValidation');
+  }
+
   if (!pipeline.getPlugins(PipelineStage.PreProcess).some((p: any) => p.id === 'standard-operator')) {
     const {operatorExpressionPlugin} = await import('./engine/compiler/plugins/OperatorExpressionPlugin');
     pipeline.register('standard-operator', PipelineStage.PreProcess, operatorExpressionPlugin, 'StandardOperatorExpression');

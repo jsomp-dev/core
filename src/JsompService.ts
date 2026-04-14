@@ -20,7 +20,7 @@ import {
   ZustandAdapter
 } from './state';
 import {JsompStream} from './misc/JsompStream';
-import {ActionRegistry, ComponentRegistry, SchemaRegistry} from './registry';
+import {ActionRegistry, ComponentRegistry, EntityRegistry, SchemaRegistry} from './registry';
 import {CreateCompilerOptions, JsompCompiler, PipelineRegistry, TraitPipeline} from './engine';
 import {JsompLayoutManager} from './misc/JsompLayoutManager';
 import {jsompEnv} from './JsompEnv';
@@ -57,6 +57,11 @@ export class JsompService implements IJsompService {
    * Business layers should inject long-term shared state here.
    */
   public readonly atoms: IStateDispatcherRegistry;
+
+  /**
+   * Entity registry for reusable templates
+   */
+  public readonly entities: EntityRegistry = new EntityRegistry();
 
   /**
    * Global state registry
@@ -193,6 +198,6 @@ export class JsompService implements IJsompService {
   public reset(): void {
     this.atoms.clear();
     this._compiler = undefined;
-    // We don't clear registries like components as they are usually static definitions.
+    // We don't clear registries like components/entities as they are usually static definitions.
   }
 }

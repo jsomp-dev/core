@@ -38,6 +38,7 @@ export class JsompRuntime implements IJsompRuntime {
   private _version = 0;
   private _pendingNodes = new Set<string>(); // Stores IDs of orphan nodes
   private _dirtyIdsLastRun = new Set<string>();
+  private _rootId?: string;
 
   constructor(compiler?: IJsompCompiler) {
     // Inject or use shared Service compiler
@@ -106,6 +107,19 @@ export class JsompRuntime implements IJsompRuntime {
         // Propagate external changes to internal SignalCenter (even if reference is same due to mutation)
         this._signalCenter?.onUpdate(key, value);
       });
+    }
+  }
+
+  /**
+   * Set the primary root ID to guide the compiler
+   */
+  public setRootId(id: string | undefined): void {
+    if (this._rootId !== id) {
+      this._rootId = id;
+      // If rootId changes, we might need to reconcile again if we are already setup
+      if (id && this._signalCenter) {
+        this.reconcile([id]);
+      }
     }
   }
 
@@ -210,6 +224,7 @@ export class JsompRuntime implements IJsompRuntime {
     // The compiler will return the updated map (same instance if mutated)
     const result = this._compiler.compile(this._entities, {
       dirtyIds: dirtySet,
+      rootId: this._rootId,
       onDependency: (nodeId: string, atomKey: string) => {
         let nodeSet = this._dependencyMap.get(atomKey);
         if (!nodeSet) {

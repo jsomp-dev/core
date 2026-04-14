@@ -109,6 +109,9 @@ export const JsompView: React.FC<JsompViewProps> = ({
       onMounted(jsompEnv.service);
     }
 
+    // Set Initial Root ID
+    runtime.setRootId(rootId);
+
     // Initial Sync Feed for SSR support
     if (entities) {
       const map = normalizeToMap(entities);
@@ -142,7 +145,10 @@ export const JsompView: React.FC<JsompViewProps> = ({
     if (fb) {
       runtimeRef.current?.setRegistryFallback(fb);
     }
-  }, [components, stylePresets, registry]);
+
+    // Update Root ID
+    runtimeRef.current?.setRootId(rootId);
+  }, [components, stylePresets, registry, rootId]);
 
   // 4. Connect to React Store
   const descriptors = useJsompRuntime(adapter);

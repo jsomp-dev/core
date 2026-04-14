@@ -9,7 +9,7 @@ export const pathResolutionPlugin: IJsompPluginDef = {
   stage: PipelineStage.ReStructure,
   onNode: (id: string, entity: any, ctx: ICompilerContext) => {
     // 1. Skip non-UI entities
-    if (entity.type === 'state') return;
+    if (!ctx.isUiNode(entity)) return;
 
     // 2. Initialize path cache and maps in context if not exists
     if (!ctx.options.__pathCache) {
