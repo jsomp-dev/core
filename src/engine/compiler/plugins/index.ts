@@ -8,3 +8,4 @@ export * from './IncrementalDiscoveryPlugin';
 export * from './RecursionGuardPlugin';
 export * from './AutoSyncPlugin';
 export * from './OperatorExpressionPlugin';
+export * from './WindowPlugin';

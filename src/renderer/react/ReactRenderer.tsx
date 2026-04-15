@@ -3,6 +3,8 @@ import {VisualDescriptor} from '../../types';
 import {jsompEnv} from '../../JsompEnv';
 import {PerformanceMonitor} from '../PerformanceMonitor';
 import {ReactAdapter} from './ReactAdapter';
+import {JsompWindow} from './components/JsompWindow';
+
 
 /**
  * Context for O(1) node lookup during recursive rendering
@@ -50,10 +52,12 @@ const JsompNodeItem = memo(({id}: {id: string}) => {
       if (localComponents[descriptor.componentType]) {
         Component = localComponents[descriptor.componentType];
       } else {
-        // Step 2: Try global registry
         const registered = jsompEnv.service?.components.get(descriptor.componentType);
         if (registered) {
           Component = registered;
+        } else if (descriptor.componentType === 'window') {
+          // Fallback for core window type
+          Component = JsompWindow;
         }
       }
     }
