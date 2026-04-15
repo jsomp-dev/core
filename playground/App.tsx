@@ -11,13 +11,16 @@ import {ActionTagsTest} from './ActionTagsTest';
 import {AdapterTest} from './AdapterTest';
 import {EntityPoolTest} from './EntityPoolTest';
 import {ShortcutTest} from './ShortcutTest';
+import {WindowNodeTest} from './WindowNodeTest';
+
 import {HtmlRegistry, setupJsomp} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool' | 'shortcuts'>('shortcuts');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool' | 'shortcuts' | 'window'>('window');
+
   const [entities] = useState<any[]>([
     {
       id: 'app_root',
@@ -172,7 +175,7 @@ const App: React.FC = () => {
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      background: '#09090b',
+      background: currentTab === 'window' ? 'transparent' : '#09090b',
       color: '#fafafa',
       padding: '1.5rem',
       boxSizing: 'border-box',
@@ -400,6 +403,22 @@ const App: React.FC = () => {
         >
           Shortcut Lab
         </button>
+        <button
+          onClick={() => setCurrentTab('window')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.25rem',
+            background: currentTab === 'window' ? '#27272a' : 'transparent',
+            border: 'none',
+            color: currentTab === 'window' ? '#fafafa' : '#a1a1aa',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s'
+          }}
+        >
+          Window Lab
+        </button>
       </nav>
 
       {/* Main View Container */}
@@ -434,9 +453,12 @@ const App: React.FC = () => {
           <EntityPoolTest />
         ) : currentTab === 'shortcuts' ? (
           <ShortcutTest />
+        ) : currentTab === 'window' ? (
+          <WindowNodeTest />
         ) : (
           <StreamTest />
         )}
+
       </main>
 
       <div style={{

@@ -83,6 +83,11 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
     pipeline.register('standard-auto-sync', PipelineStage.Hydrate, autoSyncPlugin, 'StandardAutoSync');
   }
 
+  if (!pipeline.getPlugins(PipelineStage.Hydrate).some((p: any) => p.id === 'standard-window')) {
+    const {windowPlugin} = await import('./engine/compiler/plugins/WindowPlugin');
+    pipeline.register('standard-window', PipelineStage.Hydrate, windowPlugin, 'StandardWindow');
+  }
+
   if (!pipeline.getPlugins(PipelineStage.PostAssemble).some((p: any) => p.id === 'standard-dependency')) {
     const {dependencyPlugin} = await import('./engine/compiler/plugins/DependencyPlugin');
     pipeline.register('standard-dependency', PipelineStage.PostAssemble, dependencyPlugin, 'StandardDependency');
