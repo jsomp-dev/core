@@ -6,7 +6,7 @@ describe('JSOMP Feedback & Proxy (V1.2)', () => {
   let registry: AtomRegistry;
 
   beforeEach(async () => {
-    await setupJsomp();
+    await setupJsomp({framework: 'fallback'});
     registry = new AtomRegistry();
   });
 

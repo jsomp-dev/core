@@ -53,6 +53,11 @@ export type {
 // Export renderer
 export * from './renderer';
 
+// Export adapters (Framework Adapter System - core only, React is opt-in)
+export * from './framework/core';
+// Note: React adapter must be imported explicitly via '@jsomp/core/react'
+// to enable tree-shaking
+
 // Export Standard Presets (HTML)
 export * from './presets';
 

@@ -16,7 +16,7 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
   let compiler: JsompCompiler;
 
   beforeAll(async () => {
-    await setupJsomp();
+    await setupJsomp({framework: 'fallback'});
   });
 
   beforeEach(() => {

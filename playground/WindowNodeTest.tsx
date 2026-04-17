@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {setupJsomp, BasicRegistry} from "@jsomp/core";
+import {jsompEnv, BasicRegistry} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
 export const WindowNodeTest: React.FC = () => {
@@ -21,7 +21,7 @@ export const WindowNodeTest: React.FC = () => {
 
   useEffect(() => {
     const init = async () => {
-      const jsomp = await setupJsomp();
+      const jsomp = jsompEnv.service;
       BasicRegistry.registerAll(jsomp.components);
 
       const defaultColor = '#09090b';

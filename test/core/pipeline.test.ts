@@ -24,7 +24,11 @@ describe('TraitPipeline & StandardTraits', () => {
       },
       actions: {
         register: () => { },
-        getDefinition: () => undefined
+        getDefinition: () => undefined,
+        execute: vi.fn(),
+        getNames: vi.fn(() => []),
+        registerTriggerSource: vi.fn(),
+        getTriggerSource: vi.fn(() => undefined)
       },
       components: {
         register: () => { },

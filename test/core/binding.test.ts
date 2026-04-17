@@ -5,7 +5,7 @@ describe('BindingResolver', () => {
   let registry: AtomRegistry;
 
   beforeEach(async () => {
-    await setupJsomp();
+    await setupJsomp({framework: 'fallback'});
     registry = new AtomRegistry();
   });
 

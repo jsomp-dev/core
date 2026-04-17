@@ -6,10 +6,10 @@ import {JsompEventBus, JsompFlattener, JsompLogger} from './service';
  */
 export interface JsompConfig {
   /** 
-   * Active host environment ID (e.g., 'react', 'vue', 'electron-ipc')
-   * @default 'react'
+   * Active framework environment ID (e.g., 'react', 'vue', 'electron-ipc')
+   * @default 'fallback'
    */
-  host?: string;
+  framework?: string | 'auto' | 'fallback';
 
   /**
    * Logger instance for environment

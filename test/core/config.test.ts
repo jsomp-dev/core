@@ -3,12 +3,9 @@ import {setupJsomp, jsompEnv, JsompCompiler, JsompAtom, PipelineStage} from '../
 
 describe('Config System', () => {
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Reset JsompEnv for each test to ensure isolation
-    (jsompEnv as any).isSetup = false;
-    (jsompEnv as any)._service = undefined;
-    const {ConfigRegistry} = await import('../../src/registry/ConfigRegistry');
-    (jsompEnv as any)._config = new ConfigRegistry();
+    jsompEnv.clear();
   });
 
   describe('ConfigRegistry', () => {
@@ -42,6 +39,7 @@ describe('Config System', () => {
   describe('Integration with setupJsomp', () => {
     it('should merge user config into registry', async () => {
       await setupJsomp({
+        framework: 'fallback',
         features: {
           enableCache: false,
           customFlag: true
@@ -56,6 +54,7 @@ describe('Config System', () => {
 
     it('should support disabling standard plugins', async () => {
       const service = await setupJsomp({
+        framework: 'fallback',
         features: {
           standardPlugins: {
             'standard-inherit': false
@@ -76,7 +75,7 @@ describe('Config System', () => {
       ]);
       
       // Test default (strictMode = false)
-      const service = await setupJsomp({ features: { strictMode: false } } as any);
+      const service = await setupJsomp({ framework: 'fallback', features: { strictMode: false } });
       
       const warnSpy = vi.spyOn(jsompEnv.logger, 'warn').mockImplementation(() => {});
       const throwSpy = vi.spyOn(jsompEnv.logger, 'throw');
@@ -90,7 +89,7 @@ describe('Config System', () => {
 
       // Test strictMode = true
       (jsompEnv as any).isSetup = false; 
-      await setupJsomp({ features: { strictMode: true } } as any);
+      await setupJsomp({ framework: 'fallback', features: { strictMode: true } } as any);
       
       expect(() => {
         service.compiler.compile(entities);
@@ -99,7 +98,7 @@ describe('Config System', () => {
 
     it('enableCache: should functional even when toggled', async () => {
       // This test ensures switching the flag doesn't break resolution
-      await setupJsomp({ features: { enableCache: false } } as any);
+      await setupJsomp({ framework: 'fallback', features: { enableCache: false } } as any);
       
       const entities = new Map<string, any>([
         ['node', { id: 'node', type: 'div', props: { content: '{{val}}' } }]
@@ -129,7 +128,7 @@ describe('Config System', () => {
       // Actually, standard compiler doesn't put things into nodes in PreProcess.
       
       // Let's use a more complete compiler setup to verify the end-to-end flow
-      const service = await setupJsomp({ features: { enableCache: false } } as any);
+      const service = await setupJsomp({ framework: 'fallback', features: { enableCache: false } } as any);
       const { roots: r1 } = service.compiler.compile(entities, { atomRegistry });
       expect(r1[0].props?.content).toBe('v1');
 

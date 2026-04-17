@@ -150,6 +150,7 @@ const App: React.FC = () => {
       HtmlRegistry.registerAll(jsomp.components);
 
       setIsReady(true);
+      console.log('JSOMP Engine Initialized');
     };
     init();
   }, []);

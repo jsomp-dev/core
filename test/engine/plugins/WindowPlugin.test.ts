@@ -6,7 +6,7 @@ describe('WindowPlugin Logic', () => {
 
   beforeAll(async () => {
     // 确保环境初始化以加载标准插件
-    await setupJsomp();
+    await setupJsomp({framework: 'fallback'});
   });
 
   it('should identify window type nodes and mark them as system nodes', async () => {

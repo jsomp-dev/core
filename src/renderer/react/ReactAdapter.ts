@@ -2,7 +2,7 @@ import {JsompRuntime} from '../../engine';
 import {VisualDescriptor, ISignalCenter} from '../../types';
 
 /**
- * ReactAdapter
+ * ReactRuntimeAdapter
  * Responsibility: Bridge JsompRuntime to React using useSyncExternalStore pattern.
  * Ensures stable references for zero-diff rendering.
  */

@@ -5,7 +5,7 @@ describe('JsompCompiler', () => {
   let compiler: JsompCompiler;
 
   beforeEach(async () => {
-    await setupJsomp();
+    await setupJsomp({framework: 'fallback'});
     compiler = new JsompCompiler();
   });
 

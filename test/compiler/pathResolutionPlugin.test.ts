@@ -7,7 +7,7 @@ describe('PathResolutionPlugin', () => {
   let compiler: JsompCompiler;
 
   beforeEach(async () => {
-    await setupJsomp();
+    await setupJsomp({framework: 'fallback'});
     compiler = new JsompCompiler();
     // Register PathResolutionPlugin manually for testing
     compiler.use('path-resolution', PipelineStage.PreProcess, pathResolutionPlugin as any);

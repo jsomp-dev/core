@@ -7,7 +7,7 @@ describe('EntityRegistry', () => {
 
   beforeEach(async () => {
     service = new JsompService();
-    await jsompEnv.init({service});
+    await jsompEnv.init({service, framework: 'fallback'});
   });
 
   it('should register nodes with namespace prefixing', () => {

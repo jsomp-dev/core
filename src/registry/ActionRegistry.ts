@@ -1,8 +1,8 @@
-import {IActionDef, IActionRegistry, ITriggerHost} from '../types';
+import {IActionDef, IActionRegistry, ITriggerSource} from '../types';
 
 export class ActionRegistry implements IActionRegistry {
   private _actions = new Map<string, IActionDef>();
-  private _triggerHosts = new Map<string, ITriggerHost>();
+  private _triggerSources = new Map<string, ITriggerSource>();
 
   public register<TAtoms extends Record<string, any> = any>(
     name: string,
@@ -39,12 +39,12 @@ export class ActionRegistry implements IActionRegistry {
     return Array.from(this._actions.keys());
   }
 
-  public registerTriggerHost(namespace: string, host: ITriggerHost): void {
-    this._triggerHosts.set(namespace, host);
+  public registerTriggerSource(namespace: string, source: ITriggerSource): void {
+    this._triggerSources.set(namespace, source);
   }
 
-  public getTriggerHost(namespace: string): ITriggerHost | undefined {
-    return this._triggerHosts.get(namespace);
+  public getTriggerSource(namespace: string): ITriggerSource | undefined {
+    return this._triggerSources.get(namespace);
   }
 
   public getDefinition(name: string): IActionDef<any> | undefined {
@@ -53,6 +53,6 @@ export class ActionRegistry implements IActionRegistry {
 
   public clear(): void {
     this._actions.clear();
-    this._triggerHosts.clear();
+    this._triggerSources.clear();
   }
 }

@@ -7,9 +7,7 @@ describe('Action Tag Neutrality & Mapping', () => {
   beforeEach(async () => {
     // Ensure env is setup with default platform
     if (!jsompEnv.isSetup) {
-      await jsompEnv.init({
-        host: 'react'
-      });
+      await jsompEnv.init({framework: 'fallback'});
     }
 
     context = {

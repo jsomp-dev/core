@@ -7,7 +7,7 @@ describe('Headless Operator Expressions', () => {
   let center: SignalCenter;
 
   beforeEach(async () => {
-    const service = await setupJsomp();
+    const service = await setupJsomp({framework: 'fallback'});
     const compiler = service.createCompiler();
 
     runtime = new JsompRuntime(compiler);

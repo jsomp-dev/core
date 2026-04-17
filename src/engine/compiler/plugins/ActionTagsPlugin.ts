@@ -111,13 +111,18 @@ export const actionTagsPlugin: IJsompPluginDef = {
         let finalHandler = (e: any) => actionHandler(e, trigger);
         const [ns, eventName] = trigger.includes(':') ? trigger.split(':') : ['dom', trigger];
 
-        const host = jsompEnv.service.hosts.getActive();
-        if (host.isOwner(ns) && host.wrapHandler) {
-          finalHandler = host.wrapHandler(ns, eventName, finalHandler) as any;
+        // Only need active framework for known namespaces that may need wrapping
+        const knownNamespaces = jsompEnv.frameworkLoader?.capabilityNamespaces || [];
+        if (knownNamespaces.includes(ns)) {
+          const framework = jsompEnv.service.frameworks.getActive();
+          if (framework.isOwner(ns) && framework.wrapHandler) {
+            finalHandler = framework.wrapHandler(ns, eventName, finalHandler) as any;
+          }
         }
 
         // Store using original trigger as key (Neutral)
         const existing = localHandlers[trigger];
+        
         if (existing) {
           localHandlers[trigger] = async (payload: any) => {
             await existing(payload);
