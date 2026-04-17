@@ -15,7 +15,8 @@ export const JsompRenderContext = createContext<IRenderContext>({
   pathStack: [],
   slots: {},
   descriptorMap: new Map(),
-  runtimeAdapter: null as unknown as IRuntimeAdapter
+  runtimeAdapter: null as unknown as IRuntimeAdapter,
+  getStableKey: (id: string) => id
 });
 
 export function resolveComponent(
@@ -84,7 +85,7 @@ const JsompNodeItem = memo(({id}: {id: string}) => {
     const children: ReactNode[] = [];
 
     Object.entries<string[]>(slots).forEach(([name, ids]) => {
-      const rendered = ids.map(childId => <JsompNodeItem key={childId} id={childId} />);
+      const rendered = ids.map(childId => <JsompNodeItem key={ctx.getStableKey(childId)} id={childId} />);
 
       if (name === 'children' || name === 'default') {
         children.push(...rendered);
@@ -152,7 +153,7 @@ export const ReactRenderer = memo(({
 
   return (
     <JsompRenderContext.Provider value={runtimeAdapter.currentContext}>
-      {roots.map(node => <JsompNodeItem key={node.id} id={node.id} />)}
+      {roots.map(node => <JsompNodeItem key={runtimeAdapter.currentContext.getStableKey(node.id)} id={node.id} />)}
     </JsompRenderContext.Provider>
   );
 });

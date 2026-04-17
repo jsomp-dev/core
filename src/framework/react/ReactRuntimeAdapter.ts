@@ -23,7 +23,8 @@ export class ReactRuntimeAdapter implements IRuntimeAdapter {
       pathStack: [],
       slots: {},
       descriptorMap: new Map(),
-      runtimeAdapter: this
+      runtimeAdapter: this,
+      getStableKey: (id: string) => id // React uses ID as key by default
     };
 
     // Listen to signal center. 
@@ -100,5 +101,11 @@ export class ReactRuntimeAdapter implements IRuntimeAdapter {
 
   public updateContext(partial: Partial<IRenderContext>): void {
     this.currentContext = {...this.currentContext, ...partial};
+  }
+
+  public getReactiveSource(path: string): any {
+    // In React, atoms are typically consumed via hooks in the component layer.
+    // This adapter method can return the latest value from the signal center.
+    return this.signalCenter.get(path);
   }
 }
