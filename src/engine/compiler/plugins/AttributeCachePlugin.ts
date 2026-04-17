@@ -1,5 +1,6 @@
 import {IJsompPluginDef, PipelineStage} from "../../../types";
 import {BindingResolver} from "../../../state";
+import {jsompEnv} from "../../../JsompEnv";
 
 /**
  * Attribute Cache Plugin
@@ -18,6 +19,25 @@ export const attributeCachePlugin: IJsompPluginDef = {
   stage: PipelineStage.PreProcess, // We want to resolve attributes early so other plugins see resolved values
   onNode: (id, entity, ctx) => {
     if (!entity.props || !ctx.atomRegistry) return;
+
+    // Feature Flag: enableCache
+    if (jsompEnv.config.get('features.enableCache') === false) {
+      // Resolve every time without caching
+      const updates: Record<string, any> = {};
+      let changed = false;
+      for (const [key, value] of Object.entries(entity.props)) {
+        if (typeof value === 'string' && value.includes('{{')) {
+          const depKeys = BindingResolver.extractKeys(value);
+          if (depKeys.length === 0) continue;
+          if (ctx.onDependency) {
+            depKeys.forEach(k => ctx.onDependency!(id, k));
+          }
+          updates[key] = BindingResolver.resolve(value, ctx.atomRegistry!);
+          changed = true;
+        }
+      }
+      return changed ? {props: {...entity.props, ...updates}} : null;
+    }
 
     let entityCache = propCache.get(entity);
     if (!entityCache) {

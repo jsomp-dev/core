@@ -24,11 +24,17 @@ export const pathResolutionPlugin: IJsompPluginDef = {
     const parentVal = entity.parent;
     const explicitSlot = entity.slot;
 
+    const visited = new Set<string>();
+
     /**
      * Recursive path calculator (Memoized)
      */
     const getCalculatedPath = (targetId: string): string => {
       if (pathCache.has(targetId)) return pathCache.get(targetId)!;
+
+      if (visited.has(targetId)) {
+        ctx.logger.throw('CYCLE_DETECTED', `[Compiler][PathResolution] Circular dependency detected at node "${targetId}"`);
+      }
 
       const targetEntity = ctx.entities.get(targetId);
       if (!targetEntity) return targetId;
@@ -41,9 +47,11 @@ export const pathResolutionPlugin: IJsompPluginDef = {
         pId = pVal.includes('.') ? pVal.split('.').pop()! : pVal;
       }
 
+      visited.add(targetId);
       const path = (pId && ctx.entities.has(pId))
         ? `${getCalculatedPath(pId)}.${targetId}`
         : targetId;
+      visited.delete(targetId);
 
       pathCache.set(targetId, path);
       pathToIdMap.set(path, targetId);

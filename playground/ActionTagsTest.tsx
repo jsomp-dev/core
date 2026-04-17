@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {jsompEnv, HtmlRegistry} from '../src';
 import {JsompView} from '../src/renderer/react';
 
@@ -33,7 +33,7 @@ export const ActionTagsTest: React.FC = () => {
       style_tw: ['w-full', 'max-w-4xl', 'grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-6']
     },
 
-    // --- 3. Feature 1: Proxy Mutation (The Magic Corner) ---
+    // --- 3. Feature 1: Proxy Mutation (Standard Triggers) ---
     {
       id: 'proxy_card',
       inherit: 'tpl_card',
@@ -43,143 +43,151 @@ export const ActionTagsTest: React.FC = () => {
       id: 'proxy_title',
       inherit: 'tpl_title',
       parent: 'proxy_card',
-      props: {children: 'Magic Proxy Mutation'}
-    },
-    {
-      id: 'proxy_desc',
-      inherit: 'tpl_desc',
-      parent: 'proxy_card',
-      props: {children: 'Directly incrementing states via atoms.count++ in Action Handlers.'}
+      props: {children: 'Standard DOM Triggers'}
     },
     {
       id: 'counter_value',
       parent: 'proxy_card',
       type: 'h2',
-      props: {children: 'Current: {{magic_count}}'},
+      props: {children: 'Count: {{magic_count}}'},
       style_tw: ['text-4xl', 'font-mono', 'text-white', 'my-4']
     },
     {
       id: 'inc_btn',
       inherit: 'tpl_btn',
       parent: 'proxy_card',
-      props: {children: 'Quick Increment'},
+      props: {children: 'dom:click (Increment)'},
       actions: {
-        'magic_inc': ['onClick']
+        'magic_inc': ['dom:click']
+      }
+    },
+    {
+      id: 'dbl_btn',
+      inherit: 'tpl_btn',
+      parent: 'proxy_card',
+      style_tw: ['bg-zinc-800', 'hover:bg-zinc-700'],
+      props: {children: 'dom:double_click (Reset)'},
+      actions: {
+        'magic_reset': ['dom:double_click']
       }
     },
 
-    // --- 4. Feature 2: Deep Object Patching ---
+    // --- 4. Feature 2: Keyboard Shortcuts ---
     {
-      id: 'patch_card',
+      id: 'key_card',
       inherit: 'tpl_card',
       parent: 'root'
     },
     {
-      id: 'patch_title',
+      id: 'key_title',
       inherit: 'tpl_title',
-      parent: 'patch_card',
-      props: {children: 'Deep Object Patching'}
+      parent: 'key_card',
+      style_tw: ['text-amber-400'],
+      props: {children: 'Keyboard Shortcuts'}
     },
     {
-      id: 'patch_desc',
+      id: 'key_desc',
       inherit: 'tpl_desc',
-      parent: 'patch_card',
-      props: {children: 'Updating nested profile fields using the patch API or Proxy.'}
+      parent: 'key_card',
+      props: {children: 'Focus this card and try keys!'}
     },
     {
-      id: 'profile_display',
-      parent: 'patch_card',
+      id: 'key_area',
+      parent: 'key_card',
       type: 'div',
-      style_tw: ['p-3', 'bg-black/40', 'rounded-xl', 'font-mono', 'text-xs', 'text-emerald-400'],
-      props: {
-        children: 'USER: {{user_profile.name}} | NOTE: {{user_profile.meta.status}}'
+      props: {tabIndex: 0, children: 'Click to Focus Area'},
+      style_tw: ['p-8', 'bg-zinc-950/50', 'rounded-xl', 'border-2', 'border-dashed', 'border-zinc-800', 'text-center', 'text-xs', 'text-zinc-500', 'focus:border-indigo-500', 'focus:bg-indigo-500/5', 'focus:text-indigo-400', 'focus:outline-none', 'transition-all', 'cursor-pointer'],
+      actions: {
+        'log_key': ['key:escape', 'key:enter', 'key:ctrl+s']
       }
     },
     {
-      id: 'patch_btn_group',
-      parent: 'patch_card',
-      type: 'div',
-      style_tw: ['flex', 'gap-2', 'mt-2']
-    },
-    {
-      id: 'patch_btn_1',
-      inherit: 'tpl_btn',
-      parent: 'patch_btn_group',
-      style_tw: ['bg-zinc-800', 'hover:bg-zinc-700', 'flex-1'],
-      props: {
-        children: 'Set Status: Idle',
-        meta: {status: 'Idle'}
-      },
-      actions: {'update_status': ['onClick']}
-    },
-    {
-      id: 'patch_btn_2',
-      inherit: 'tpl_btn',
-      parent: 'patch_btn_group',
-      style_tw: ['bg-zinc-800', 'hover:bg-zinc-700', 'flex-1'],
-      props: {
-        children: 'Set Status: Busy',
-        meta: {status: 'Busy'}
-      },
-      actions: {'update_status': ['onClick']}
+      id: 'key_feedback',
+      parent: 'key_card',
+      type: 'p',
+      props: {children: 'Last Key: {{last_trigger}}'},
+      style_tw: ['text-xs', 'font-mono', 'text-amber-500']
     },
 
-    // --- 5. Feature 3: Array Management (Stack) ---
+    // --- 5. Feature 3: Custom Namespace (Automated Bridge) ---
     {
-      id: 'array_card',
+      id: 'runtime_card',
       inherit: 'tpl_card',
       parent: 'root',
-      style_tw: ['md:col-span-2']
+      style_tw: ['md:col-span-2', 'border-emerald-900/50']
     },
     {
-      id: 'array_title',
+      id: 'runtime_title',
       inherit: 'tpl_title',
-      parent: 'array_card',
-      props: {children: 'Reactive Array Mutations'}
+      parent: 'runtime_card',
+      style_tw: ['text-emerald-400'],
+      props: {children: 'Automated Custom Bridge (Runtime)'}
     },
     {
-      id: 'stack_display',
-      parent: 'array_card',
+      id: 'runtime_desc',
+      inherit: 'tpl_desc',
+      parent: 'runtime_card',
+      props: {children: 'Listening to external "runtime:system_notify" events via automated proxy host.'}
+    },
+    {
+      id: 'notification_display',
+      parent: 'runtime_card',
       type: 'div',
-      style_tw: ['flex', 'flex-wrap', 'gap-2', 'min-h-[40px]', 'items-center'],
+      style_tw: ['p-4', 'bg-emerald-950/30', 'rounded-xl', 'border', 'border-emerald-800/50', 'text-sm', 'text-emerald-200', 'min-h-[3rem]', 'flex', 'items-center', 'gap-3'],
       props: {
-        // Note: Jsomp supports array interpolation in props if renderer allows, 
-        // here we just use a helper text
-        children: 'Items in Stack: {{stack_count}}'
+        children: 'Message: {{notification_msg}}'
+      },
+      actions: {
+        'handle_notify': ['runtime:system_notify']
       }
-    },
-    {
-      id: 'array_ops',
-      parent: 'array_card',
-      type: 'div',
-      style_tw: ['flex', 'gap-4']
-    },
-    {
-      id: 'push_btn',
-      inherit: 'tpl_btn',
-      parent: 'array_ops',
-      props: {children: 'Push Item'},
-      actions: {'stack_push': ['onClick']}
-    },
-    {
-      id: 'pop_btn',
-      inherit: 'tpl_btn',
-      parent: 'array_ops',
-      style_tw: ['bg-rose-600', 'hover:bg-rose-500'],
-      props: {children: 'Pop Item'},
-      actions: {'stack_pop': ['onClick']}
     }
   ]);
+
+  // Mock Global Backend Registry for the playground
+  useEffect(() => {
+    const jsomp = jsompEnv.service!;
+
+    // Simulating a backend emitter
+    const listeners = new Set<(p: any) => void>();
+
+    // Register the custom Trigger Host for 'runtime:' namespace
+    jsomp.actions.registerTriggerHost('runtime', {
+      subscribe: (eventName, emit) => {
+        if (eventName === 'system_notify') {
+          listeners.add(emit);
+          return () => listeners.delete(emit);
+        }
+        return () => { };
+      }
+    });
+
+    // Simulate backend push every 5 seconds
+    const timer = setInterval(() => {
+      const msg = `Alert at ${new Date().toLocaleTimeString()}`;
+      listeners.forEach(l => l(msg));
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="w-full flex flex-col items-center py-16 px-6 bg-[#09090b] min-h-screen text-zinc-100">
       <div className="max-w-4xl w-full mb-12">
-        <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4">
-          Action Tags V1.2
-        </h1>
-        <p className="text-zinc-500 text-lg">
-          Testing the new Proxy-based state mutation engine and semantic action contracts.
-        </p>
+        <div className="flex justify-between items-end mb-4">
+          <div>
+            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-2">
+              Action Tags V1.2
+            </h1>
+            <p className="text-zinc-500 text-lg">
+              Testing Host-Agnostic Triggers & Automated Lifecycle Bridging.
+            </p>
+          </div>
+          <div className="text-right">
+            <span className="px-3 py-1 bg-zinc-800 rounded-full text-[10px] font-bold text-zinc-400 uppercase tracking-widest border border-zinc-700">
+              Host: {jsompEnv.service?.hosts.getActive().target}
+            </span>
+          </div>
+        </div>
       </div>
 
       <JsompView
@@ -190,62 +198,49 @@ export const ActionTagsTest: React.FC = () => {
           // 1. Setup Initial States
           jsomp.atoms.batchSet({
             'magic_count': 0,
-            'user_profile': {
-              name: 'Landing Wizard',
-              meta: {status: 'Online'}
-            },
-            'item_stack': [],
-            'stack_count': 0
+            'last_trigger': 'None',
+            'notification_msg': 'Waiting for host signal...'
           });
 
-          // 2. Register Actions with Magic Proxy Support
+          // 2. Register Actions
 
-          // Action 1: Simple Proxy Increment
+          // Incrementor
           jsomp.actions.register('magic_inc', {
             require: {
               atoms: {count: 'magic_count'}
             },
             handler: ({atoms}: any) => {
-              atoms.count++; // Magic!
+              atoms.count++;
             }
           });
 
-          // Action 2: Contextual Patching
-          jsomp.actions.register('update_status', {
+          // Resetter (Triggered by dblclick)
+          jsomp.actions.register('magic_reset', {
             require: {
-              atoms: {user: 'user_profile'}
-            },
-            handler: ({atoms, props}: any) => {
-              const newStatus = props.meta?.status || 'Unknown';
-              // Using Proxy to patch deep field
-              atoms.user.meta.status = newStatus;
-            }
-          });
-
-          // Action 3: Array Operations
-          jsomp.actions.register('stack_push', {
-            require: {
-              atoms: {
-                stack: 'item_stack',
-                count: 'stack_count'
-              }
+              atoms: {count: 'magic_count'}
             },
             handler: ({atoms}: any) => {
-              atoms.stack.push(Math.floor(Math.random() * 100));
-              atoms.count = atoms.stack.length;
+              atoms.count = 0;
             }
           });
 
-          jsomp.actions.register('stack_pop', {
+          // Key Logger
+          jsomp.actions.register('log_key', {
             require: {
-              atoms: {
-                stack: 'item_stack',
-                count: 'stack_count'
-              }
+              atoms: {last: 'last_trigger'}
             },
-            handler: ({atoms}: any) => {
-              atoms.stack.pop();
-              atoms.count = atoms.stack.length;
+            handler: ({atoms, trigger}: any) => {
+              atoms.last = `[${trigger}]`;
+            }
+          });
+
+          // Notification Handler (Custom Namespace)
+          jsomp.actions.register('handle_notify', {
+            require: {
+              atoms: {msg: 'notification_msg'}
+            },
+            handler: ({atoms, event, namespace, eventName}: any) => {
+              atoms.msg = `[${namespace}] ${eventName}: ${event}`;
             }
           });
         }}
@@ -255,16 +250,16 @@ export const ActionTagsTest: React.FC = () => {
 
       <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl opacity-50">
         <div className="space-y-2">
-          <h4 className="text-zinc-300 font-bold text-sm">Direct Mutation</h4>
-          <p className="text-xs leading-loose">Handlers now use <code>atoms.count++</code> instead of repository calls, reducing boilerplate and improving readability.</p>
+          <h4 className="text-zinc-300 font-bold text-sm">Host-Agnostic DOM</h4>
+          <p className="text-xs leading-loose">Namespace <code>dom:*</code> triggers are mapped to host props (e.g., <code>onDoubleClick</code>) with snake_case neutrality.</p>
         </div>
         <div className="space-y-2">
-          <h4 className="text-zinc-300 font-bold text-sm">Deep Tracking</h4>
-          <p className="text-xs leading-loose">Recursive proxies allow modifying nested fields like <code>atoms.user.meta.status</code> with full reactivity.</p>
+          <h4 className="text-zinc-300 font-bold text-sm">Smart Shortcuts</h4>
+          <p className="text-xs leading-loose">Namespace <code>key:*</code> provides built-in keyboard filtering and automatic lifecycle management.</p>
         </div>
         <div className="space-y-2">
-          <h4 className="text-zinc-300 font-bold text-sm">Array Sync</h4>
-          <p className="text-xs leading-loose">Built-in support for array methods (push/pop/splice). JSOMP tracks these changes and triggers UI updates automatically.</p>
+          <h4 className="text-zinc-300 font-bold text-sm">Namespace Bridge</h4>
+          <p className="text-xs leading-loose">Custom namespaces like <code>runtime:*</code> can be connected to any environment API via the Trigger Host registry.</p>
         </div>
       </div>
     </div>

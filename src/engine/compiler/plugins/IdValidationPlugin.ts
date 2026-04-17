@@ -1,4 +1,5 @@
 import {IJsompPluginDef, PipelineStage} from "../../../types";
+import {jsompEnv} from "../../../JsompEnv";
 
 /**
  * ID Validation Plugin
@@ -25,10 +26,14 @@ export const idValidationPlugin: IJsompPluginDef = {
       const isPooled = ctx.entityPool?.get(id);
 
       if (!isPooled) {
-        ctx.logger.throw(
-          'INVALID_ENTITY_ID',
-          `[Compiler][IdValidation] Invalid ID "${id}": Local entity IDs cannot contain dots. Dots are reserved for path separators.`
-        );
+        const isStrict = jsompEnv.config.get('features.strictMode', false);
+        const msg = `[Compiler][IdValidation] Invalid ID "${id}": Local entity IDs cannot contain dots. Dots are reserved for path separators.`;
+        
+        if (isStrict) {
+          ctx.logger.throw('INVALID_ENTITY_ID', msg);
+        } else {
+          ctx.logger.warn(msg);
+        }
       }
     }
 

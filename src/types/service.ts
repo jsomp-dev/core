@@ -1,12 +1,13 @@
 import {IComponentRegistry} from './component';
 import {IAtomRegistry, ISchemaRegistry, IJsompAtom, IStateDispatcherRegistry} from './state';
 import {IPipelineRegistry, ITraitPipeline, IJsompCompiler} from './compiler';
+import {IConfigRegistry, JsompConfig} from './config';
 import {IActionRegistry} from './action';
 import {IJsompStream, StreamOptions} from './stream';
 import {IJsompLayoutManager} from './layout';
 import {IJsompNode} from './node';
 import {IEntityRegistry} from './entity';
-
+import {IHostAdapter, IHostRegistry} from './host';
 /**
  * JSOMP Service Interface
  * Central orchestration for all JSOMP capabilities.
@@ -21,6 +22,11 @@ export interface IJsompService {
    * Component registry
    */
   readonly components: IComponentRegistry;
+
+  /**
+   * Host registry for framework-specific adapters
+   */
+  readonly hosts: IHostRegistry;
 
   /**
    * Entity pool for reusable templates and fragments
@@ -155,19 +161,8 @@ export interface IJsompEnv {
   readonly logger: JsompLogger;
   readonly flattener: JsompFlattener;
   readonly eventBus?: JsompEventBus;
+  readonly config: IConfigRegistry;
   /** Initialize the environment with explicit config (async) */
   init(config: JsompConfig): Promise<void>;
 }
 
-/**
- * JSOMP Configuration
- */
-export interface JsompConfig {
-  /** Optional custom service instance to use/initialize */
-  service?: IJsompService;
-  logger?: JsompLogger;
-  flattener?: JsompFlattener;
-  eventBus?: JsompEventBus;
-  /** Custom compiler plugins */
-  plugins?: any[];
-}

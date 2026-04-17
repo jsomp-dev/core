@@ -1,6 +1,6 @@
 import {IActionRegistry, IJsompPluginDef, PipelineStage} from '../../../types';
 import {createActionAtomsProxy} from '../../../utils/proxy';
-import {KeyboardUtils} from '../../../utils/keyboard';
+import {jsompEnv} from '../../../JsompEnv';
 
 /**
  * ActionTagsPlugin
@@ -77,7 +77,12 @@ export const actionTagsPlugin: IJsompPluginDef = {
         }
 
         // 5. Create Runtime Handler (Environment Injection)
-        actionHandler = async (eventPayload: any) => {
+        actionHandler = async (eventPayload: any, triggerOverride?: string) => {
+          const fullTrigger = triggerOverride || tagName;
+          const [ns, eName] = fullTrigger.includes(':') 
+            ? fullTrigger.split(':') 
+            : ['dom', fullTrigger];
+
           const env = {
             // A. Aliased Atoms (V1.2: Proxy Support)
             atoms: (def.require?.atoms && ctx.atomRegistry) ?
@@ -85,47 +90,41 @@ export const actionTagsPlugin: IJsompPluginDef = {
               {} as Record<string, any>,
             // B. Props Snapshot
             props: node.props || {},
-            // C. Event Payload
-            event: eventPayload
+            // C. Event Data
+            event: eventPayload,
+            originEvent: eventPayload,
+            // D. Trigger Identifier & Details
+            trigger: fullTrigger,
+            namespace: ns,
+            eventName: eName
           };
 
           await def.handler(env);
         };
       }
 
-      // 6. Populate Local Event Handlers
+      // 6. Populate Local Event Handlers (Using Neutral Trigger Keys)
       const triggerList = Array.isArray(triggers) ? triggers : [triggers];
       triggerList.forEach(trigger => {
         if (typeof trigger !== 'string') return;
 
-        let targetEvent = trigger;
-        let finalHandler = actionHandler;
+        let finalHandler = (e: any) => actionHandler(e, trigger);
+        const [ns, eventName] = trigger.includes(':') ? trigger.split(':') : ['dom', trigger];
 
-        // Keyboard Trigger Logic: 'key:ctrl+s' -> map to onKeyDown with filtering
-        if (trigger.startsWith('key:')) {
-          targetEvent = 'onKeyDown';
-          const keyConstraint = trigger.substring(4);
-
-          finalHandler = async (e: KeyboardEvent) => {
-            if (KeyboardUtils.isMatch(e, keyConstraint)) {
-              // Standard behavior for matched shortcut: consume event
-              if (typeof e.preventDefault === 'function') {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-              await actionHandler(e);
-            }
-          };
+        const host = jsompEnv.service.hosts.getActive();
+        if (host.isOwner(ns) && host.wrapHandler) {
+          finalHandler = host.wrapHandler(ns, eventName, finalHandler) as any;
         }
 
-        const existing = localHandlers[targetEvent];
+        // Store using original trigger as key (Neutral)
+        const existing = localHandlers[trigger];
         if (existing) {
-          localHandlers[targetEvent] = async (payload: any) => {
+          localHandlers[trigger] = async (payload: any) => {
             await existing(payload);
             await finalHandler(payload);
           };
         } else {
-          localHandlers[targetEvent] = finalHandler;
+          localHandlers[trigger] = finalHandler;
         }
       });
     });

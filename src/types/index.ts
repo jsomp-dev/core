@@ -8,3 +8,5 @@ export * from './entity';
 export * from './runtime';
 export * from './layout';
 export * from './stream';
+export * from './host';
+export * from './config';

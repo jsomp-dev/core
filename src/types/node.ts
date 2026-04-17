@@ -71,6 +71,23 @@ export interface VisualDescriptor {
   slots: Record<string, string[]>;
   /** Parent ID to identify roots */
   parentId?: string | null;
+  /** 
+   * Pre-processed custom namespace triggers (V1.2+)
+   * Used by host renderer to establish external subscriptions
+   */
+  triggers?: IVisualTrigger[];
+}
+
+/**
+ * Pre-processed Trigger Descriptor
+ */
+export interface IVisualTrigger {
+  /** Namespace (e.g., 'backend') */
+  namespace: string;
+  /** Neutral event name (e.g., 'receive_msg') */
+  event: string;
+  /** Framework-specific property name (e.g., 'onBackendReceiveMsg') */
+  prop: string;
 }
 
 /**

@@ -1,4 +1,5 @@
 import {IJsompNode, PipelineContext, TraitProcessor, VisualDescriptor} from "../../../types";
+import {jsompEnv} from "../../../JsompEnv";
 
 /**
  * Standard Props Trait
@@ -20,9 +21,42 @@ export const propsTrait: TraitProcessor = (
 
   // Pass generated event handlers to the renderer
   if (node.onEvent) {
+    const mappedEvents: Record<string, Function> = {};
+
+    Object.entries(node.onEvent).forEach(([trigger, handler]) => {
+      let propName = trigger;
+
+      const [ns, name] = trigger.includes(':') ? trigger.split(':') : ['dom', trigger];
+
+      const host = jsompEnv.service.hosts.getActive();
+      if (host.isOwner(ns)) {
+        propName = host.mapPropName(ns, name);
+      } else {
+        // Default Rule for Custom Namespaces: on + Namespace + EventName (PascalCase)
+        const pascalNS = ns.charAt(0).toUpperCase() + ns.slice(1);
+        const pascalEvent = name.split('_').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('');
+        propName = `on${pascalNS}${pascalEvent}`;
+
+        // Store pre-processed trigger metadata for host renderer to wire up lifecycle
+        if (!descriptor.triggers) descriptor.triggers = [];
+        descriptor.triggers.push({namespace: ns, event: name, prop: propName});
+      }
+
+      // Merge handlers if multiple neutral triggers map to the same framework prop (e.g., key:* -> onKeyDown)
+      const existing = mappedEvents[propName];
+      if (existing) {
+        mappedEvents[propName] = async (payload: any) => {
+          await (existing as any)(payload);
+          await (handler as any)(payload);
+        };
+      } else {
+        mappedEvents[propName] = handler;
+      }
+    });
+
     descriptor.props = {
       ...descriptor.props,
-      ...node.onEvent
+      ...mappedEvents
     };
   }
 };

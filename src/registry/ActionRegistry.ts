@@ -1,11 +1,12 @@
-import {IActionDef, IActionRegistry} from '../types';
+import {IActionDef, IActionRegistry, ITriggerHost} from '../types';
 
 export class ActionRegistry implements IActionRegistry {
   private _actions = new Map<string, IActionDef>();
+  private _triggerHosts = new Map<string, ITriggerHost>();
 
-  public register(
+  public register<TAtoms extends Record<string, any> = any>(
     name: string,
-    def: IActionDef | ((env: {atoms: Record<string, any>; props: Record<string, any>; event: any}) => void | Promise<void>)
+    def: IActionDef<TAtoms> | IActionDef<TAtoms>['handler']
   ): void {
     if (typeof def === 'function') {
       this._actions.set(name, {
@@ -16,11 +17,42 @@ export class ActionRegistry implements IActionRegistry {
     }
   }
 
-  public getDefinition(name: string): IActionDef | undefined {
+  public async execute(tagName: string, env: any, trigger?: string): Promise<void> {
+    const def = this._actions.get(tagName);
+    if (!def) return;
+
+    const fullTrigger = trigger || tagName;
+    const [ns, eName] = fullTrigger.includes(':') 
+      ? fullTrigger.split(':') 
+      : ['dom', fullTrigger];
+
+    await def.handler({
+      ...env, 
+      trigger: fullTrigger,
+      namespace: ns,
+      eventName: eName,
+      originEvent: env.event
+    });
+  }
+
+  public getNames(): string[] {
+    return Array.from(this._actions.keys());
+  }
+
+  public registerTriggerHost(namespace: string, host: ITriggerHost): void {
+    this._triggerHosts.set(namespace, host);
+  }
+
+  public getTriggerHost(namespace: string): ITriggerHost | undefined {
+    return this._triggerHosts.get(namespace);
+  }
+
+  public getDefinition(name: string): IActionDef<any> | undefined {
     return this._actions.get(name);
   }
 
   public clear(): void {
     this._actions.clear();
+    this._triggerHosts.clear();
   }
 }
