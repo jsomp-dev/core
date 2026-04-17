@@ -12,9 +12,9 @@ import type { PerformanceMetrics } from './runtime';
  * It only manages the subscription model and snapshot delivery.
  */
 export interface IRuntimeAdapter {
-
   /** Current render context for this adapter (mutable) */
   currentContext: IRenderContext;
+
   /**
    * Subscribe to runtime state changes.
    * Called by the framework's rendering layer to know when to re-render.
@@ -46,6 +46,17 @@ export interface IRuntimeAdapter {
   getVersion(): number;
 
   /**
+   * Get a reactive accessor for a specific atom path.
+   * Framework-specific implementations:
+   * - Vue: Returns a Ref or Computed
+   * - Solid: Returns an Accessor signal
+   * - React: May return a current snapshot value or a specialized hook-ready object
+   * @param path - The state path to access (e.g. "user.profile.name")
+   * @returns Framework-native reactive primitive
+   */
+  getReactiveSource?(path: string): any;
+
+  /**
    * Get runtime performance metrics.
    * @returns Performance metrics snapshot
    */
@@ -70,6 +81,11 @@ export interface IRenderContext {
   descriptorMap: Map<string, VisualDescriptor>;
   /** Runtime adapter reference for metrics/version access */
   runtimeAdapter: IRuntimeAdapter;
+  /** 
+   * Utility to get a stable key for a descriptor ID.
+   * Ensures key consistency across framework re-renders.
+   */
+  getStableKey(id: string): string;
 }
 
 /**
@@ -128,6 +144,16 @@ export interface IRenderer {
       container?: Element;
     }
   ): IRenderRoot;
+
+  /**
+   * Optional: Prepare a descriptor before full resolution.
+   * Useful for pre-calculating state, pre-fetching resources,
+   * or building imperative structures (e.g. Minecraft forms).
+   * @param descriptor - The descriptor to prepare
+   * @param ctx - Render context
+   * @returns Optional intermediate data
+   */
+  prepare?(descriptor: VisualDescriptor, ctx: IRenderContext): any;
 
   /**
    * Resolve a single VisualDescriptor into a framework element.

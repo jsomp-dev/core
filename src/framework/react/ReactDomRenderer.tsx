@@ -34,6 +34,11 @@ export const ReactDomRenderer: IRenderer = {
     return root;
   },
 
+  prepare(descriptor: VisualDescriptor, _ctx: IRenderContext): any {
+    // React implementation currently doesn't require pre-processing
+    return descriptor;
+  },
+
   resolve(descriptor: VisualDescriptor, ctx: IRenderContext): any {
     const resolved = resolveComponent(descriptor, ctx);
     if (!resolved) return null;
@@ -47,7 +52,10 @@ export const ReactDomRenderer: IRenderer = {
       const rendered = ids.map(childId => {
         const childDescriptor = ctx.descriptorMap.get(childId);
         if (!childDescriptor) return null;
-        return ReactDomRenderer.resolve(childDescriptor, ctx);
+        const element = ReactDomRenderer.resolve(childDescriptor, ctx);
+        if (!element) return null;
+        // React requires a key for list items
+        return <Fragment key={ctx.getStableKey(childId)}>{element}</Fragment>;
       });
 
       if (name === 'children' || name === 'default') {
