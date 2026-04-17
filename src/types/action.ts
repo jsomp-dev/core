@@ -44,11 +44,11 @@ export interface IActionDef<TAtoms extends Record<string, any> = any> {
 export type IActionPlugin = (env: any, registry: IActionRegistry) => void | Promise<void>;
 
 /**
- * Trigger Host Interface (V1.2+)
+ * Trigger Source Interface (V1.2+)
  * Responsibility: Bridge external/custom event sources to JSOMP actions.
  */
-export interface ITriggerHost {
-  /** 
+export interface ITriggerSource {
+  /**
    * Establish a real connection to the external event source.
    * @param eventName Neutral event name (e.g., 'receive_msg')
    * @param emit Function to trigger the action with a payload
@@ -77,14 +77,14 @@ export interface IActionRegistry {
   /** Get a list of all registered action names */
   getNames(): string[];
 
-  /** 
-   * Register a host for a specific trigger namespace (V1.2+)
-   * @example registerTriggerHost('backend', new MyElectronHost())
+  /**
+   * Register a trigger source for a specific trigger namespace (V1.2+)
+   * @example registerTriggerSource('backend', new MyElectronSource())
    */
-  registerTriggerHost(namespace: string, host: ITriggerHost): void;
+  registerTriggerSource(namespace: string, source: ITriggerSource): void;
 
-  /** Get the host for a specific trigger namespace */
-  getTriggerHost(namespace: string): ITriggerHost | undefined;
+  /** Get the trigger source for a specific trigger namespace */
+  getTriggerSource(namespace: string): ITriggerSource | undefined;
 
   /** Get an action definition by name */
   getDefinition(name: string): IActionDef<any> | undefined;

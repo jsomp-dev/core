@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {setupJsomp, jsompEnv} from "@jsomp/core";
+import {jsompEnv} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
 export const EntityPoolTest: React.FC = () => {
@@ -8,7 +8,7 @@ export const EntityPoolTest: React.FC = () => {
 
   useEffect(() => {
     const init = async () => {
-      const jsomp = await setupJsomp();
+      const jsomp = jsompEnv.service;
 
       // 1. Register base templates
       jsomp.entities.register('tpl', [

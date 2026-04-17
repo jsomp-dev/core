@@ -7,7 +7,7 @@ import {IJsompStream, StreamOptions} from './stream';
 import {IJsompLayoutManager} from './layout';
 import {IJsompNode} from './node';
 import {IEntityRegistry} from './entity';
-import {IHostAdapter, IHostRegistry} from './host';
+import {IFrameworkRegistry} from './framework';
 /**
  * JSOMP Service Interface
  * Central orchestration for all JSOMP capabilities.
@@ -24,9 +24,9 @@ export interface IJsompService {
   readonly components: IComponentRegistry;
 
   /**
-   * Host registry for framework-specific adapters
+   * Framework registry for framework-specific adapters
    */
-  readonly hosts: IHostRegistry;
+  readonly frameworks: IFrameworkRegistry;
 
   /**
    * Entity pool for reusable templates and fragments

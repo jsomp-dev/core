@@ -1,8 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SignalCenter } from '../../src/engine/headless/SignalCenter';
-import { AtomRegistry } from '../../src/state/AtomRegistry';
-import { setupJsomp } from '../../src/setup';
-import { JsompRuntime } from '../../src/engine/headless/JsompRuntime';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {JsompRuntime, SignalCenter} from '../../src/engine';
+import {AtomRegistry, setupJsomp} from '../../src';
 
 describe('AtomRegistry - SignalCenter UI Sync Integration', () => {
     let sc: SignalCenter;
@@ -10,7 +8,7 @@ describe('AtomRegistry - SignalCenter UI Sync Integration', () => {
     let runtime: JsompRuntime;
 
     beforeEach(async () => {
-        await setupJsomp();
+        await setupJsomp({framework: 'fallback'});
         sc = new SignalCenter();
         registry = new AtomRegistry();
         runtime = new JsompRuntime();

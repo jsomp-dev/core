@@ -7,7 +7,7 @@ describe('Headless Expression Resolution', () => {
   let center: SignalCenter;
 
   beforeEach(async () => {
-    const service = await setupJsomp();
+    const service = await setupJsomp({framework: 'fallback'});
     // Use service to create compiler so it has all registered plugins (including TreeAssembly & Dependency)
     const compiler = service.createCompiler();
 

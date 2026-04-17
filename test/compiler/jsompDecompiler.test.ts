@@ -3,7 +3,7 @@ import {JsompDecompiler, setupJsomp} from '../../src';
 
 describe('JsompDecompiler', () => {
   beforeEach(async () => {
-    await setupJsomp();
+    await setupJsomp({framework: 'fallback'});
   });
 
   it('should decompile slot nodes with standard parent and slot attribute', () => {

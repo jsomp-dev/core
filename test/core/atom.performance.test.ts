@@ -7,7 +7,7 @@ describe('JSOMP 1.1/1.2 Atom Performance (Path-Based Backtracking)', () => {
   let signalCenter: SignalCenter;
 
   beforeAll(async () => {
-    await setupJsomp();
+    await setupJsomp({framework: 'fallback'});
   });
 
   beforeEach(() => {

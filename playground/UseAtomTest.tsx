@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {jsompEnv, HtmlRegistry} from '../src';
-import {JsompView, useAtom, useAtomProxy} from '../src/renderer/react';
+import {JsompView, useAtom, useAtomProxy} from '@jsomp/core/react';
 
 /**
  * Proxy-based React Subscriber

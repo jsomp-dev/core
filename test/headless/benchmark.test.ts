@@ -7,7 +7,7 @@ describe('Headless Core Benchmark & Extreme Cases', () => {
 
   beforeAll(async () => {
     // Standard initialization to ensure logger and standard plugins are registered
-    service = await setupJsomp();
+    service = await setupJsomp({framework: 'fallback'});
   });
 
   it('Should build a large logic tree (2000 nodes) within 50ms', () => {

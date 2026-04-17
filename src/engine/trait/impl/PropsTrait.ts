@@ -28,16 +28,27 @@ export const propsTrait: TraitProcessor = (
 
       const [ns, name] = trigger.includes(':') ? trigger.split(':') : ['dom', trigger];
 
-      const host = jsompEnv.service.hosts.getActive();
-      if (host.isOwner(ns)) {
-        propName = host.mapPropName(ns, name);
-      } else {
+      // For known namespaces (dom, key), we need the active framework to map them
+      // For custom namespaces (backend:, custom:), we use the default rule regardless
+      const knownNamespaces = jsompEnv.frameworkLoader?.capabilityNamespaces || [];
+      let isOwner = false;
+
+      if (knownNamespaces.includes(ns)) {
+        // Check if the framework supports the namespace
+        const framework = jsompEnv.service.frameworks.getActive();
+        isOwner = framework.isOwner(ns);
+        if (isOwner) {
+          propName = framework.mapPropName(ns, name);
+        }
+      }
+
+      if (!isOwner) {
         // Default Rule for Custom Namespaces: on + Namespace + EventName (PascalCase)
         const pascalNS = ns.charAt(0).toUpperCase() + ns.slice(1);
         const pascalEvent = name.split('_').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('');
         propName = `on${pascalNS}${pascalEvent}`;
 
-        // Store pre-processed trigger metadata for host renderer to wire up lifecycle
+        // Store pre-processed trigger metadata for framework renderer to wire up lifecycle
         if (!descriptor.triggers) descriptor.triggers = [];
         descriptor.triggers.push({namespace: ns, event: name, prop: propName});
       }

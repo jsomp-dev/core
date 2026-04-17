@@ -11,25 +11,28 @@
   "types": "./dist/index.d.ts",
   "source": "./src/index.ts",
   "scripts": {
-    "dev": "tsup src/index.ts src/renderer/react/index.ts src/engine/compiler/plugins/*.ts --format esm --watch --dts --external zod --external react --external react-dom --splitting",
-    "dev:ui": "vite",
+    "dev": "tsup src/index.ts src/framework/core/index.ts src/framework/react/index.ts src/engine/compiler/plugins/*.ts --format esm --watch --dts --external zod --external react --external react-dom --splitting",
+    "dev:ui": "vite --port 3001",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "build": "tsup src/index.ts src/renderer/react/index.ts src/engine/compiler/plugins/*.ts --format esm --clean --dts --minify --external zod --external react --external react-dom --splitting",
+    "build": "tsup src/index.ts src/framework/core/index.ts src/framework/react/index.ts src/engine/compiler/plugins/*.ts --format esm --clean --dts --minify --external zod --external react --external react-dom --splitting",
     "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "development": "./src/index.ts",
       "import": "./dist/index.js"
     },
     "./react": {
-      "types": "./dist/renderer/react/index.d.ts",
-      "import": "./dist/renderer/react/index.js"
+      "types": "./dist/framework/react/index.d.ts",
+      "development": "./src/framework/react/index.ts",
+      "import": "./dist/framework/react/index.js"
     },
     "./plugins": {
       "types": "./dist/engine/compiler/plugins/index.d.ts",
+      "development": "./src/engine/compiler/plugins/index.ts",
       "import": "./dist/engine/compiler/plugins/index.js"
     }
   },
@@ -109,7 +112,7 @@
       "limit": "15 kB"
     },
     {
-      "path": "dist/renderer/react/index.js",
+      "path": "dist/framework/react/index.js",
       "limit": "15 kB"
     }
   ]

@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {jsompEnv, HtmlRegistry} from '../src';
-import {JsompView} from '../src/renderer/react';
+import {JsompView} from '@jsomp/core/react';
 
 export const ActionTagsTest: React.FC = () => {
   const [entities] = useState<any[]>([
@@ -150,9 +150,9 @@ export const ActionTagsTest: React.FC = () => {
     // Simulating a backend emitter
     const listeners = new Set<(p: any) => void>();
 
-    // Register the custom Trigger Host for 'runtime:' namespace
-    jsomp.actions.registerTriggerHost('runtime', {
-      subscribe: (eventName, emit) => {
+    // Register the custom Trigger Source for 'runtime:' namespace
+    jsomp.actions.registerTriggerSource('runtime', {
+      subscribe: (eventName: string, emit: (p: any) => void) => {
         if (eventName === 'system_notify') {
           listeners.add(emit);
           return () => listeners.delete(emit);
@@ -179,12 +179,12 @@ export const ActionTagsTest: React.FC = () => {
               Action Tags V1.2
             </h1>
             <p className="text-zinc-500 text-lg">
-              Testing Host-Agnostic Triggers & Automated Lifecycle Bridging.
+              Testing Framework-Agnostic Triggers & Automated Lifecycle Bridging.
             </p>
           </div>
           <div className="text-right">
             <span className="px-3 py-1 bg-zinc-800 rounded-full text-[10px] font-bold text-zinc-400 uppercase tracking-widest border border-zinc-700">
-              Host: {jsompEnv.service?.hosts.getActive().target}
+              Framework: {jsompEnv.service?.frameworks.getActive()?.target ?? 'None'}
             </span>
           </div>
         </div>

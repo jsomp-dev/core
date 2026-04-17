@@ -1,6 +1,6 @@
 import React, {useMemo, useState} from 'react';
 import {jsompEnv, BasicRegistry} from '../src';
-import {JsompView} from '../src/renderer/react';
+import {JsompView} from '@jsomp/core/react';
 
 export const BasicPresetsTest: React.FC = () => {
   const [entities] = useState<any[]>([

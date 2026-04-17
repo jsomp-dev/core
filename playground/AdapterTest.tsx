@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {createStore} from 'zustand/vanilla';
-import {jsompEnv, HtmlRegistry} from '../src';
-import {JsompView} from '../src/renderer/react';
+import {HtmlRegistry} from '../src';
+import {JsompView} from '@jsomp/core/react';
 
 // 1. Setup REAL Zustand Store
 const zustandStore = createStore(() => ({

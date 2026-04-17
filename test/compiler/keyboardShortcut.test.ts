@@ -7,7 +7,7 @@ describe('Keyboard Shortcut Implementation (Native Rules)', () => {
   let actionRegistry: ActionRegistry;
 
   beforeAll(async () => {
-    await setupJsomp();
+    await setupJsomp({framework: 'fallback'});
   });
 
   beforeEach(() => {

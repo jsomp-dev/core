@@ -1,6 +1,8 @@
-import {JsompConfig, JsompLogger, JsompFlattener, JsompEventBus, IJsompEnv, IJsompService, IHostAdapter, IConfigRegistry} from './types';
+import {JsompConfig, JsompLogger, JsompFlattener, JsompEventBus, IJsompEnv, IJsompService, IConfigRegistry} from './types';
 import {ConfigRegistry} from './registry/ConfigRegistry';
 import {JsompService} from './JsompService';
+import {FrameworkLoader} from './framework/core/FrameworkLoader';
+import {FrameworkManifest} from './types';
 
 /**
  * JSOMP Environment Container (Global Registry)
@@ -9,9 +11,11 @@ import {JsompService} from './JsompService';
 export class JsompEnv implements IJsompEnv {
   private _logger?: JsompLogger;
   private _flattener?: JsompFlattener;
+  // TODO: Evaluate and implement event system
   private _eventBus?: JsompEventBus;
   private _service?: IJsompService;
   private _config: IConfigRegistry = new ConfigRegistry();
+  private _frameworkLoader: FrameworkLoader = new FrameworkLoader();
 
   public isSetup = false;
 
@@ -47,15 +51,21 @@ export class JsompEnv implements IJsompEnv {
     return this._config;
   }
 
+  public get frameworkLoader(): FrameworkLoader {
+    return this._frameworkLoader;
+  }
+
   /**
    * Initialize tools and variables in the container.
-   * Supports dynamic injection and default fallbacks.
+   * Supports dynamic injection, default fallbacks, and framework auto-discovery.
+   * @param config - Optional configuration object for JSOMP initialization
    */
-  public async init(config: JsompConfig): Promise<void> {
+  public async init(config: JsompConfig = {}): Promise<void> {
     // 0. Merge user configuration into registry
     this._config.merge(config);
 
     // 1. Service Injection
+    // If a service instance is provided via config, use it; otherwise create a default
     const injectedService = this._config.get('service');
     if (injectedService) {
       this._service = injectedService;
@@ -64,6 +74,7 @@ export class JsompEnv implements IJsompEnv {
     }
 
     // 2. Logger (Dynamic Load Default if missing)
+    // Allow user-provided logger, otherwise fall back to default implementation
     const logger = this._config.get('logger');
     if (logger) {
       this._logger = logger;
@@ -73,6 +84,7 @@ export class JsompEnv implements IJsompEnv {
     }
 
     // 3. Flattener
+    // Allow user-provided flattener, otherwise fall back to default
     const flattener = this._config.get('flattener');
     if (flattener) {
       this._flattener = flattener;
@@ -82,6 +94,7 @@ export class JsompEnv implements IJsompEnv {
     }
 
     // 4. EventBus
+    // Allow user-provided event bus, otherwise fall back to default
     const eventBus = this._config.get('eventBus');
     if (eventBus) {
       this._eventBus = eventBus;
@@ -90,29 +103,102 @@ export class JsompEnv implements IJsompEnv {
       this._eventBus = new DefaultEventBus();
     }
 
-    // 5. Host Registry & Selection
-    const hostId = this._config.get('host', 'react');
+    // 5. Load frameworks
+    await this._loadFrameworks();
 
-    if (hostId === 'react') {
-      const {DefaultReactHost} = await import('./uniform/host/DefaultReactHost');
-      this._service!.hosts.register('react', new DefaultReactHost());
+    // 6. Activate framework based on config
+    await this._activateFramework(config);
+  }
+
+  private async _loadFrameworks() {
+    // Framework Registry Initialization with Auto-Discovery
+    // 1 Load all built-in frameworks (React, etc.)
+    this._frameworkLoader.loadBuiltInFrameworks();
+
+    // 2 Load external framework packages if configured
+    // This enables future frameworks like @jsomp/framework-vue to be loaded dynamically
+    const externalFrameworks = this._config.get('externalFrameworks', []) as string[];
+    if (externalFrameworks.length > 0) {
+      await this._frameworkLoader.loadExternalFrameworks(externalFrameworks);
     }
+  }
 
-    // Set active host
-    this._service!.hosts.setActive(hostId);
+  // Activate the framework based on configuration
+  // Support three modes:
+  // - 'auto': Automatically detect best framework based on environment
+  // - 'react' (default): Explicitly use React
+  // - Custom framework ID: Use specified framework if registered
+  private async _activateFramework(config: JsompConfig) {
+    const frameworkId = this._config.get('framework', config.framework ?? 'auto') as string;
+
+    if (frameworkId === 'auto') {
+      // Auto-detection mode: detect best available framework
+      const detectedFramework = await this._frameworkLoader.autoDetect({
+        hasReact: this._hasPackage('react'),
+        hasVue: this._hasPackage('vue'),
+        hasSolid: this._hasPackage('solid-js'),
+        hasPreact: this._hasPackage('preact')
+      });
+      await this._service!.frameworks.setActive(detectedFramework);
+    } else {
+      // Explicit framework selection
+      await this._service!.frameworks.setActive(frameworkId);
+    }
+  }
+
+  public registerBuiltInFramework(manifest: FrameworkManifest) {
+    this._frameworkLoader.registerBuiltInFramework(manifest);
   }
 
   /**
-   * Internal bridge to set service instance
+   * Checks if a package is available in the current environment.
+   * Used for framework auto-detection to determine which frameworks are present.
+   * @param packageName - Name of the package to check (e.g., 'react', 'vue')
+   * @returns true if the package is detected in the environment
+   */
+  private _hasPackage(packageName?: string): boolean {
+    try {
+      // Check for package in various ways common in Node and browser environments
+      if (typeof window !== 'undefined') {
+        if (packageName !== undefined) {
+          return Boolean((window as any)[packageName] !== undefined);
+        }
+        // Browser environment: check global scope
+        const globalNames = ['react', 'React', 'vue', 'Vue', 'solid-js', 'preact'];
+        for (const name of globalNames) {
+          if (Boolean((window as any)[name] !== undefined)) return true;
+        }
+      }
+      // For server-side or build-time detection, check if module can be resolved
+      // This is a simplified check; a real implementation might use require.resolve
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Internal bridge to set service instance.
+   * Called by setup functions to inject custom service implementations.
+   * @param service - The JSOMP service instance to set
    */
   public setService(service: IJsompService) {
     this._service = service;
   }
+
+  /**
+   * Clears all internal state, resetting the environment to its initial state.
+   */
+  public clear() {
+    this.isSetup = false;
+    this._config = new ConfigRegistry();
+    this._service = undefined;
+    this._frameworkLoader = new FrameworkLoader();
+  }
 }
 
 /**
- * Global singleton access to the container
+ * Global singleton access to the environment container.
+ * Use this instead of creating new JsompEnv instances.
  */
 export const jsompEnv = JsompEnv.instance;
-
-

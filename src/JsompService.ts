@@ -9,7 +9,6 @@ import {
   IJsompStream,
   IStateDispatcherRegistry,
   ITraitPipeline,
-  IHostRegistry,
   StreamOptions
 } from './types';
 import {
@@ -21,10 +20,11 @@ import {
   ZustandAdapter
 } from './state';
 import {JsompStream} from './misc/JsompStream';
-import {ActionRegistry, ComponentRegistry, EntityRegistry, HostRegistry, SchemaRegistry} from './registry';
+import {ActionRegistry, ComponentRegistry, EntityRegistry, FrameworkRegistry, SchemaRegistry} from './registry';
 import {CreateCompilerOptions, JsompCompiler, PipelineRegistry, TraitPipeline} from './engine';
 import {JsompLayoutManager} from './misc/JsompLayoutManager';
 import {jsompEnv} from './JsompEnv';
+import type {IFrameworkRegistry} from './types';
 
 /**
  * JSOMP Service Implementation
@@ -93,13 +93,13 @@ export class JsompService implements IJsompService {
   public readonly traitPipeline: ITraitPipeline;
 
   /**
-   * Host registry
+   * Framework registry
    */
-  public readonly hosts: IHostRegistry;
+  public readonly frameworks: IFrameworkRegistry;
 
   constructor() {
     this.atoms = new StateDispatcherRegistry(new AtomRegistry());
-    this.hosts = new HostRegistry();
+    this.frameworks = new FrameworkRegistry();
     this.pipeline = PipelineRegistry.global.clone();
     this.traitPipeline = new TraitPipeline();
     this.schemas = SchemaRegistry.global;

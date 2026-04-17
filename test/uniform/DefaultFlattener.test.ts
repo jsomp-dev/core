@@ -19,7 +19,7 @@ describe('DefaultFlattener - Atomic Recovery (1.1.4)', () => {
   let flattener: DefaultFlattener;
 
   beforeEach(async () => {
-    await setupJsomp();
+    await setupJsomp({framework: 'fallback'});
     flattener = new DefaultFlattener();
   });
 
