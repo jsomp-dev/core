@@ -6,6 +6,8 @@ import {ReactAdapter} from './ReactAdapter';
 import {JsompWindow} from './components/JsompWindow';
 
 
+import {useJsompTriggers} from './hooks';
+
 /**
  * Context for O(1) node lookup during recursive rendering
  */
@@ -35,6 +37,9 @@ const JsompNodeItem = memo(({id}: {id: string}) => {
   const localComponents = useContext(JsompComponentsContext);
   const parentPathStack = useContext(JsompPathContext);
   const descriptor = nodesMap.get(id);
+  
+  // V1.2+: Manage external trigger subscriptions
+  useJsompTriggers(descriptor);
 
   // Inner memoization to block re-render if descriptor reference is stable
   return useMemo(() => {

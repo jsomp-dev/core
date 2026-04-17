@@ -349,10 +349,10 @@ export const OperatorTest: React.FC = () => {
         beforeMount={() => {
           // 1. Prepare Local States
           const reg = jsompEnv.service!.atoms;
-          reg.set('count', {value: 5});
-          reg.set('isExpanded', {value: false});
-          reg.set('userRole', {value: 'user'});
-          reg.set('price', {value: 120});
+          reg.set('count', 5);
+          reg.set('isExpanded', false);
+          reg.set('userRole', 'user');
+          reg.set('price', 120);
 
           // 2. Register Actions (Successfully resolved after timing fix)
           const actions = jsompEnv.service!.actions;
@@ -376,6 +376,7 @@ export const OperatorTest: React.FC = () => {
             }
           });
           actions.register('op.setRole', {
+            require: {atoms: {userRole: 'userRole'}},
             handler: ({atoms, event}) => {
               atoms.userRole = event.target.value;
             }

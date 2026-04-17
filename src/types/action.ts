@@ -13,7 +13,7 @@ export interface IActionDef<TAtoms extends Record<string, any> = any> {
   /** Environmental requirements (Atoms, Props, Event Params) */
   require?: {
     /** Alias mapping for atom access: { "localName": "path" or {path: "...", default: 0} } */
-    atoms?: { [K in keyof TAtoms]: string | IActionAtomRequirement<TAtoms[K]> };
+    atoms?: {[K in keyof TAtoms]: string | IActionAtomRequirement<TAtoms[K]>};
     /** Property requirements (with Zod or simple string keys) */
     props?: Record<string, any>;
     /** Event parameter expectations */
@@ -27,7 +27,34 @@ export interface IActionDef<TAtoms extends Record<string, any> = any> {
     props: Record<string, any>;
     /** Payload from the triggered event */
     event: any;
+    /** Alias for the raw event payload (V1.2+) */
+    originEvent: any;
+    /** The original trigger that fired this action (e.g., 'dom:click') */
+    trigger: string;
+    /** Trigger namespace (e.g., 'dom') */
+    namespace: string;
+    /** Unqualified event name (e.g., 'click') */
+    eventName: string;
   }) => void | Promise<void>;
+}
+
+/**
+ * Action Plugin Function
+ */
+export type IActionPlugin = (env: any, registry: IActionRegistry) => void | Promise<void>;
+
+/**
+ * Trigger Host Interface (V1.2+)
+ * Responsibility: Bridge external/custom event sources to JSOMP actions.
+ */
+export interface ITriggerHost {
+  /** 
+   * Establish a real connection to the external event source.
+   * @param eventName Neutral event name (e.g., 'receive_msg')
+   * @param emit Function to trigger the action with a payload
+   * @returns Unsubscribe function
+   */
+  subscribe(eventName: string, emit: (payload: any) => void): (() => void);
 }
 
 /**
@@ -43,6 +70,21 @@ export interface IActionRegistry {
     name: string,
     def: IActionDef<TAtoms> | IActionDef<TAtoms>['handler']
   ): void;
+
+  /** Execute an action by tag name */
+  execute(tagName: string, env: any, trigger?: string): Promise<void>;
+  
+  /** Get a list of all registered action names */
+  getNames(): string[];
+
+  /** 
+   * Register a host for a specific trigger namespace (V1.2+)
+   * @example registerTriggerHost('backend', new MyElectronHost())
+   */
+  registerTriggerHost(namespace: string, host: ITriggerHost): void;
+
+  /** Get the host for a specific trigger namespace */
+  getTriggerHost(namespace: string): ITriggerHost | undefined;
 
   /** Get an action definition by name */
   getDefinition(name: string): IActionDef<any> | undefined;

@@ -203,6 +203,7 @@ export class JsompCompiler implements IJsompCompiler {
             }
           } catch (err: any) {
             ctx.logger.error(`[Compiler][${stage}][Batch] Plugin ${plugin.name || 'anonymous'} failed on node ${id}: ${err.message}`, err);
+            throw err;
           }
         }
 

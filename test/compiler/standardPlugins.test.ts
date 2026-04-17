@@ -160,17 +160,11 @@ describe('JSOMP Standard Plugins (V2 Optimization Suite)', () => {
       const entities = new Map<string, any>([
         ['a', {id: 'a', type: 'div', parent: 'a'}]
       ]);
-      // Pass 1: Ensure node 'a' exists in the logic store
-      const {nodes} = compiler.compile(entities);
-
-      // Pass 2: Re-compile with dirty flag to trigger IncrementalDiscovery 
-      // to link 'a' to itself (parent lookup finds 'a' in ctx.nodes), creating a cycle.
+      
+      // Since PathResolution now has strict cycle detection, 
+      // it will throw on the first pass.
       expect(() => {
-        compiler.compile(entities, {
-          rootId: 'a',
-          dirtyIds: new Set(['a']),
-          nodes // 🚨 MUST pass manual state since compiler is now stateless
-        });
+        compiler.compile(entities);
       }).toThrow();
     });
   });
