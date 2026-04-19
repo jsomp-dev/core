@@ -1,7 +1,7 @@
 import type {IJsompEnv, IJsompService} from './index';
 import type {IJsompRuntime} from './runtime';
 import type {IRenderContext, IRenderer, IRuntimeAdapter} from './renderer';
-import {ISignalCenter} from 'dist';
+import {ISignalCenter} from './runtime';
 
 /**
  * Manifest metadata for a framework adapter package.
@@ -41,7 +41,7 @@ export interface FrameworkManifest {
    * Async factory function that creates the framework adapter instance.
    * Supports both direct IFrameworkAdapter returns and { createAdapter } pattern.
    */
-  factory: () => Promise<IFrameworkAdapter | { createAdapter: () => IFrameworkAdapter }>;
+  factory: () => Promise<IFrameworkAdapter | {createAdapter: () => IFrameworkAdapter}>;
 
   /**
    * Optional validation function called during framework initialization.

@@ -108,6 +108,7 @@ export const SlotTest: React.FC = () => {
         <JsompView
           entities={entities}
           rootId='app_root'
+          id="slot_test"
           components={{
             CustomCard
           }}

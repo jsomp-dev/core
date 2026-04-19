@@ -433,7 +433,7 @@ const App: React.FC = () => {
         {currentTab === 'presets' ? (
           <BasicPresetsTest />
         ) : currentTab === 'basic' ? (
-          <JsompView entities={entities} rootId='app_root' />
+          <JsompView entities={entities} rootId='app_root' id='app_main' />
         ) : currentTab === 'layout' ? (
           <LayoutTest />
         ) : currentTab === 'slot' ? (

@@ -87,6 +87,7 @@ export const PerformanceTest: React.FC = () => {
           <JsompView
             entities={entities}
             rootId="perf_root"
+            id="performance_test"
             beforeMount={(jsomp) => {
               // 1. Initial States
               jsomp.atoms.set('status', {value: 'System Ready'});

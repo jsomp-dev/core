@@ -74,7 +74,7 @@ export const LayoutTest: React.FC = () => {
     <div className="flex flex-col gap-6 w-full max-w-4xl">
       <section>
         <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-wider mb-3">Live JSOMP Render</h3>
-        <JsompView entities={TEST_LAYOUT as any} rootId="app_root" />
+        <JsompView entities={TEST_LAYOUT as any} rootId="app_root" id="layout_test" />
       </section>
 
       {/* B. Path Resolution Verification */}

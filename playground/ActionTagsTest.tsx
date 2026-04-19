@@ -246,6 +246,7 @@ export const ActionTagsTest: React.FC = () => {
         }}
         entities={entities}
         rootId="root"
+        id="action_tags_test"
       />
 
       <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl opacity-50">

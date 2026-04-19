@@ -214,6 +214,7 @@ export const AutoSyncTest: React.FC = () => {
       <JsompView
         entities={entities}
         rootId="sync_root_wrapper"
+        id="auto_sync_test"
         beforeMount={(jsomp) => {
           // 1. Prepare Local States
           const reg = jsomp.atoms;
