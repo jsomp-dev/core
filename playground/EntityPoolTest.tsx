@@ -142,7 +142,7 @@ export const EntityPoolTest: React.FC = () => {
             <div style={{fontSize: '0.8rem', color: '#71717a', marginBottom: '1rem'}}>
               Nodes inherit styles from <code>tpl.card</code> and <code>tpl.btn</code> in the global pool.
             </div>
-            <JsompView entities={inheritanceUI} rootId="page_root" />
+            <JsompView entities={inheritanceUI} rootId="page_root" id="entity_pool_inheritance" />
           </div>
         )}
 
@@ -151,7 +151,7 @@ export const EntityPoolTest: React.FC = () => {
             <div style={{fontSize: '0.8rem', color: '#71717a', marginBottom: '1rem'}}>
               The primary root is `comp.profile.container` which resides entirely in the pool.
             </div>
-            <JsompView entities={[]} rootId="comp-profile.container" />
+            <JsompView entities={[]} rootId="comp-profile.container" id="entity_pool_root_pulling" />
           </div>
         )}
 

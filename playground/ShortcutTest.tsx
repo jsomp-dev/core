@@ -152,6 +152,7 @@ export const ShortcutTest: React.FC = () => {
       {/* Left: JSOMP Rendered Test Area */}
       <JsompView 
         entities={entities} 
+        id="shortcut_test"
         beforeMount={beforeMount}
       />
 

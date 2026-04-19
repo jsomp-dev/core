@@ -346,6 +346,7 @@ export const OperatorTest: React.FC = () => {
       <JsompView
         entities={entities}
         rootId="app_wrapper"
+        id="operator_test"
         beforeMount={() => {
           // 1. Prepare Local States
           const reg = jsompEnv.service!.atoms;

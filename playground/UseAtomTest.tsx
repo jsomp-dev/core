@@ -254,6 +254,7 @@ export const UseAtomTest: React.FC = () => {
         }}
         entities={entities}
         rootId="root"
+        id="use_atom_test"
       />
 
       <div className="mt-12 p-6 bg-zinc-900/40 border border-zinc-800/60 rounded-xl text-xs text-zinc-500 max-w-xl leading-relaxed">

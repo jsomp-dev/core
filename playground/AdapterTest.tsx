@@ -318,6 +318,7 @@ export const AdapterTest: React.FC = () => {
         }}
         entities={entities}
         rootId="root"
+        id="adapter_test"
       />
     </div>
   );

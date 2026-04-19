@@ -158,6 +158,7 @@ export const BasicPresetsTest: React.FC = () => {
       <JsompView
         entities={entities}
         rootId="root"
+        id="basic_presets_test"
         beforeMount={() => {
           const jsomp = jsompEnv.service!;
           BasicRegistry.registerAll(jsomp.components);

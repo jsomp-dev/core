@@ -289,7 +289,7 @@ export const StreamTest: React.FC = () => {
             minHeight: '600px',
             boxShadow: 'inset 0 0 100px rgba(0,0,0,0.5)'
           }}>
-            <JsompView key={testKey} entities={entities} rootId="stream_root" />
+            <JsompView key={testKey} entities={entities} rootId="stream_root" id="stream_test" />
             {!isStreaming && logs.length === 0 && (
               <div style={{
                 position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',

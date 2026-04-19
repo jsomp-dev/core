@@ -158,7 +158,7 @@ export const WindowNodeTest: React.FC = () => {
 
   return (
     <div className="w-full h-full flex items-center justify-center p-4">
-      {isReady && <JsompView entities={entities} />}
+      {isReady && <JsompView entities={entities} id="window_node_test" />}
     </div>
   );
 };
