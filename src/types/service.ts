@@ -8,6 +8,7 @@ import {IJsompLayoutManager} from './layout';
 import {IJsompNode} from './node';
 import {IEntityRegistry} from './entity';
 import {IFrameworkRegistry} from './framework';
+import {IInstanceRegistry} from './instance';
 /**
  * JSOMP Service Interface
  * Central orchestration for all JSOMP capabilities.
@@ -69,6 +70,11 @@ export interface IJsompService {
    * Action Registry for semantic interaction
    */
   readonly actions: IActionRegistry;
+
+  /**
+   * Instance Registry for component instances
+   */
+  readonly instances: IInstanceRegistry;
 
   /**
    * Create a new atomic state managed by this service

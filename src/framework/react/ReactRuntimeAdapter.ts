@@ -1,5 +1,6 @@
 import {IJsompRuntime} from '../../types';
 import {IRenderContext, ISignalCenter, IRuntimeAdapter, PerformanceMetrics, VisualDescriptor} from '../../types';
+import {jsompEnv} from '../../JsompEnv';
 
 /**
  * ReactRuntimeAdapter
@@ -107,5 +108,29 @@ export class ReactRuntimeAdapter implements IRuntimeAdapter {
     // In React, atoms are typically consumed via hooks in the component layer.
     // This adapter method can return the latest value from the signal center.
     return this.signalCenter.get(path);
+  }
+
+  /**
+   * Report a component instance (DOM element or object) back to the runtime.
+   */
+  public reportInstance(id: string, instance: any, path?: string): void {
+    const service = jsompEnv.service;
+    if (service) {
+      service.instances.set(id, instance, path);
+    }
+  }
+
+  /**
+   * Invoke a method on a component instance.
+   */
+  public async invokeMethod(id: string, methodName: string, args: any[]): Promise<any> {
+    const service = jsompEnv.service;
+    if (service) {
+      const instance = service.instances.getRaw(id);
+      if (instance && typeof (instance as any)[methodName] === 'function') {
+        return (instance as any)[methodName](...args);
+      }
+    }
+    return undefined;
   }
 }

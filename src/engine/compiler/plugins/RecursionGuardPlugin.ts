@@ -47,11 +47,11 @@ export const recursionGuardPlugin: IJsompPluginDef = {
       path.push(nodeId);
 
       if (anyNode.children && Array.isArray(anyNode.children)) {
-        // Use a copy of path for reporting
-        anyNode.children.forEach((child: IJsompNode) => check(child, depth + 1, [...path]));
+        anyNode.children.forEach((child: IJsompNode) => check(child, depth + 1, path));
       }
 
       // Backtrack
+      path.pop();
       stack.delete(nodeId);
     };
 

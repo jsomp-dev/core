@@ -61,6 +61,25 @@ export interface IRuntimeAdapter {
    * @returns Performance metrics snapshot
    */
   getMetrics?(): Partial<PerformanceMetrics> | undefined;
+
+  /**
+   * Report a component instance (DOM element or object) back to the runtime.
+   * This is used by the framework adapter to sync physical instances with the service.
+   * @param id - The unique view identifier
+   * @param instance - The platform-specific instance (e.g. HTMLElement, native view)
+   * @param path - Optional full topology path
+   */
+  reportInstance(id: string, instance: any, path?: string): void;
+
+  /**
+   * Invoke a method on a component instance.
+   * Supports both local and remote (cross-process) execution.
+   * @param id - The unique view identifier
+   * @param methodName - Method name to call (e.g. 'focus', 'scrollIntoView')
+   * @param args - Arguments to pass to the method
+   * @returns Promise resolving to the method result
+   */
+  invokeMethod(id: string, methodName: string, args: any[]): Promise<any>;
 }
 
 /**

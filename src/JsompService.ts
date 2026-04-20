@@ -20,7 +20,7 @@ import {
   ZustandAdapter
 } from './state';
 import {JsompStream} from './misc/JsompStream';
-import {ActionRegistry, ComponentRegistry, EntityRegistry, FrameworkRegistry, SchemaRegistry} from './registry';
+import {ActionRegistry, ComponentRegistry, EntityRegistry, FrameworkRegistry, InstanceRegistry, SchemaRegistry} from './registry';
 import {CreateCompilerOptions, JsompCompiler, PipelineRegistry, TraitPipeline} from './engine';
 import {JsompLayoutManager} from './misc/JsompLayoutManager';
 import {jsompEnv} from './JsompEnv';
@@ -81,6 +81,11 @@ export class JsompService implements IJsompService {
    * Action Registry for semantic interaction
    */
   public readonly actions = new ActionRegistry();
+
+  /**
+   * Instance Registry for component instances
+   */
+  public readonly instances = new InstanceRegistry();
 
   /**
    * Compiler pipeline registry
@@ -204,6 +209,7 @@ export class JsompService implements IJsompService {
    */
   public reset(): void {
     this.atoms.clear();
+    this.instances.clear();
     this._compiler = undefined;
     // We don't clear registries like components/entities as they are usually static definitions.
   }

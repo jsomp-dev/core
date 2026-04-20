@@ -91,6 +91,11 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
       pipeline.register('standard-attribute-cache', PipelineStage.PreProcess, attributeCachePlugin, 'StandardAttributeCache');
     }
 
+    if (shouldRegister('standard-multi-mount', PipelineStage.ReStructure)) {
+      const {multiMountPlugin} = await import('./engine/compiler/plugins/MultiMountPlugin');
+      pipeline.register('standard-multi-mount', PipelineStage.ReStructure, multiMountPlugin, 'StandardMultiMount');
+    }
+
     if (shouldRegister('standard-incremental-discovery', PipelineStage.ReStructure)) {
       const {incrementalDiscoveryPlugin} = await import('./engine/compiler/plugins/IncrementalDiscoveryPlugin');
       pipeline.register('standard-incremental-discovery', PipelineStage.ReStructure, incrementalDiscoveryPlugin, 'StandardIncrementalDiscovery');

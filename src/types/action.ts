@@ -33,6 +33,8 @@ export interface IActionDef<TAtoms extends Record<string, any> = any> {
     trigger: string;
     /** Trigger namespace (e.g., 'dom') */
     namespace: string;
+    /** The topology path of the node that triggered this action */
+    contextPath: string;
     /** Unqualified event name (e.g., 'click') */
     eventName: string;
   }) => void | Promise<void>;

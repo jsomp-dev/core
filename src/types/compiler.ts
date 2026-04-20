@@ -46,6 +46,10 @@ export interface CompilationResult {
   roots: IJsompNode[];
   /** The full map of all processed nodes */
   nodes: Map<string, IJsompNode>;
+  /** IDs of nodes that were dynamically created (e.g. by MultiMount) */
+  createdIds?: Set<string>;
+  /** Whether any topological changes occurred during compilation */
+  hasStructureChanged?: boolean;
 }
 
 /**
@@ -90,6 +94,12 @@ export interface ICompilerContext {
    * If missing, fall back to full scanning.
    */
   dirtyIds?: Set<string>;
+
+  /** IDs of nodes created dynamically during this run */
+  createdIds?: Set<string>;
+
+  /** Whether any topological changes occurred during this run */
+  hasStructureChanged?: boolean;
 
   /** Callback for dependency collection */
   onDependency?: (nodeId: string, atomKey: string) => void;

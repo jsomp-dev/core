@@ -1,4 +1,4 @@
-import {createContext, Fragment, memo, ReactNode, useContext, useLayoutEffect, useMemo} from 'react';
+import {createContext, Fragment, memo, ReactNode, useContext, useLayoutEffect, useMemo, useRef} from 'react';
 import {jsompEnv} from '../../JsompEnv';
 import {PerformanceMonitor} from '../../renderer';
 import {IRenderContext, IRuntimeAdapter, VisualDescriptor} from '../../types';
@@ -72,8 +72,17 @@ export function resolveComponent(
 const JsompNodeItem = memo(({id}: {id: string}) => {
   const ctx = useContext(JsompRenderContext);
   const descriptor = ctx.descriptorMap.get(id);
+  const instanceRef = useRef<any>(null);
 
   useJsompTriggers(descriptor);
+
+  // Sync instance to runtime adapter
+  useLayoutEffect(() => {
+    if (descriptor?.trackInstance) {
+      ctx.runtimeAdapter.reportInstance(id, instanceRef.current, descriptor.path);
+      return () => ctx.runtimeAdapter.reportInstance(id, null, descriptor.path);
+    }
+  }, [id, descriptor?.trackInstance, descriptor?.path]);
 
   return useMemo(() => {
     const resolved = resolveComponent(descriptor, ctx);
@@ -101,7 +110,7 @@ const JsompNodeItem = memo(({id}: {id: string}) => {
 
     return (
       <JsompRenderContext.Provider value={ctx}>
-        <Component {...props} {...slotProps} style={props.style ?? descriptor?.styles}>
+        <Component {...props} {...slotProps} ref={instanceRef} style={props.style ?? descriptor?.styles}>
           {finalChildren}
         </Component>
       </JsompRenderContext.Provider>

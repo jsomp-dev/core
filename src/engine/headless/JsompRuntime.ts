@@ -180,17 +180,39 @@ export class JsompRuntime implements IJsompRuntime {
   }
 
   /**
-   * Feed raw data
-   * Initial load or large snapshot updates
+   * Feed raw data (State Synchronization)
+   * 
+   * This method treats the input Map as the "Source of Truth" for the current state.
+   * It performs a diffing between the new input and the existing internal cache to:
+   * 1. Identify removed entities (present in cache but missing in input) -> Mark for Deletion.
+   * 2. Identify new or updated entities -> Mark for Reconciliation.
+   * 
+   * Note: For purely additive or high-frequency incremental updates, use SignalCenter instead.
    */
   public feed(entities: Map<string, any>): void {
-    // Merge entity data into cache
+    const dirtyIds = new Set<string>();
+
+    // 1. Identify removed entities
+    for (const id of this._entities.keys()) {
+      if (!entities.has(id)) {
+        this._entities.delete(id);
+        dirtyIds.add(id);
+      }
+    }
+
+    // 2. Identify new or updated entities
     entities.forEach((val, key) => {
-      this._entities.set(key, val);
+      const old = this._entities.get(key);
+      if (old !== val) {
+        this._entities.set(key, val);
+        dirtyIds.add(key);
+      }
     });
 
-    // Trigger full initial compilation
-    this.reconcile(Array.from(entities.keys()));
+    if (dirtyIds.size > 0) {
+      // Trigger incremental reconciliation for affected IDs
+      this.reconcile(Array.from(dirtyIds));
+    }
   }
 
   /**
@@ -245,8 +267,19 @@ export class JsompRuntime implements IJsompRuntime {
     // Just in case the compiler decided to clone or create a new map.
     this._topologyMap = result.nodes;
 
+    // If new nodes were created (e.g. by MultiMount), 
+    // add them to the dirty set to ensure descriptors are created.
+    if (result.createdIds) {
+      for (const id of result.createdIds) {
+        dirtySet.add(id);
+      }
+    }
+
     // 4. Validate topology (Circular & Orphan checks)
-    this.validateTopology();
+    // Only validate if structure actually changed or it's a full compile.
+    if (!dirtyIds || result.hasStructureChanged) {
+      this.validateTopology();
+    }
 
     // 5. Run Visual Pipeline
     const tPipeStart = performance.now();
@@ -261,7 +294,7 @@ export class JsompRuntime implements IJsompRuntime {
       pipelineMs: tEnd - tPipeStart,
       activeNodes: this._topologyMap.size,
       recursionDepth: 0 // Placeholder
-    };
+    }
 
     // 6. Increment version
     this._version++;
@@ -279,15 +312,17 @@ export class JsompRuntime implements IJsompRuntime {
       for (const id of currentBatch) {
         const node = this._topologyMap.get(id);
         if (node && node.parent) {
-          const parentId = node.parent;
-          if (!visited.has(parentId)) {
-            // Clone descriptor to force React update (Change Reference)
-            const desc = this._descriptors.get(parentId);
-            if (desc) {
-              this._descriptors.set(parentId, {...desc});
+          const parentIds = Array.isArray(node.parent) ? node.parent : [node.parent];
+          for (const pId of parentIds) {
+            if (!visited.has(pId)) {
+              // Clone descriptor to force React update (Change Reference)
+              const desc = this._descriptors.get(pId);
+              if (desc) {
+                this._descriptors.set(pId, {...desc});
+              }
+              visited.add(pId);
+              nextBatch.push(pId);
             }
-            visited.add(parentId);
-            nextBatch.push(parentId);
           }
         }
       }
@@ -299,21 +334,33 @@ export class JsompRuntime implements IJsompRuntime {
    * Execute the visual pipeline for all affected nodes
    */
   private _runPipeline(dirtyIds: Set<string>): void {
-    // Invalidate pipeline cache for dirty nodes
-    // Convert Set to Array for invalidation
+    // 1. Invalidate pipeline cache for dirty nodes
     this._pipeline.invalidate(Array.from(dirtyIds));
 
-    // Update Context
+    // 2. Update Context
     this._pipelineContext.dirtyIds = dirtyIds;
 
-    // Re-process all nodes (Pipeline handles caching internally)
-    // We iterate over the entire map to ensure the snapshot descriptors are complete.
-    // Non-dirty nodes will be efficiently retrieved from the cache.
-    for (const [id, node] of this._topologyMap) {
-      // Process node through pipeline
-      const descriptor = this._pipeline.processNode(node, this._pipelineContext);
-      descriptor.parentId = node.parent;
-      this._descriptors.set(id, descriptor);
+    // 3. Incremental Processing: Only process nodes affected by the current change
+    // This reduces O(N) traversal to O(K) where K is the number of dirty nodes.
+    for (const id of dirtyIds) {
+      const node = this._topologyMap.get(id);
+      if (node) {
+        // Update or Create Descriptor
+        const descriptor = this._pipeline.processNode(node, this._pipelineContext);
+
+        // Safety: Ensure parentId is synced. 
+        // processNode might return a cached descriptor, so we only update if it changed.
+        if (!this.areParentsEqual(descriptor.parentId, node.parent)) {
+          descriptor.parentId = node.parent;
+        }
+
+        this._descriptors.set(id, descriptor);
+      } else {
+        // Cleanup descriptors for deleted nodes
+        this._descriptors.delete(id);
+        // Also ensure they are removed from the pipeline cache
+        // (already handled by this._pipeline.invalidate above)
+      }
     }
   }
 
@@ -322,37 +369,47 @@ export class JsompRuntime implements IJsompRuntime {
    */
   private validateTopology(): void {
     this._pendingNodes.clear();
+    const visited = new Set<string>();
+    const stack = new Set<string>();
 
-    for (const [id, node] of this._topologyMap) {
-      if (node.parent) {
-        // Orphan check
-        if (!this._topologyMap.has(node.parent)) {
-          this._pendingNodes.add(id);
-        }
+    // Single pass DFS handles both orphans and circularity in O(N)
+    for (const node of this._topologyMap.values()) {
+      this._dfsValidate(node, visited, stack);
+    }
+  }
 
-        // Circular reference detection (Simple path tracing)
-        if (this.isCircular(node)) {
-          console.error(`[JsompRuntime] Circular reference detected at node: ${id}`);
+  private _dfsValidate(node: IJsompNode, visited: Set<string>, stack: Set<string>): void {
+    if (stack.has(node.id)) {
+      console.error(`[JsompRuntime] Circular reference detected at node: ${node.id}`);
+      return;
+    }
+    if (visited.has(node.id)) return;
+
+    visited.add(node.id);
+    stack.add(node.id);
+
+    if (node.parent) {
+      const parentIds = Array.isArray(node.parent) ? node.parent : [node.parent];
+      for (const pId of parentIds) {
+        const parent = this._topologyMap.get(pId);
+        if (parent) {
+          this._dfsValidate(parent, visited, stack);
+        } else {
+          // Orphan check
+          this._pendingNodes.add(node.id);
         }
       }
     }
+
+    stack.delete(node.id);
   }
 
-  /**
-   * Simple circular detection
-   */
-  private isCircular(startNode: IJsompNode): boolean {
-    const visited = new Set<string>();
-    let current: IJsompNode | undefined = startNode;
-
-    while (current && current.parent) {
-      if (visited.has(current.id)) return true;
-      visited.add(current.id);
-      current = this._topologyMap.get(current.parent);
-
-      // Recursive depth limit to avoid infinite loops in extreme cases
-      if (visited.size > 2000) return true;
+  private areParentsEqual(p1: any, p2: any): boolean {
+    if (Array.isArray(p1) && Array.isArray(p2)) {
+      return p1.length === p2.length && p1.every((v, i) => v === p2[i]);
     }
-    return false;
+    return p1 === p2;
   }
+
+
 }
