@@ -96,7 +96,8 @@ export const actionTagsPlugin: IJsompPluginDef = {
             // D. Trigger Identifier & Details
             trigger: fullTrigger,
             namespace: ns,
-            eventName: eName
+            eventName: eName,
+            contextPath: node._fullPath || id
           };
 
           await def.handler(env);

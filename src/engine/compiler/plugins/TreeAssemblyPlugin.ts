@@ -7,12 +7,18 @@ export const treeAssemblyPlugin: IJsompPluginDef = {
   id: 'standard-tree',
   stage: PipelineStage.Hydrate,
   handler: (ctx: ICompilerContext) => {
-    // 1. Identify roots (nodes without parent or pointing to non-existent parent)
     const roots: IJsompNode[] = [];
+    const isRootRef = (p: any) => p === 'root' && !ctx.nodes.has('root');
+    const hasValidParent = (p: any) => p && (Array.isArray(p) ? p.some(id => ctx.nodes.has(id)) : ctx.nodes.has(p));
+
     ctx.nodes.forEach(node => {
+      const parentVal = node.parent;
+      
       const isRoot = ctx.rootId
         ? node.id === ctx.rootId
-        : (!node.parent || (node.parent === 'root' && !ctx.nodes.has('root')) || !ctx.nodes.has(node.parent));
+        : (!parentVal || 
+           (Array.isArray(parentVal) ? parentVal.some(p => isRootRef(p)) : isRootRef(parentVal)) || 
+           !hasValidParent(parentVal));
 
       if (isRoot) {
         roots.push(node);

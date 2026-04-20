@@ -67,18 +67,17 @@ describe('Headless Core Benchmark & Extreme Cases', () => {
     const runtime = new JsompRuntime(service.createCompiler());
 
     // 1. Inject child first (Orphan context)
-    const childEntities = new Map<string, any>();
-    childEntities.set('child_1', {id: 'child_1', type: 'Box', parent: 'parent_1'});
+    const entities = new Map<string, any>();
+    entities.set('child_1', {id: 'child_1', type: 'Box', parent: 'parent_1'});
 
-    runtime.feed(childEntities);
+    runtime.feed(entities);
     let snapshot = runtime.getSnapshot();
     expect(snapshot.allNodes.length).toBe(1);
 
     // 2. Inject parent later
-    const parentEntities = new Map<string, any>();
-    parentEntities.set('parent_1', {id: 'parent_1', type: 'Box', parent: null});
+    entities.set('parent_1', {id: 'parent_1', type: 'Box', parent: null});
 
-    runtime.feed(parentEntities);
+    runtime.feed(entities);
     snapshot = runtime.getSnapshot();
 
     expect(snapshot.allNodes.length).toBe(2);

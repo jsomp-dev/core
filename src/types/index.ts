@@ -11,3 +11,4 @@ export * from './stream';
 export * from './framework';
 export * from './renderer';
 export * from './config';
+export * from './instance';

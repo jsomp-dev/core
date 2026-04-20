@@ -23,7 +23,7 @@ export interface IJsompNode {
   style_css?: Record<string, string | number>; // Inline CSS
 
   /** Points to the id of the parent container */
-  parent?: string | null;
+  parent?: string | string[] | null;
 
   /**
    * Slot name (optional)
@@ -36,7 +36,7 @@ export interface IJsompNode {
 
   /**
    * Semantic action tags (mapping tag name to event names)
-   * @example { "search": ["onEnter", "onIconClick"] }
+   * @example { "search": ["key:enter", "dom:click", "custom:receive_msg"] }
    */
   actions?: Record<string, string[]>;
 
@@ -44,6 +44,12 @@ export interface IJsompNode {
    * Runtime event handlers (spliced by plugins)
    */
   onEvent?: Record<string, Function>;
+
+  /**
+   * Whether this node needs its physical instance (DOM/Object) to be reported back to the service.
+   * Default is false.
+   */
+  trackInstance?: boolean;
 }
 
 /**
@@ -69,13 +75,17 @@ export interface VisualDescriptor {
   styles: Record<string, any>;
   /** Slot distribution table: key=slotName, value=childIds */
   slots: Record<string, string[]>;
-  /** Parent ID to identify roots */
-  parentId?: string | null;
+  /** Parent ID to identify roots. Supports multiple parents for Multi-Mount. */
+  parentId?: string | string[] | null;
   /** 
    * Pre-processed custom namespace triggers (V1.2+)
    * Used by host renderer to establish external subscriptions
    */
   triggers?: IVisualTrigger[];
+  /**
+   * Whether this node needs its physical instance to be reported back.
+   */
+  trackInstance?: boolean;
 }
 
 /**

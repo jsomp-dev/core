@@ -16,6 +16,7 @@ import {KeyboardUtils} from '../../utils/keyboard';
 import {ReactRuntimeAdapter} from './ReactRuntimeAdapter';
 import {ISignalCenter} from 'dist';
 import {ReactDomRenderer} from './ReactDomRenderer';
+import {jsompEnv} from '../../JsompEnv';
 
 /**
  * React framework manifest declaration.
@@ -129,6 +130,10 @@ export class ReactFrameworkAdapter implements IFrameworkAdapter {
     // Create and store the runtime adapter
     const reactRuntimeAdapter = new ReactRuntimeAdapter(runtime, signalCenter);
     this.reactRuntimeAdapterMap.set(id, reactRuntimeAdapter);
+
+    // Bind this adapter to the instance registry to enable smart proxy commands
+    jsompEnv.service.instances.setAdapter(reactRuntimeAdapter);
+
     return reactRuntimeAdapter;
   }
 

@@ -8,6 +8,7 @@ import {IJsompPluginDef, PipelineStage} from "../../../types";
  * 1. Promotes raw entities to logic nodes (IJsompNode).
  * 2. Compares parent relationships to detect topology shifts.
  * 3. Supports partial updates for O(1) attribute synchronization.
+ * 4. Handles node deletion when the source entity is removed from the dataset.
  */
 export const incrementalDiscoveryPlugin: IJsompPluginDef = {
   id: 'standard-incremental-discovery',
@@ -25,6 +26,26 @@ export const incrementalDiscoveryPlugin: IJsompPluginDef = {
   },
   onNode: (id, entity, ctx) => {
     const oldNode = ctx.nodes.get(id);
+
+    // --- DELETION LOGIC ---
+    if (!entity) {
+      if (oldNode) {
+        const oldParent = oldNode.parent;
+        if (oldParent) {
+          const parentIds = Array.isArray(oldParent) ? oldParent : [oldParent];
+          parentIds.forEach(pId => {
+            const oldParentNode = ctx.nodes.get(pId) as any;
+            if (oldParentNode && oldParentNode.children) {
+              oldParentNode.children = oldParentNode.children.filter((c: any) => c.id !== id);
+            }
+          });
+        }
+        ctx.nodes.delete(id);
+        ctx.hasStructureChanged = true;
+      }
+      return;
+    }
+
     const oldParent = oldNode?.parent;
     const newParent = entity.parent;
 
@@ -37,6 +58,7 @@ export const incrementalDiscoveryPlugin: IJsompPluginDef = {
     const isFullDataset = ctx.dirtyIds && ctx.dirtyIds.size === ctx.entities.size;
     if (oldNode && oldParent === newParent && ctx.dirtyIds && !isFullDataset) {
       node.props = {...node.props, ...entity.props};
+      node.trackInstance = entity.trackInstance;
 
       // Copy other volatile fields
       if (entity.style_presets) node.style_presets = entity.style_presets;
@@ -49,18 +71,23 @@ export const incrementalDiscoveryPlugin: IJsompPluginDef = {
     // 3. Topology Shift detected or New Node
     if (oldNode) {
       // ctx.logger.debug(`[IncrementalDiscovery] Topology shift detected for node ${id}: ${oldParent} -> ${newParent}`);
+      ctx.hasStructureChanged = true;
 
       // Remove from old parent children
       if (oldParent) {
-        const oldParentNode = ctx.nodes.get(oldParent) as any;
-        if (oldParentNode && oldParentNode.children) {
-          oldParentNode.children = oldParentNode.children.filter((c: any) => c.id !== id);
-        }
+        const parentIds = Array.isArray(oldParent) ? oldParent : [oldParent];
+        parentIds.forEach(pId => {
+          const oldParentNode = ctx.nodes.get(pId) as any;
+          if (oldParentNode && oldParentNode.children) {
+            oldParentNode.children = oldParentNode.children.filter((c: any) => c.id !== id);
+          }
+        });
       }
     }
 
     // 4. Promote/Refresh logic node
     node.type = entity.type;
+    node.trackInstance = entity.trackInstance;
     node.props = entity.props ? {...entity.props} : (node.props || {});
     node.actions = entity.actions ? {...entity.actions} : (node.actions || {});
     node.parent = newParent;
@@ -72,14 +99,22 @@ export const incrementalDiscoveryPlugin: IJsompPluginDef = {
 
     // Attach to new parent children immediately if parent exists in logic tree
     if (newParent) {
-      // 💡 Support immediate self-linking for cycle detection or forward-referencing if node is its own parent
-      const newParentNode = (newParent === id ? node : ctx.nodes.get(newParent)) as any;
-      if (newParentNode) {
+      const parentIds = Array.isArray(newParent) ? newParent : [newParent];
+      parentIds.forEach(pId => {
+        // Resolve parent node: reuse existing, use self if same ID, or create placeholder
+        let newParentNode = (pId === id ? node : ctx.nodes.get(pId)) as any;
+        
+        if (!newParentNode) {
+          // Create placeholder parent node to support forward-referencing
+          newParentNode = {id: pId, children: []};
+          ctx.nodes.set(pId, newParentNode);
+        }
+
         newParentNode.children = newParentNode.children || [];
         if (!newParentNode.children.find((c: any) => c.id === id)) {
           newParentNode.children.push(node);
         }
-      }
+      });
     }
 
     ctx.nodes.set(id, node);

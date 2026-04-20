@@ -12,6 +12,7 @@ export {JsompAtom} from './state/JsompAtom';
 export {JsompStream} from './misc/JsompStream';
 export {BindingResolver} from './state/BindingResolver';
 export {ComponentRegistry} from './registry/ComponentRegistry';
+export {InstanceRegistry, REMOTE_INSTANCE} from './registry/InstanceRegistry';
 export {JsompLayoutManager, createLayoutManager} from './misc/JsompLayoutManager';
 export * from './engine/compiler/JsompCompiler';
 export * from './engine/compiler/JsompDecompiler';

@@ -50,7 +50,8 @@ export class TraitPipeline implements ITraitPipeline {
       componentType: node.type,
       props: {},
       styles: {},
-      slots: {} // To be populated by SlotTrait
+      slots: {}, // To be populated by SlotTrait
+      trackInstance: node.trackInstance
     };
 
     // 4. Prepare Context for next level (V1.1: Automatic Path Stack)
