@@ -1,4 +1,4 @@
-import {createContext, Fragment, memo, ReactNode, useContext, useLayoutEffect, useMemo, useRef} from 'react';
+import {createContext, Fragment, memo, ReactNode, useLayoutEffect, useMemo, useSyncExternalStore} from 'react';
 import {jsompEnv} from '../../JsompEnv';
 import {PerformanceMonitor} from '../../renderer';
 import {IRenderContext, IRuntimeAdapter, VisualDescriptor} from '../../types';
@@ -7,8 +7,7 @@ import {JsompWindow} from './components';
 import {useJsompTriggers} from './hooks';
 
 /**
- * Single render context replacing four separate contexts.
- * Implements IRenderContext — consumed by JsompNodeItem during tree traversal.
+ * Single render context for hooks compatibility.
  */
 export const JsompRenderContext = createContext<IRenderContext>({
   components: {},
@@ -19,42 +18,37 @@ export const JsompRenderContext = createContext<IRenderContext>({
   getStableKey: (id: string) => id
 });
 
+const pathStackCache = new WeakMap<VisualDescriptor, string[]>();
+
+/**
+ * Optimized component resolution
+ */
 export function resolveComponent(
   descriptor: VisualDescriptor | undefined,
-  ctx: IRenderContext
+  ctx: IRenderContext,
+  parentPathStack: string[] = ctx.pathStack
 ): {Component: any; props: Record<string, any>; pathStack: string[]; slots: Record<string, string[]>} | null {
   if (!descriptor) return null;
 
-  const currentPathStack = descriptor.path
-    ? descriptor.path.split('.')
-    : ctx.pathStack;
+  let currentPathStack = parentPathStack;
+  if (descriptor.path) {
+    const cached = pathStackCache.get(descriptor);
+    if (cached) {
+      currentPathStack = cached;
+    } else {
+      currentPathStack = descriptor.path.split('.');
+      pathStackCache.set(descriptor, currentPathStack);
+    }
+  }
 
   let Component: any = descriptor.componentType;
-
   if (typeof descriptor.componentType === 'string') {
-    if (ctx.components[descriptor.componentType]) {
-      Component = ctx.components[descriptor.componentType];
-    } else {
-      const registered = jsompEnv.service?.components.get(descriptor.componentType);
-      if (registered) {
-        Component = registered;
-      } else if (descriptor.componentType === 'window') {
-        Component = JsompWindow;
-      }
-    }
+    Component = ctx.components[descriptor.componentType] ||
+      jsompEnv.service?.components.get(descriptor.componentType) ||
+      (descriptor.componentType === 'window' ? JsompWindow : descriptor.componentType);
   }
 
-  if (!Component) {
-    if (typeof descriptor.componentType === 'string') {
-      console.warn(`[JsompRenderer] Component not found: ${descriptor.componentType}`);
-    }
-    return null;
-  }
-
-  if (typeof Component === 'string' && /^[A-Z]/.test(Component)) {
-    console.error(`[JsompRenderer] Detected unresolved PascalCase component name: "${Component}". Skipping render.`);
-    return null;
-  }
+  if (!Component) return null;
 
   return {
     Component,
@@ -66,104 +60,145 @@ export function resolveComponent(
 
 /**
  * JsompNodeItem
- * Zero-Logic Atomic Renderer.
- * Consumes IRenderContext instead of individual contexts.
+ * Atomically subscribed to its own descriptor.
+ * This is the ultimate performance/correctness balance.
  */
-const JsompNodeItem = memo(({id}: {id: string}) => {
-  const ctx = useContext(JsompRenderContext);
-  const descriptor = ctx.descriptorMap.get(id);
-  const instanceRef = useRef<any>(null);
+const JsompNodeItem = memo(({id, pathStack, ctx, adapter}: {
+  id: string;
+  pathStack: string[];
+  ctx: IRenderContext;
+  adapter: ReactRuntimeAdapter;
+}) => {
+  // ATOMIC SUBSCRIPTION: 
+  // Each node listens to its own data. Because getDescriptor(id) returns stable 
+  // references from TraitPipeline, React skips 117/118 nodes at the Hook level.
+  const descriptor = useSyncExternalStore(
+    adapter.subscribe,
+    () => adapter.getDescriptor(id)
+  );
 
+  if (!descriptor) return null;
+
+  // Bind triggers
   useJsompTriggers(descriptor);
 
-  // Sync instance to runtime adapter
-  useLayoutEffect(() => {
-    if (descriptor?.trackInstance) {
-      ctx.runtimeAdapter.reportInstance(id, instanceRef.current, descriptor.path);
-      return () => ctx.runtimeAdapter.reportInstance(id, null, descriptor.path);
-    }
-  }, [id, descriptor?.trackInstance, descriptor?.path]);
+  // Resolve component using current context and descriptor
+  const resolved = resolveComponent(descriptor, ctx, pathStack);
+  if (!resolved) return null;
 
-  return useMemo(() => {
-    const resolved = resolveComponent(descriptor, ctx);
-    if (!resolved) return null;
+  const {Component, props, pathStack: nextPathStack, slots} = resolved;
 
-    const {Component, props, pathStack, slots} = resolved;
+  // Prepare slots
+  const slotProps: Record<string, any> = {};
+  let children: ReactNode = props.children;
 
-    const slotProps: Record<string, ReactNode> = {};
-    const children: ReactNode[] = [];
-
-    Object.entries<string[]>(slots).forEach(([name, ids]) => {
-      const rendered = ids.map(childId => <JsompNodeItem key={ctx.getStableKey(childId)} id={childId} />);
+  const slotNames = Object.keys(slots);
+  if (slotNames.length > 0) {
+    const childrenList: ReactNode[] = [];
+    for (let i = 0; i < slotNames.length; i++) {
+      const name = slotNames[i];
+      const ids = slots[name];
+      const rendered: ReactNode[] = [];
+      for (let j = 0; j < ids.length; j++) {
+        const childId = ids[j];
+        rendered.push(
+          <JsompNodeItem
+            key={childId}
+            id={childId}
+            pathStack={nextPathStack}
+            ctx={ctx}
+            adapter={adapter}
+          />
+        );
+      }
 
       if (name === 'children' || name === 'default') {
-        children.push(...rendered);
+        childrenList.push(...rendered);
       } else {
-        slotProps[name] = <Fragment>{rendered}</Fragment>;
+        slotProps[name] = <Fragment key={name}>{rendered}</Fragment>;
       }
-    });
+    }
+    if (childrenList.length > 0) {
+      children = childrenList;
+    }
+  }
 
-    const finalChildren = children.length > 0 ? children : props.children;
-
-    const runtimeAdapter = ctx.runtimeAdapter as ReactRuntimeAdapter;
-    runtimeAdapter.updateContext({pathStack, slots});
-
-    return (
-      <JsompRenderContext.Provider value={ctx}>
-        <Component {...props} {...slotProps} ref={instanceRef} style={props.style ?? descriptor?.styles}>
-          {finalChildren}
-        </Component>
-      </JsompRenderContext.Provider>
-    );
-  }, [descriptor, ctx]);
-}, (prev, next) => prev.id === next.id);
+  return (
+    <Component
+      {...props}
+      {...slotProps}
+      style={props.style ?? descriptor.styles}
+      // Direct ref callback for instance tracking
+      ref={descriptor.trackInstance ? (inst: any) => adapter.reportInstance(id, inst, descriptor.path) : undefined}
+    >
+      {children}
+    </Component>
+  );
+}, (prev, next) => (
+  // Since JsompNodeItem handles its own reactivity via useSyncExternalStore,
+  // the parent only re-renders it if the identity (id) or context (components) changes.
+  prev.id === next.id &&
+  prev.ctx === next.ctx &&
+  prev.pathStack === next.pathStack
+));
 
 /**
- * Zero-Logic React Renderer
+ * Optimized React Renderer
+ * Static Shell: Only renders the roots once.
  */
 export const ReactRenderer = memo(({
-  descriptors,
   adapter,
   rootId,
   components = {}
 }: {
-  descriptors: VisualDescriptor[];
   adapter: IRuntimeAdapter;
   rootId?: string;
   components?: Record<string, any>;
 }) => {
-  // 1. Build lookup map (O(N))
-  const descriptorMap = useMemo(() => {
-    return new Map(descriptors.map(d => [d.id, d]));
-  }, [descriptors]);
-
-  // 2. Performance Monitoring
-  useLayoutEffect(() => {
-    const metrics = adapter.getMetrics?.();
-    const version = adapter.getVersion();
-    PerformanceMonitor.instance.report(
-      {metrics, version} as any,
-      descriptors.length,
-      performance.now()
-    );
-  });
-
-  // 3. Identify Roots
-  const roots = useMemo(() => {
-    if (rootId) {
-      const root = descriptors.find(d => d.id === rootId);
-      if (root) return [root];
-    }
-    return descriptors.filter(d => !d.parentId);
-  }, [descriptors, rootId]);
-
   const runtimeAdapter = adapter as ReactRuntimeAdapter;
-  runtimeAdapter.updateContext({components, descriptorMap});
+
+  // SUBSCRIPTION FOR ROOTS ONLY:
+  // ReactRenderer only re-renders if the list of root IDs changes.
+  const rootIdsString = useSyncExternalStore(
+    runtimeAdapter.subscribe,
+    () => runtimeAdapter.getRootIdsSnapshot(rootId)
+  );
+
+  const rootIds = useMemo(() => rootIdsString.split(',').filter(id => id), [rootIdsString]);
+
+  // Async Performance Monitoring
+  useLayoutEffect(() => {
+    const unsub = runtimeAdapter.subscribe(() => {
+      const reportTask = () => {
+        PerformanceMonitor.instance.report(
+          {metrics: runtimeAdapter.getMetrics(), version: runtimeAdapter.getVersion()} as any,
+          runtimeAdapter.getSnapshot().length,
+          performance.now()
+        );
+      };
+      if (typeof requestIdleCallback !== 'undefined') requestIdleCallback(reportTask);
+      else setTimeout(reportTask, 0);
+    });
+    return unsub;
+  }, [runtimeAdapter]);
+
+  useMemo(() => {
+    runtimeAdapter.updateContext({components});
+  }, [components, runtimeAdapter]);
+
+  const ctx = runtimeAdapter.currentContext;
 
   return (
-    <JsompRenderContext.Provider value={runtimeAdapter.currentContext}>
-      {roots.map(node => <JsompNodeItem key={runtimeAdapter.currentContext.getStableKey(node.id)} id={node.id} />)}
+    <JsompRenderContext.Provider value={ctx}>
+      {rootIds.map(id => (
+        <JsompNodeItem
+          key={id}
+          id={id}
+          pathStack={ctx.pathStack}
+          ctx={ctx}
+          adapter={runtimeAdapter}
+        />
+      ))}
     </JsompRenderContext.Provider>
   );
 });
-

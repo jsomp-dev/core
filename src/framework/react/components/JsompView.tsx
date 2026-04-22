@@ -1,7 +1,6 @@
 import React, {useEffect, useMemo, useRef} from 'react';
 import {JsompRuntime, SignalCenter} from '../../../engine';
 import {ReactRenderer} from '../ReactRenderer';
-import {useJsompRuntime} from '../hooks';
 import {IAtomRegistry, IJsompService} from '../../../types';
 import {jsompEnv} from '../../../JsompEnv';
 
@@ -165,9 +164,8 @@ export const JsompView: React.FC<JsompViewProps> = ({
     runtimeRef.current?.setRootId(rootId);
   }, [components, stylePresets, registry, rootId]);
 
-  // 4. Connect to React Store
-  const descriptors = useJsompRuntime(adapter);
-
-  // 5. Render
-  return <ReactRenderer descriptors={descriptors} adapter={adapter} rootId={rootId} components={components} />;
+  // 4. Render
+  // Note: We no longer use useJsompRuntime(adapter) here to avoid redundant re-renders of the view shell.
+  // ReactRenderer handles its own internal subscription to the adapter.
+  return <ReactRenderer adapter={adapter} rootId={rootId} components={components} />;
 };

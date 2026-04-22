@@ -1,7 +1,6 @@
 import {Fragment, ReactNode} from 'react';
 import {IRenderContext, IRenderer, IRenderRoot, IRuntimeAdapter, VisualDescriptor} from "../../types";
 import {ReactRenderRoot} from "./ReactRenderRoot";
-import {ReactRuntimeAdapter} from "./ReactRuntimeAdapter";
 import {resolveComponent} from "./ReactRenderer";
 
 /**
@@ -45,17 +44,20 @@ export const ReactDomRenderer: IRenderer = {
 
     const {Component, props, pathStack, slots} = resolved;
 
+    // Create a local context for recursion to avoid side-effects on the shared adapter context
+    const childCtx = {...ctx, pathStack, slots};
+
     const slotProps: Record<string, ReactNode> = {};
     const children: ReactNode[] = [];
 
     Object.entries<string[]>(slots).forEach(([name, ids]) => {
       const rendered = ids.map(childId => {
-        const childDescriptor = ctx.descriptorMap.get(childId);
+        const childDescriptor = childCtx.descriptorMap.get(childId);
         if (!childDescriptor) return null;
-        const element = ReactDomRenderer.resolve(childDescriptor, ctx);
+        const element = ReactDomRenderer.resolve(childDescriptor, childCtx);
         if (!element) return null;
         // React requires a key for list items
-        return <Fragment key={ctx.getStableKey(childId)}>{element}</Fragment>;
+        return <Fragment key={childCtx.getStableKey(childId)}>{element}</Fragment>;
       });
 
       if (name === 'children' || name === 'default') {
@@ -67,13 +69,11 @@ export const ReactDomRenderer: IRenderer = {
 
     const finalChildren = children.length > 0 ? children : props.children;
 
-    const runtimeAdapter = ctx.runtimeAdapter as ReactRuntimeAdapter;
-    runtimeAdapter.updateContext({pathStack, slots});
-
     return (
       <Component {...props} {...slotProps} style={props.style ?? descriptor?.styles}>
         {finalChildren}
       </Component>
     );
   }
+
 };

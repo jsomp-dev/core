@@ -100,6 +100,13 @@ export interface JsompFeatures {
   strictMode?: boolean;
 
   /**
+   * Enable or disable internal performance monitoring and console warnings.
+   * If true, slow frames (>16ms) will be reported to the console.
+   * @default true
+   */
+  performanceMonitor?: boolean;
+
+  /**
    * Catch-all for experimental or plugin-specific feature flags.
    */
   [key: string]: any;

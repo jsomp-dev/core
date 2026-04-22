@@ -14,6 +14,7 @@ export class ReactRuntimeAdapter implements IRuntimeAdapter {
   private _runtime: IJsompRuntime;
   private _lastVersion = -1;
   private _cachedDescriptors: VisualDescriptor[] = [];
+  private _descriptorMap = new Map<string, VisualDescriptor>();
   private _listeners = new Set<() => void>();
   public currentContext: IRenderContext;
 
@@ -23,15 +24,12 @@ export class ReactRuntimeAdapter implements IRuntimeAdapter {
       components: {},
       pathStack: [],
       slots: {},
-      descriptorMap: new Map(),
+      descriptorMap: this._descriptorMap,
       runtimeAdapter: this,
       getStableKey: (id: string) => id // React uses ID as key by default
     };
 
     // Listen to signal center. 
-    // Since JsompRuntime.reconcile is synchronous within SignalCenter subscription,
-    // we can safely assume runtime state is updated when we receive this signal (if registered after runtime).
-    // Or even if concurrent, useSyncExternalStore invokes getSnapshot to check consistency.
     signalCenter.subscribe(() => {
       this.notify();
     });
@@ -64,13 +62,28 @@ export class ReactRuntimeAdapter implements IRuntimeAdapter {
     if (snapshot.version !== this._lastVersion) {
       if (snapshot.descriptors) {
         this._cachedDescriptors = snapshot.descriptors;
+        // Update descriptor map for O(1) lookups
+        this._descriptorMap.clear();
+        for (const d of this._cachedDescriptors) {
+          this._descriptorMap.set(d.id, d);
+        }
       } else {
         this._cachedDescriptors = [];
+        this._descriptorMap.clear();
       }
       this._lastVersion = snapshot.version;
     }
 
     return this._cachedDescriptors;
+  }
+
+  /**
+   * Get a single descriptor by ID (O(1))
+   */
+  public getDescriptor(id: string): VisualDescriptor | undefined {
+    // Ensure snapshot is up to date
+    this.getSnapshot();
+    return this._descriptorMap.get(id);
   }
 
   /**
@@ -100,13 +113,62 @@ export class ReactRuntimeAdapter implements IRuntimeAdapter {
     return this._lastVersion;
   }
 
+  /**
+   * Get a stable string representation of root IDs to detect structural changes
+   */
+  public getRootIdsSnapshot(rootId?: string): string {
+    const descriptors = this.getSnapshot();
+    if (rootId) return rootId;
+
+    const roots: string[] = [];
+    for (let i = 0; i < descriptors.length; i++) {
+      if (!descriptors[i].parentId) {
+        roots.push(descriptors[i].id);
+      }
+    }
+    return roots.sort().join(',');
+  }
+
+  private _dispatcherCache = new Map<string, Function>();
+
+  /**
+   * Get a stable event dispatcher for a specific node and trigger.
+   * This prevents React re-renders caused by function reference changes.
+   */
+  public getEventDispatcher(nodeId: string, trigger: string): Function {
+    const key = `${nodeId}:${trigger}`;
+    let dispatcher = this._dispatcherCache.get(key);
+
+    if (!dispatcher) {
+      dispatcher = (payload: any) => {
+        const descriptor = this.getDescriptor(nodeId);
+        if (!descriptor || !descriptor.props) return;
+
+        const handler = descriptor.props[trigger];
+        if (typeof handler === 'function') {
+          handler(payload);
+        }
+      };
+      this._dispatcherCache.set(key, dispatcher);
+    }
+
+    return dispatcher;
+  }
+
   public updateContext(partial: Partial<IRenderContext>): void {
-    this.currentContext = {...this.currentContext, ...partial};
+    let changed = false;
+    for (const key in partial) {
+      if ((this.currentContext as any)[key] !== (partial as any)[key]) {
+        changed = true;
+        break;
+      }
+    }
+    if (changed) {
+      this.currentContext = {...this.currentContext, ...partial};
+    }
   }
 
   public getReactiveSource(path: string): any {
-    // In React, atoms are typically consumed via hooks in the component layer.
-    // This adapter method can return the latest value from the signal center.
     return this.signalCenter.get(path);
   }
 
@@ -134,3 +196,4 @@ export class ReactRuntimeAdapter implements IRuntimeAdapter {
     return undefined;
   }
 }
+

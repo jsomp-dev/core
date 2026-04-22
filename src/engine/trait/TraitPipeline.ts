@@ -70,17 +70,72 @@ export class TraitPipeline implements ITraitPipeline {
         processor(node, descriptor, nextContext);
       } catch (e) {
         console.error(`Error in trait for node ${node.id}:`, e);
-        // Fallback or rethrow? 
-        // For robustness, maybe log and continue or mark descriptor as error
         descriptor.props['__error'] = (e as Error).message;
       }
     }
 
-    // 6. Update Cache
+    // 6. Persistence Check: If new descriptor is effectively equal to cached one, reuse the old reference.
+    // This is the CRITICAL optimization to prevent React re-renders.
+    if (cached) {
+      if (this.isDescriptorEqual(cached, descriptor)) {
+        return cached;
+      }
+    }
+
+    // 7. Update Cache
     this.descriptorCache.set(node.id, descriptor);
 
     return descriptor;
   }
+
+  /**
+   * Deep compare two descriptors to ensure reference stability
+   */
+  private isDescriptorEqual(a: VisualDescriptor, b: VisualDescriptor): boolean {
+    // Basic checks
+    if (a.componentType !== b.componentType) return false;
+    if (a.path !== b.path) return false;
+    if (a.trackInstance !== b.trackInstance) return false;
+
+    // Props check (Shallow enough for most cases, but JSOMP props can be nested)
+    if (!this.isDeepEqual(a.props, b.props)) return false;
+    
+    // Styles check
+    if (!this.isDeepEqual(a.styles, b.styles)) return false;
+
+    // Slots check
+    const slotNamesA = Object.keys(a.slots);
+    const slotNamesB = Object.keys(b.slots);
+    if (slotNamesA.length !== slotNamesB.length) return false;
+    for (const name of slotNamesA) {
+      const idsA = a.slots[name];
+      const idsB = b.slots[name];
+      if (idsA.length !== idsB.length) return false;
+      for (let i = 0; i < idsA.length; i++) {
+        if (idsA[i] !== idsB[i]) return false;
+      }
+    }
+
+    return true;
+  }
+
+  private isDeepEqual(a: any, b: any): boolean {
+    if (a === b) return true;
+    
+    // For JSOMP performance, we treat functions as equal during descriptor comparison
+    // because we use stable event delegation in the renderer.
+    if (typeof a === 'function' && typeof b === 'function') return true;
+
+    if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false;
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+    for (const key of keysA) {
+      if (!this.isDeepEqual(a[key], b[key])) return false;
+    }
+    return true;
+  }
+
 
   /**
    * Explicitly invalidate cache for specific IDs

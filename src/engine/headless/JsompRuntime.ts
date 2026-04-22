@@ -203,7 +203,8 @@ export class JsompRuntime implements IJsompRuntime {
     // 2. Identify new or updated entities
     entities.forEach((val, key) => {
       const old = this._entities.get(key);
-      if (old !== val) {
+      // Use smart equality check to avoid marking "effectively same" data as dirty
+      if (!this._isEffectivelyEqual(old, val)) {
         this._entities.set(key, val);
         dirtyIds.add(key);
       }
@@ -284,7 +285,6 @@ export class JsompRuntime implements IJsompRuntime {
     // 5. Run Visual Pipeline
     const tPipeStart = performance.now();
     this._runPipeline(dirtySet);
-    this._propagateRefUpdates(dirtySet);
     const tEnd = performance.now();
 
     // Record Metrics
@@ -300,35 +300,7 @@ export class JsompRuntime implements IJsompRuntime {
     this._version++;
   }
 
-  /**
-   * Propagate reference changes to ancestors to ensure VDOM traversal
-   */
-  private _propagateRefUpdates(dirtyIds: Set<string>): void {
-    const visited = new Set(dirtyIds);
-    let currentBatch = Array.from(dirtyIds);
 
-    while (currentBatch.length > 0) {
-      const nextBatch: string[] = [];
-      for (const id of currentBatch) {
-        const node = this._topologyMap.get(id);
-        if (node && node.parent) {
-          const parentIds = Array.isArray(node.parent) ? node.parent : [node.parent];
-          for (const pId of parentIds) {
-            if (!visited.has(pId)) {
-              // Clone descriptor to force React update (Change Reference)
-              const desc = this._descriptors.get(pId);
-              if (desc) {
-                this._descriptors.set(pId, {...desc});
-              }
-              visited.add(pId);
-              nextBatch.push(pId);
-            }
-          }
-        }
-      }
-      currentBatch = nextBatch;
-    }
-  }
 
   /**
    * Execute the visual pipeline for all affected nodes
@@ -350,7 +322,7 @@ export class JsompRuntime implements IJsompRuntime {
 
         // Safety: Ensure parentId is synced. 
         // processNode might return a cached descriptor, so we only update if it changed.
-        if (!this.areParentsEqual(descriptor.parentId, node.parent)) {
+        if (!this._isEffectivelyEqual(descriptor.parentId, node.parent)) {
           descriptor.parentId = node.parent;
         }
 
@@ -404,12 +376,30 @@ export class JsompRuntime implements IJsompRuntime {
     stack.delete(node.id);
   }
 
-  private areParentsEqual(p1: any, p2: any): boolean {
-    if (Array.isArray(p1) && Array.isArray(p2)) {
-      return p1.length === p2.length && p1.every((v, i) => v === p2[i]);
+  private _isEffectivelyEqual(a: any, b: any): boolean {
+    if (a === b) return true;
+    if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false;
+
+    // Fast path for arrays (common for style_tw, triggers, etc.)
+    if (Array.isArray(a)) {
+      if (!Array.isArray(b) || a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        if (!this._isEffectivelyEqual(a[i], b[i])) return false;
+      }
+      return true;
     }
-    return p1 === p2;
+
+    if (Array.isArray(b)) return false;
+
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+
+    for (const key of keysA) {
+      if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
+      if (!this._isEffectivelyEqual(a[key], b[key])) return false;
+    }
+
+    return true;
   }
-
-
 }

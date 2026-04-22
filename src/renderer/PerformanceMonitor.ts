@@ -25,6 +25,10 @@ export class PerformanceMonitor {
       return;
     }
 
+    // Feature Check: Allow disabling via config
+    const enabled = jsompEnv.config.get<boolean>('features.performanceMonitor', true);
+    if (enabled === false) return;
+
     const metrics = snapshot.metrics;
     if (!metrics || metrics.startTime === undefined) return;
 
