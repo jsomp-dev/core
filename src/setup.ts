@@ -136,7 +136,7 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
       pipeline.register('standard-recursion-guard', PipelineStage.PostAssemble, recursionGuardPlugin, 'StandardRecursionGuard');
     }
 
-    jsompEnv.isSetup = true;
+    jsompEnv.notifySetup();
 
     // Clear the shared promise to prevent concurrent calls
     _initPromise = null;

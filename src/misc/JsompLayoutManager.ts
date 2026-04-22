@@ -43,17 +43,21 @@ export class JsompLayoutManager<TId extends string = string, TLayout extends rea
     const parentVal = node.parent;
     if (!parentVal) return null;
 
-    if (parentVal.startsWith('[slot]')) {
-      const content = parentVal.slice(6);
+    // Handle multi-mount (array of parents). For layout calculation, we use the primary (first) parent.
+    const p = Array.isArray(parentVal) ? parentVal[0] : parentVal;
+    if (!p) return null;
+
+    if (p.startsWith('[slot]')) {
+      const content = p.slice(6);
       const segments = content.split('.');
       return segments.length > 1 ? segments[segments.length - 2] : segments[0];
     }
 
-    if (parentVal.includes('.')) {
-      return parentVal.split('.').pop()!;
+    if (p.includes('.')) {
+      return p.split('.').pop()!;
     }
 
-    return parentVal;
+    return p;
   }
 
   /**
@@ -107,8 +111,9 @@ export class JsompLayoutManager<TId extends string = string, TLayout extends rea
     if (node.slot) return node.slot;
 
     const parentVal = node.parent;
-    if (parentVal && parentVal.startsWith('[slot]')) {
-      const content = parentVal.slice(6);
+    const p = Array.isArray(parentVal) ? parentVal[0] : parentVal;
+    if (p && p.startsWith('[slot]')) {
+      const content = p.slice(6);
       const segments = content.split('.');
       return segments.length > 1 ? segments.pop() : undefined;
     }

@@ -56,16 +56,23 @@ export class EntityRegistry implements IEntityRegistry {
       const processedNode: IJsompNode = {...node, id: fullId};
 
       // 1. Prefix parent reference if it points to a node in the same batch
-      if (processedNode.parent && localIds.has(processedNode.parent)) {
-        processedNode.parent = prefix + processedNode.parent;
+      if (processedNode.parent) {
+        if (Array.isArray(processedNode.parent)) {
+          processedNode.parent = processedNode.parent.map(p => localIds.has(p) ? prefix + p : p);
+        } else if (localIds.has(processedNode.parent)) {
+          processedNode.parent = prefix + processedNode.parent;
+        }
       }
 
       // Track parent-child relationship for discovery
       if (processedNode.parent) {
-        if (!this.childMap.has(processedNode.parent)) {
-          this.childMap.set(processedNode.parent, []);
-        }
-        this.childMap.get(processedNode.parent)!.push(fullId);
+        const parents = Array.isArray(processedNode.parent) ? processedNode.parent : [processedNode.parent];
+        parents.forEach(pId => {
+          if (!this.childMap.has(pId)) {
+            this.childMap.set(pId, []);
+          }
+          this.childMap.get(pId)!.push(fullId);
+        });
       }
 
       // 2. Prefix inherit reference if it points to a node in the same batch
@@ -93,10 +100,13 @@ export class EntityRegistry implements IEntityRegistry {
     for (const [id, node] of this.nodes.entries()) {
       if (id.startsWith(prefix)) {
         if (node.parent) {
-          const siblings = this.childMap.get(node.parent);
-          if (siblings) {
-            this.childMap.set(node.parent, siblings.filter(childId => childId !== id));
-          }
+          const parents = Array.isArray(node.parent) ? node.parent : [node.parent];
+          parents.forEach(pId => {
+            const siblings = this.childMap.get(pId);
+            if (siblings) {
+              this.childMap.set(pId, siblings.filter(childId => childId !== id));
+            }
+          });
         }
         this.childMap.delete(id); // Children of this node will stay orphaned unless ns is specifically cleared
         this.nodes.delete(id);

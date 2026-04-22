@@ -15,11 +15,10 @@ export class FrameworkLoader implements IFrameworkLoader {
 
   /**
    * Built-in framework manifests that ship with JSOMP.
-   * NOTE: This array is intentionally empty to enable tree-shaking.
-   * Built-in frameworks must be explicitly registered via their own entry points.
-   * For example, import '@jsomp/core/react' to use React.
+   * NOTE: This array is intentionally static to enable registration at import time
+   * and survival across JsompEnv.clear() resets.
    */
-  private _builtInFrameworks: FrameworkManifest[] | undefined = [];
+  private static _staticBuiltInFrameworks: FrameworkManifest[] = [];
 
   public readonly capabilityNamespaces = ['dom', 'key'];
 
@@ -29,10 +28,9 @@ export class FrameworkLoader implements IFrameworkLoader {
    * @param manifest - The framework manifest to register
    */
   public registerBuiltInFramework(manifest: FrameworkManifest): void {
-    if (this._builtInFrameworks) {
-      this._builtInFrameworks.push(manifest);
-    } else {
-      throw new Error(`[JSOMP] Built-in framework's manifests are now loaded via explicit entry points. Please use the service.frameworks.registerManifest method.`);
+    // Avoid double-registration of the same manifest object
+    if (!FrameworkLoader._staticBuiltInFrameworks.includes(manifest)) {
+      FrameworkLoader._staticBuiltInFrameworks.push(manifest);
     }
   }
 
@@ -42,10 +40,9 @@ export class FrameworkLoader implements IFrameworkLoader {
    * explicit entry points to support tree-shaking.
    */
   public loadBuiltInFrameworks(): void {
-    for (const manifest of this._builtInFrameworks || []) {
+    for (const manifest of FrameworkLoader._staticBuiltInFrameworks) {
       this._registry.registerManifest(manifest);
     }
-    this._builtInFrameworks = undefined;
   }
 
   /**

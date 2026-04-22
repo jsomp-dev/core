@@ -104,9 +104,12 @@ export class DefaultFlattener implements JsompFlattener {
       if (isRoot) {
         roots.push(node as T);
       } else {
-        const parent = nodeMap.get(parentId);
-        if (parent) {
-          parent[childrenField].push(node);
+        const parents = Array.isArray(parentId) ? parentId : [parentId];
+        for (const pId of parents) {
+          const parent = nodeMap.get(pId);
+          if (parent) {
+            parent[childrenField].push(node);
+          }
         }
       }
     }

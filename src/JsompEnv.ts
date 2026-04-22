@@ -16,6 +16,7 @@ export class JsompEnv implements IJsompEnv {
   private _service?: IJsompService;
   private _config: IConfigRegistry = new ConfigRegistry();
   private _frameworkLoader: FrameworkLoader = new FrameworkLoader();
+  private _setupListeners = new Set<() => void>();
 
   public isSetup = false;
 
@@ -187,6 +188,32 @@ export class JsompEnv implements IJsompEnv {
   }
 
   /**
+   * TODO: move to jsomp.events system
+   * 
+   * Register a callback to be notified when JSOMP is setup.
+   * If already setup, the callback is NOT called immediately (use isSetup check).
+   */
+  public onSetup(callback: () => void): () => void {
+    if (this.isSetup) {
+      // If already setup, we don't need to subscribe as it won't transition from false to true again.
+      return () => {};
+    }
+    this._setupListeners.add(callback);
+    return () => {
+      this._setupListeners.delete(callback);
+    };
+  }
+
+  /**
+   * Internal method to notify that setup is complete.
+   */
+  public notifySetup(): void {
+    this.isSetup = true;
+    this._setupListeners.forEach(fn => fn());
+    this._setupListeners.clear();
+  }
+
+  /**
    * Clears all internal state, resetting the environment to its initial state.
    */
   public clear() {
@@ -194,6 +221,7 @@ export class JsompEnv implements IJsompEnv {
     this._config = new ConfigRegistry();
     this._service = undefined;
     this._frameworkLoader = new FrameworkLoader();
+    this._setupListeners.clear();
   }
 }
 
