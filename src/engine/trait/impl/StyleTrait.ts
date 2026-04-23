@@ -57,14 +57,28 @@ export const styleTrait: TraitProcessor = (
 
   // 1. Handle Presets
   if (node.style_presets && context.stylePresets) {
-    for (const preset of node.style_presets) {
-      processPreset(preset);
+    // Check if it's an array type and not an Operator object
+    if (Array.isArray(node.style_presets)) {
+      for (const preset of node.style_presets) {
+        // Only process string types
+        if (typeof preset === 'string') {
+          processPreset(preset);
+        }
+      }
     }
   }
 
   // 2. Handle Tailwind (style_tw)
-  if (node.style_tw && Array.isArray(node.style_tw)) {
-    classNames.push(...node.style_tw);
+  if (node.style_tw) {
+    // Check if it's an array type
+    if (Array.isArray(node.style_tw)) {
+      // Only add string types
+      for (const tw of node.style_tw) {
+        if (typeof tw === 'string') {
+          classNames.push(tw);
+        }
+      }
+    }
   }
 
   // 3. Resolve all Class Names (including bindings)

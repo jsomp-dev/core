@@ -1,4 +1,4 @@
-import type {ZodType} from 'zod';
+import {Operator} from './operator';
 
 /**
  * JSOMP Node definition (Atomic structure)
@@ -18,9 +18,9 @@ export interface IJsompNode {
    * Style descriptor (Visual Props)
    * Supports combined prefabs, Tailwind arrays and inline CSS
    */
-  style_presets?: readonly string[];  // e.g. ["btn-base", "btn-primary"]
-  style_tw?: readonly string[];       // e.g. ["p-4", "bg-red-500"]
-  style_css?: Record<string, string | number>; // Inline CSS
+  style_presets?: string[] | Operator | (string | Operator)[];  // e.g. ["btn-base", "btn-primary"]
+  style_tw?: string[] | Operator | (string | Operator)[];       // e.g. ["p-4", "bg-red-500"]
+  style_css?: Record<string, string | number | Operator>; // Inline CSS
 
   /** Points to the id of the parent container */
   parent?: string | string[] | null;
@@ -30,6 +30,12 @@ export interface IJsompNode {
    * Used when this node is not passed directly as children, but as Props passed to a specific position of the parent component
    */
   slot?: string;
+
+  /**
+   * Inheritance reference
+   * Points to the id of the parent entity
+   */
+  inherit?: string | Operator;
 
   /** [Runtime injection] Automatically spliced full path ID */
   _fullPath?: string;

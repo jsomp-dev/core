@@ -72,16 +72,32 @@ export class AtomRegistry implements IAtomRegistry {
       if (key.includes('.')) {
         const parts = key.split('.');
         const rootKey = parts[0];
-        const rootVal = this.atoms.get(rootKey);
-        if (rootVal !== undefined && !isAtom(rootVal) && !isAtom(value)) {
+        let rootVal = this.atoms.get(rootKey);
+        if (rootVal === undefined) {
+          this.atoms.set(rootKey, {});
+          rootVal = {};
+        }
+        if (!isAtom(rootVal) && !isAtom(value)) {
           const nextRoot = pathUtils.set(rootVal, parts.slice(1).join('.'), value);
-          this.atoms.set(rootKey, nextRoot); // Update root with new immutable reference
+          this.atoms.set(rootKey, nextRoot);
 
           this.notify(key);
           this.notify(rootKey);
 
           this.notifyGlobal(key, value);
           this.notifyGlobal(rootKey, nextRoot);
+          return;
+        }
+        if (isAtom(rootVal)) {
+          const atomCurrent = rootVal.value;
+          const nextAtomValue = pathUtils.set(atomCurrent, parts.slice(1).join('.'), value);
+          rootVal.set(nextAtomValue);
+
+          this.notify(key);
+          this.notify(rootKey);
+
+          this.notifyGlobal(key, value);
+          this.notifyGlobal(rootKey, nextAtomValue);
           return;
         }
       }

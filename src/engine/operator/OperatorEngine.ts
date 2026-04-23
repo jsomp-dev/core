@@ -1,18 +1,6 @@
 import {BindingResolver} from "../../state";
 import {IAtomRegistry} from "../../types";
-
-export interface Operator {
-  opType: string;
-  target?: any;
-  value?: any;
-  test?: any;
-  then?: any;
-  else?: any;
-  cases?: Array<{value: any, return: any}>;
-  default?: any;
-  steps?: Operator[];
-  [key: string]: any;
-}
+import {Operator} from '../../types';
 
 /**
  * JSOMP Operator Engine

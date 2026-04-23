@@ -34,17 +34,30 @@ export const operatorExpressionPlugin: IJsompPluginDef = {
         const opId = customName || `__op_v1_${id}_${path}`;
         const placeholder = `{{${opId}}}`;
 
+        // Get node early for both dependency and evaluation
+        const node = ctx.nodes.get(id);
+        const nodeFullPath = node && node._fullPath ? node._fullPath : null;
+        
         // 2. Report dependencies for this operator
         const deps = BindingResolver.extractKeys(val);
         deps.forEach(key => {
           // Filter out internal variables like $value
           if (key !== '$value' && !key.startsWith('__op_v1_')) {
-            ctx.onDependency?.(id, key);
+            // If key is a relative path like 'states.isSelected' and we have a node path,
+            // register the full path as the dependency key!
+            let depKey = key;
+            if (key.startsWith('states.') && nodeFullPath) {
+              depKey = `${nodeFullPath}.${key}`;
+            }
+            ctx.onDependency?.(id, depKey);
           }
         });
 
         // 3. Evaluate and store result in Registry
-        const result = OperatorEngine.evaluate(val, ctx.atomRegistry!);
+        // Build pathStack from node's _fullPath (for resolving relative paths like states.isSelected!)
+        const pathStack: string[] = nodeFullPath ? [nodeFullPath] : [];
+        
+        const result = OperatorEngine.evaluate(val, ctx.atomRegistry!, pathStack);
 
         // Only set if value changed to avoid triggering unnecessary re-compiles
         // when bridged to reactive systems like React.

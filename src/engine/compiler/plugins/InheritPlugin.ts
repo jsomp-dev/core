@@ -7,6 +7,7 @@ import {ICompilerContext, IJsompPluginDef, PipelineStage} from "../../../types";
  * Rules:
  * - type: Sub-node covers parent node (Overlay).
  * - props: Shallow merge, sub-node priority (Shallow Merge).
+ * - states: Shallow merge, sub-node priority (Shallow Merge).
  * - style_presets: Unique union of arrays (Union).
  * - style_tw: Unique union of arrays (Union).
  * - style_css: Shallow merge, sub-node priority (Shallow Merge).
@@ -34,10 +35,15 @@ export const inheritPlugin: IJsompPluginDef = {
       // 2. props: Shallow merge
       merged.props = {...(parent.props || {}), ...(child.props || {})};
 
-      // 3. style_css: Shallow merge
+      // 3. states: Shallow merge (child states override parent at property level)
+      if (parent.states || child.states) {
+        merged.states = {...(parent.states || {}), ...(child.states || {})};
+      }
+
+      // 4. style_css: Shallow merge
       merged.style_css = {...(parent.style_css || {}), ...(child.style_css || {})};
 
-      // 4. style_presets: Union of unique values
+      // 5. style_presets: Union of unique values
       if (parent.style_presets || child.style_presets) {
         const presets = new Set([
           ...(parent.style_presets || []),
@@ -46,7 +52,7 @@ export const inheritPlugin: IJsompPluginDef = {
         merged.style_presets = Array.from(presets);
       }
 
-      // 5. style_tw: Union of unique values
+      // 6. style_tw: Union of unique values
       if (parent.style_tw || child.style_tw) {
         const tw = new Set([
           ...(parent.style_tw || []),
@@ -55,7 +61,7 @@ export const inheritPlugin: IJsompPluginDef = {
         merged.style_tw = Array.from(tw);
       }
 
-      // 6. actions: Deep merge (Map tag to union of events)
+      // 7. actions: Deep merge (Map tag to union of events)
       if (parent.actions || child.actions) {
         const actions = {...(parent.actions || {})};
         Object.entries(child.actions || {}).forEach(([tag, events]) => {
@@ -84,8 +90,13 @@ export const inheritPlugin: IJsompPluginDef = {
         return undefined;
       }
 
-      // 1. Conflict Detection: Warn if local entity overrides a pooled entity
-      if (ctx.entities.has(id) && ctx.entityPool?.get(id)) {
+      // 1. Conflict Detection: Warn if local entity truly overrides a pooled entity
+      // Only warn when: (1) ID exists in both places, AND (2) they are actually different objects
+      // AND (3) localEntity is a complete entity definition (has 'type' or 'inherit' fields)
+      // This avoids false positives when ctx.entities contains partial state objects from inheritance resolution
+      const localEntity = ctx.entities.get(id);
+      const poolEntity = ctx.entityPool?.get(id);
+      if (localEntity && poolEntity && localEntity !== poolEntity && (localEntity.type || localEntity.inherit)) {
         ctx.logger.warn(`[Inherit] ID conflict detected: Local entity "${id}" is overriding an entity in the global pool.`);
       }
 

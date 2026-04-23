@@ -17,6 +17,40 @@ export const pathUtils = {
   },
 
   /**
+   * Resolve node-relative path (like "states.isSelected").
+   * If path starts with "states.", it will be prefixed with the node's _fullPath.
+   * Otherwise, returns the original path.
+   */
+  resolveNodeRelativePath(path: string, nodeFullPath?: string): string {
+    if (path.startsWith('states.') && nodeFullPath) {
+      return `${nodeFullPath}.${path}`;
+    }
+    return path;
+  },
+
+  /**
+   * Resolve path with backtracking strategy.
+   * Tries progressively shorter path prefixes from pathStack.
+   * Returns the first path that exists in the source, or the original path if none found.
+   */
+  resolveWithBacktracking(
+    path: string,
+    pathStack: string[],
+    source: {get: (p: string) => any}
+  ): string {
+    if (!pathStack || pathStack.length === 0) return path;
+
+    for (let i = pathStack.length; i >= 0; i--) {
+      const prefix = pathStack.slice(0, i).join('.');
+      const full = prefix ? `${prefix}.${path}` : path;
+      if (source.get(full) !== undefined) {
+        return full;
+      }
+    }
+    return path;
+  },
+
+  /**
    * Set value in object by path (Immutable Update)
    */
   set(obj: any, path: string, value: any): any {

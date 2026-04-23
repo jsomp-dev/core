@@ -177,13 +177,21 @@ export class JsompCompiler implements IJsompCompiler {
 
         // --- POOL DISCOVERY LOGIC ---
         // If entity is missing in local map, try resolving from the global entity pool
+        const poolEntity = ctx.entityPool?.get(id);
         let discoveryResult = rawEntity;
-        if (ctx.entityPool?.get(id)) {
-          if (discoveryResult) {
-            // Conflict Detection
+        let isPoolOnly = false; // Track if this entity is purely from the pool (no local entity)
+        if (poolEntity) {
+          // Only warn when discoveryResult is a complete entity definition (has 'type' or 'inherit' fields)
+          // and is different from the pool entity
+          if (discoveryResult && discoveryResult !== poolEntity && (discoveryResult.type || discoveryResult.inherit)) {
+            // Conflict Detection: Only warn when they are actually different complete entities
             ctx.logger.warn(`[Compiler] ID conflict detected: Local entity "${id}" is overriding an entity in the global pool.`);
           } else {
-            discoveryResult = ctx.entityPool.get(id);
+            discoveryResult = poolEntity;
+            // Mark as pool-only if there was no local entity
+            if (!rawEntity) {
+              isPoolOnly = true;
+            }
           }
         }
 
@@ -202,6 +210,11 @@ export class JsompCompiler implements IJsompCompiler {
 
         for (const plugin of batchPlugins) {
           try {
+            // --- POOL TEMPLATE SKIP ---
+            // Skip batch plugin processing for pool-only entities (template definitions).
+            // Pool templates are inherited from but should not be validated as rendered nodes.
+            // Note: isPoolOnly implies !rawEntity, so the condition is simply 'isPoolOnly'
+            if (isPoolOnly) continue;
             // --- DELETION SAFETY CHECK ---
             if (!entity) {
               // When an entity is deleted, ONLY ReStructure stage plugins (like IncrementalDiscovery)

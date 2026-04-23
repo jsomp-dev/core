@@ -1,5 +1,6 @@
 import {IActionRegistry, IJsompPluginDef, PipelineStage} from '../../../types';
 import {createActionAtomsProxy} from '../../../utils/proxy';
+import {pathUtils} from '../../../utils/path';
 import {jsompEnv} from '../../../JsompEnv';
 
 /**
@@ -56,7 +57,9 @@ export const actionTagsPlugin: IJsompPluginDef = {
           if (def.require.atoms && ctx.atomRegistry) {
             const missingKeyPaths = Object.entries(def.require.atoms)
               .filter(([_, entry]) => {
-                const realPath = typeof entry === 'string' ? entry : (entry as any).path;
+                let realPath = typeof entry === 'string' ? entry : (entry as any).path;
+                // Support node-relative path resolution using pathUtils
+                realPath = pathUtils.resolveNodeRelativePath(realPath, node._fullPath);
                 return ctx.atomRegistry!.get(realPath) === undefined;
               })
               .map(([_, entry]) => typeof entry === 'string' ? entry : (entry as any).path);
@@ -83,10 +86,27 @@ export const actionTagsPlugin: IJsompPluginDef = {
             ? fullTrigger.split(':') 
             : ['dom', fullTrigger];
 
+          // Process atom path mapping, support paths relative to current node
+          let atomMapping = def.require?.atoms;
+          if (atomMapping && node._fullPath) {
+            atomMapping = Object.fromEntries(
+              Object.entries(atomMapping).map(([alias, entry]) => {
+                let realPath = typeof entry === 'string' ? entry : (entry as any).path;
+                // Use pathUtils to resolve node-relative paths
+                realPath = pathUtils.resolveNodeRelativePath(realPath, node._fullPath);
+                if (typeof entry === 'string') {
+                  return [alias, realPath];
+                } else {
+                  return [alias, {...entry, path: realPath}];
+                }
+              })
+            );
+          }
+
           const env = {
             // A. Aliased Atoms (V1.2: Proxy Support)
-            atoms: (def.require?.atoms && ctx.atomRegistry) ?
-              createActionAtomsProxy(ctx.atomRegistry, def.require.atoms) :
+            atoms: (atomMapping && ctx.atomRegistry) ?
+              createActionAtomsProxy(ctx.atomRegistry, atomMapping) :
               {} as Record<string, any>,
             // B. Props Snapshot
             props: node.props || {},

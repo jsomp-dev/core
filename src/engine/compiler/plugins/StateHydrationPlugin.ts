@@ -27,9 +27,14 @@ export const stateHydrationPlugin: IJsompPluginDef = {
     // Automatically map node-local 'states' to the path registry: <nodePath>.states
     const node = ctx.nodes.get(id);
     if (node && node._fullPath && (entity.states || (entity.props && entity.props.states))) {
-      const states = entity.states || entity.props.states;
-      if (typeof states === 'object' && states !== null) {
-        ctx.atomRegistry.patch(`${node._fullPath}.states`, states);
+      const statesPath = `${node._fullPath}.states`;
+      // Only set initial states if the path doesn't already exist!
+      // This preserves any changes made in runtime!
+      if (ctx.atomRegistry.get(statesPath) === undefined) {
+        const states = entity.states || entity.props.states;
+        if (typeof states === 'object' && states !== null) {
+          ctx.atomRegistry.patch(statesPath, states);
+        }
       }
     }
   }

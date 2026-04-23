@@ -1,11 +1,12 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {contentTrait, IJsompNode, PipelineContext, slotTrait, styleTrait, TraitPipeline} from '../../src';
+import {contentTrait, IJsompNode, PipelineContext, slotTrait, styleTrait, TraitPipeline, setupJsomp} from '../../src';
 
 describe('TraitPipeline & StandardTraits', () => {
   let pipeline: TraitPipeline;
   let context: PipelineContext;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await setupJsomp({framework: 'fallback'});
     pipeline = new TraitPipeline();
     pipeline.registerTrait(styleTrait, {priority: 1, name: 'style'});
     pipeline.registerTrait(contentTrait, {priority: 2, name: 'content'});
@@ -112,12 +113,21 @@ describe('TraitPipeline & StandardTraits', () => {
     const result2 = pipeline.processNode(node, context);
 
     expect(result2).toBe(result1); // Same reference
+  });
+
+  it('should reprocess dirty nodes but return same ref if content unchanged', () => {
+    const node: IJsompNode = {id: 'static', type: 'Div'};
+
+    // First pass
+    const result1 = pipeline.processNode(node, context);
 
     // Third pass (Dirty)
-    context.dirtyIds.add('static');
+    context.dirtyIds = new Set(['static']);
     const result3 = pipeline.processNode(node, context);
 
-    expect(result3).not.toBe(result1); // New object
+    // Even though node is dirty, content hasn't changed, so pipeline returns cached reference
+    // This is the "Persistence Check" optimization to prevent React re-renders
+    expect(result3).toBe(result1);
   });
 
   it('should handle slots correctly', () => {

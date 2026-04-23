@@ -104,4 +104,71 @@ describe('AtomRegistry', () => {
       expect((registry.get('b') as any).value).toBe(2);
     });
   });
+
+  describe('Nested Path Updates on Atoms', () => {
+    it('should update atom value when setting nested path (root is atom)', () => {
+      const atom = new MockAtom({name: 'test', count: 0}) as any;
+      registry.set('node1', atom);
+
+      registry.set('node1.states', {count: 5} as any);
+
+      expect(atom.value).toEqual({name: 'test', count: 0, states: {count: 5}});
+      expect(registry.get('node1')).toBe(atom);
+      expect(registry.get('node1.states')).toEqual({count: 5});
+    });
+
+    it('should patch atom value when patching nested path (root is atom)', () => {
+      const atom = new MockAtom({name: 'test', count: 0, extra: 'original'}) as any;
+      registry.set('node1', atom);
+
+      registry.patch('node1.states', {count: 10});
+
+      expect(atom.value.states).toEqual({count: 10});
+    });
+
+    it('should include nested atom states in snapshot', () => {
+      const atom = new MockAtom({name: 'test'}) as any;
+      registry.set('node1', atom);
+
+      registry.patch('node1.states', {count: 0});
+
+      const snapshot = registry.getSnapshot();
+      expect(snapshot).toHaveProperty('node1');
+      expect(snapshot.node1).toEqual({name: 'test', states: {count: 0}});
+    });
+
+    it('should trigger subscriptions when updating nested path on atom', () => {
+      const atom = new MockAtom({name: 'test', count: 0}) as any;
+      registry.set('node1', atom);
+
+      const spy = vi.fn();
+      registry.subscribe('node1', spy);
+      registry.subscribe('node1.states', spy as any);
+
+      registry.patch('node1.states', {count: 99});
+
+      expect(spy).toHaveBeenCalled();
+      expect(atom.value.states).toEqual({count: 99});
+    });
+
+    it('should handle deep nested path on atom', () => {
+      const atom = new MockAtom({a: {b: {c: 1}}}) as any;
+      registry.set('root', atom);
+
+      registry.set('root.a.b.c', 999 as any);
+
+      expect(atom.value).toEqual({a: {b: {c: 999}}});
+    });
+
+    it('should not create orphan key for nested path on atom', () => {
+      const atom = new MockAtom({name: 'test'}) as any;
+      registry.set('node1', atom);
+
+      registry.patch('node1.states', {count: 0});
+
+      const snapshot = registry.getSnapshot();
+      expect(snapshot['node1.states']).toBeUndefined();
+      expect(snapshot.node1).toEqual({name: 'test', states: {count: 0}});
+    });
+  });
 });

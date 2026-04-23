@@ -2,6 +2,7 @@ import {useContext, useSyncExternalStore, useCallback, useMemo} from 'react';
 import {JsompRenderContext} from '../ReactRenderer';
 import {jsompEnv} from '../../../JsompEnv';
 import {ReactRuntimeAdapter} from '../ReactRuntimeAdapter';
+import {pathUtils} from '../../../utils/path';
 
 /**
  * useAtom: Path-aware reactive state hook. (V2)
@@ -26,17 +27,8 @@ export function useAtom<T = any>(path: string): [T, (val: T | ((prev: T) => T)) 
 
   // 2. Resolve final path with backtracking logic (Scope Chain)
   const resolvedPath = useMemo(() => {
-    // We only perform backtracking if used within a JsompView (with pathStack)
-    if (!pathStack || pathStack.length === 0) return path;
-
-    const key = path;
-    for (let i = pathStack.length; i >= 0; i--) {
-      const prefix = pathStack.slice(0, i).join('.');
-      const full = prefix ? `${prefix}.${key}` : key;
-      if ((source as any).get(full) !== undefined) return full;
-    }
-
-    return path;
+    // Use pathUtils to resolve with backtracking
+    return pathUtils.resolveWithBacktracking(path, pathStack, source as any);
   }, [path, pathStack, source]);
 
   // Utility to unwrap Atom/AtomValue to raw value
