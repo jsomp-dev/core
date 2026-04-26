@@ -4,5 +4,6 @@
  * for the framework adapter system.
  */
 
-export { FrameworkRegistry } from './FrameworkRegistry';
-export { FrameworkLoader } from './FrameworkLoader';
+export {FrameworkRegistry} from './FrameworkRegistry';
+export {FrameworkLoader} from './FrameworkLoader';
+export * from './manifests';

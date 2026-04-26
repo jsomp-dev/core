@@ -4,34 +4,13 @@
  * and wraps event handlers with React-compatible logic.
  */
 
-import type {
-  FrameworkManifest,
-  IFrameworkAdapter,
-  IJsompRuntime,
-  IRenderContext,
-  IRenderer,
-  IRuntimeAdapter
-} from '../../types';
+import type {IFrameworkAdapter, IJsompRuntime, IRenderContext, IRenderer, IRuntimeAdapter} from '../../types';
+import {ISignalCenter} from '../../types';
 import {KeyboardUtils} from '../../utils/keyboard';
 import {ReactRuntimeAdapter} from './ReactRuntimeAdapter';
-import {ISignalCenter} from 'dist';
 import {ReactDomRenderer} from './ReactDomRenderer';
 import {jsompEnv} from '../../JsompEnv';
-
-/**
- * React framework manifest declaration.
- * This manifest is used by the FrameworkLoader to register the React adapter.
- */
-export const reactFrameworkManifest: FrameworkManifest = {
-  id: 'react',
-  name: 'React',
-  peerDependencies: {
-    'react': '>=18.0.0 || >=19.0.0',
-    'react-dom': '>=18.0.0 || >=19.0.0'
-  },
-  priority: 100,
-  factory: async () => new ReactFrameworkAdapter()
-};
+import {reactFrameworkManifest} from "../core";
 
 /**
  * React-specific framework adapter.

@@ -207,9 +207,10 @@ export interface IFrameworkLoader {
    * Loads all built-in framework manifests that ship with JSOMP.
    * Called automatically during setup; rarely needed manually.
    */
-  loadBuiltInFrameworks(): void;
+  registerBuiltInFrameworks(...manifests: FrameworkManifest[]): void;
 
   /**
+   * @superfuture
    * Loads framework adapters from external npm packages.
    * Each package should export a 'jsompFrameworkManifest' as its default export.
    * @param packages - Array of npm package names to load

@@ -20,7 +20,7 @@ export interface IJsompNode {
    */
   style_presets?: string[] | Operator | (string | Operator)[];  // e.g. ["btn-base", "btn-primary"]
   style_tw?: string[] | Operator | (string | Operator)[];       // e.g. ["p-4", "bg-red-500"]
-  style_css?: Record<string, string | number | Operator>; // Inline CSS
+  style_css?: Partial<Record<string, string | number | Operator>>; // Inline CSS
 
   /** Points to the id of the parent container */
   parent?: string | string[] | null;

@@ -1,8 +1,15 @@
-import {JsompConfig, JsompLogger, JsompFlattener, JsompEventBus, IJsompEnv, IJsompService, IConfigRegistry} from './types';
-import {ConfigRegistry} from './registry/ConfigRegistry';
+import {
+  IConfigRegistry,
+  IJsompEnv,
+  IJsompService,
+  JsompConfig,
+  JsompEventBus,
+  JsompFlattener,
+  JsompLogger
+} from './types';
+import {ConfigRegistry} from './registry';
 import {JsompService} from './JsompService';
-import {FrameworkLoader} from './framework/core/FrameworkLoader';
-import {FrameworkManifest} from './types';
+import {BuiltInFrameworkList, FrameworkLoader} from './framework/core';
 
 /**
  * JSOMP Environment Container (Global Registry)
@@ -25,7 +32,8 @@ export class JsompEnv implements IJsompEnv {
    */
   public static readonly instance = new JsompEnv();
 
-  private constructor() { }
+  private constructor() {
+  }
 
   // --- Getters with Guard ---
 
@@ -114,7 +122,7 @@ export class JsompEnv implements IJsompEnv {
   private async _loadFrameworks() {
     // Framework Registry Initialization with Auto-Discovery
     // 1 Load all built-in frameworks (React, etc.)
-    this._frameworkLoader.loadBuiltInFrameworks();
+    this._frameworkLoader.registerBuiltInFrameworks(...BuiltInFrameworkList);
 
     // 2 Load external framework packages if configured
     // This enables future frameworks like @jsomp/framework-vue to be loaded dynamically
@@ -145,10 +153,6 @@ export class JsompEnv implements IJsompEnv {
       // Explicit framework selection
       await this._service!.frameworks.setActive(frameworkId);
     }
-  }
-
-  public registerBuiltInFramework(manifest: FrameworkManifest) {
-    this._frameworkLoader.registerBuiltInFramework(manifest);
   }
 
   /**
@@ -189,14 +193,15 @@ export class JsompEnv implements IJsompEnv {
 
   /**
    * TODO: move to jsomp.events system
-   * 
+   *
    * Register a callback to be notified when JSOMP is setup.
    * If already setup, the callback is NOT called immediately (use isSetup check).
    */
   public onSetup(callback: () => void): () => void {
     if (this.isSetup) {
       // If already setup, we don't need to subscribe as it won't transition from false to true again.
-      return () => {};
+      return () => {
+      };
     }
     this._setupListeners.add(callback);
     return () => {

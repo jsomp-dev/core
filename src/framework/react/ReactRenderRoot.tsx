@@ -40,10 +40,8 @@ export class ReactRenderRoot implements IRenderRoot {
   }
 
   private _doRender() {
-    const descriptors = this._adapter.getSnapshot();
     const element = (
       <ReactRenderer
-        descriptors={descriptors}
         adapter={this._adapter as ReactRuntimeAdapter}
         rootId={this._rootId}
         components={this._components}

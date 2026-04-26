@@ -13,54 +13,27 @@ export class FrameworkLoader implements IFrameworkLoader {
     return jsompEnv.service!.frameworks;
   };
 
-  /**
-   * Built-in framework manifests that ship with JSOMP.
-   * NOTE: This array is intentionally static to enable registration at import time
-   * and survival across JsompEnv.clear() resets.
-   */
-  private static _staticBuiltInFrameworks: FrameworkManifest[] = [];
-
   public readonly capabilityNamespaces = ['dom', 'key'];
 
   /**
-   * Registers a framework via its manifest (declarative registration).
-   * The adapter instance is created lazily when the framework is first activated.
-   * @param manifest - The framework manifest to register
-   */
-  public registerBuiltInFramework(manifest: FrameworkManifest): void {
-    // Avoid double-registration of the same manifest object
-    if (!FrameworkLoader._staticBuiltInFrameworks.includes(manifest)) {
-      FrameworkLoader._staticBuiltInFrameworks.push(manifest);
-    }
-  }
-
-  /**
-   * Loads all built-in framework manifests that ship with JSOMP.
+   * Registers all built-in framework manifests that ship with JSOMP.
    * NOTE: This is a no-op since built-in frameworks are now loaded via
    * explicit entry points to support tree-shaking.
    */
-  public loadBuiltInFrameworks(): void {
-    for (const manifest of FrameworkLoader._staticBuiltInFrameworks) {
+  public registerBuiltInFrameworks(...manifests: FrameworkManifest[]): void {
+    for (const manifest of manifests) {
       this._registry.registerManifest(manifest);
     }
   }
 
   /**
+   * @superfuture
    * Loads framework adapters from external npm packages.
    * Each package should export a 'jsompFrameworkManifest' as its default export.
    * @param packages - Array of npm package names to load (e.g., ['@jsomp/framework-vue'])
    */
   public async loadExternalFrameworks(packages: string[]): Promise<void> {
-    for (const pkg of packages) {
-      try {
-        const module = await import(/* @vite-ignore */pkg);
-        if (module.jsompFrameworkManifest) {
-          this._registry.registerManifest(module.jsompFrameworkManifest);
-        }
-      } catch (err) {
-        console.warn(`[JSOMP] Failed to load framework package "${pkg}":`, err);
-      }
-    }
+    // Do nonthing for now
   }
 
   /**
