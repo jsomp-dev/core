@@ -77,10 +77,10 @@ const JsompNodeItem = memo(({id, pathStack, ctx, adapter}: {
     () => adapter.getDescriptor(id)
   );
 
-  if (!descriptor) return null;
-
-  // Bind triggers
+  // Hooks must be called unconditionally to avoid React "Rendered more hooks than during the previous render" error
   useJsompTriggers(descriptor);
+
+  if (!descriptor) return null;
 
   // Resolve component using current context and descriptor
   const resolved = resolveComponent(descriptor, ctx, pathStack);

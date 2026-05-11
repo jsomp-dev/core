@@ -1,12 +1,24 @@
-import React, {useState, useEffect, useRef, useCallback} from 'react';
+import React, {useState, useEffect, useRef, useCallback, Component, ErrorInfo, ReactNode} from 'react';
 import {jsompEnv, BasicRegistry} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
-type BugTab = 'registry-fallback';
+type BugTab = 'registry-fallback' | 'dual-view';
 
 const tabs: {id: BugTab; label: string; desc: string}[] = [
-  {id: 'registry-fallback', label: 'Registry Fallback', desc: 'setRegistryFallback duplicate subscription detection'}
+  {id: 'registry-fallback', label: 'Registry Fallback', desc: 'setRegistryFallback duplicate subscription detection'},
+  {id: 'dual-view', label: 'Dual JsompView', desc: 'two JsompView with same rootId hooks error'}
 ];
+
+class ErrorBoundary extends Component<{children: ReactNode; onError: (error: Error) => void}, {hasError: boolean}> {
+  state = {hasError: false};
+  static getDerivedStateFromError() { return {hasError: true}; }
+  componentDidCatch(error: Error, _info: ErrorInfo) { this.props.onError(error); }
+  render() {
+    return this.state.hasError
+      ? <div className="p-4 bg-red-900/40 border border-red-500/40 rounded-xl text-red-400 text-sm font-mono">Error caught by boundary</div>
+      : this.props.children;
+  }
+}
 
 export const BugTest: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
@@ -23,6 +35,35 @@ export const BugTest: React.FC = () => {
   const addLog = useCallback((msg: string) => {
     setLog(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 20));
   }, []);
+
+  // --- Dual View Test State ---
+  const [dualTriggerCount, setDualTriggerCount] = useState(0);
+  const [dualError, setDualError] = useState<string | null>(null);
+  const [dualKey, setDualKey] = useState(0);
+
+  const dualEntities = [
+    {id: 'dual_root', type: 'Box', style_tw: ['p-4', 'rounded-xl', 'border', 'border-zinc-700', 'bg-zinc-900/60']},
+    {id: 'dual_title', type: 'Text', parent: 'dual_root', props: {children: `Dual View Test #${dualTriggerCount}`, as: 'h3'}, style_tw: ['text-lg', 'font-bold', 'text-white', 'mb-2']},
+    {id: 'dual_desc', type: 'Text', parent: 'dual_root', props: {children: 'Two JsompView siblings sharing the same rootId. Click trigger to re-render and test hooks consistency.'}, style_tw: ['text-xs', 'text-zinc-400']},
+  ];
+
+  const handleDualError = useCallback((error: Error) => {
+    setDualError(error.message);
+    addLog(`DUAL VIEW ERROR: ${error.message}`);
+  }, [addLog]);
+
+  const triggerDualReRender = useCallback(() => {
+    setDualError(null);
+    setDualTriggerCount(prev => prev + 1);
+    addLog(`Dual view trigger #${dualTriggerCount + 1}`);
+  }, [dualTriggerCount, addLog]);
+
+  const resetDualTest = useCallback(() => {
+    setDualError(null);
+    setDualTriggerCount(0);
+    setDualKey(prev => prev + 1);
+    addLog('Dual view test reset');
+  }, [addLog]);
 
   useEffect(() => {
     const init = async () => {
@@ -210,44 +251,94 @@ export const BugTest: React.FC = () => {
             ))}
           </div>
 
-          <div className="flex items-center gap-3 mb-2">
-            <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-              duplicateDetected
-                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-            }`}>
-              {duplicateDetected ? '⚠ Duplicate Detected' : '✓ Single Fire per Toggle'}
-            </div>
-            <div className="text-zinc-600 text-xs">
-              Batch: {lastBatch > 0 ? `${lastBatch}x` : '—'}
-            </div>
-            <button
-              onClick={resetAll}
-              className="ml-auto px-3 py-1 rounded-lg text-xs font-medium bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-all"
-            >
-              Reset
-            </button>
-          </div>
+          {activeTab === 'registry-fallback' && (
+            <>
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  duplicateDetected
+                    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                }`}>
+                  {duplicateDetected ? '⚠ Duplicate Detected' : '✓ Single Fire per Toggle'}
+                </div>
+                <div className="text-zinc-600 text-xs">
+                  Batch: {lastBatch > 0 ? `${lastBatch}x` : '—'}
+                </div>
+                <button
+                  onClick={resetAll}
+                  className="ml-auto px-3 py-1 rounded-lg text-xs font-medium bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-all"
+                >
+                  Reset
+                </button>
+              </div>
 
-          <JsompView entities={entities} id="bug_test" />
+              <JsompView entities={entities} id="bug_test" />
 
-          <div className="flex gap-3">
-            <button
-              onClick={toggleAtom}
-              className="flex-1 py-4 rounded-xl font-bold cursor-pointer active:scale-95 transition-all duration-500 border border-white/10 text-white"
-              style={{backgroundColor: '#3b82f6'}}
-            >
-              Toggle Atom (via reg.set)
-            </button>
-          </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={toggleAtom}
+                  className="flex-1 py-4 rounded-xl font-bold cursor-pointer active:scale-95 transition-all duration-500 border border-white/10 text-white"
+                  style={{backgroundColor: '#3b82f6'}}
+                >
+                  Toggle Atom (via reg.set)
+                </button>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'dual-view' && (
+            <>
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  dualError
+                    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                }`}>
+                  {dualError ? '⚠ Hooks Error Detected' : '✓ No Error'}
+                </div>
+                <div className="text-zinc-600 text-xs">
+                  Trigger: #{dualTriggerCount}
+                </div>
+                <button
+                  onClick={resetDualTest}
+                  className="ml-auto px-3 py-1 rounded-lg text-xs font-medium bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-all"
+                >
+                  Reset
+                </button>
+              </div>
+
+              {dualError && (
+                <div className="p-3 bg-red-900/30 border border-red-500/30 rounded-xl text-red-400 text-xs font-mono whitespace-pre-wrap break-all">
+                  {dualError}
+                </div>
+              )}
+
+              <ErrorBoundary key={dualKey} onError={handleDualError}>
+                <div className="grid grid-cols-2 gap-4">
+                  <JsompView entities={dualEntities} id="dual_view_a" rootId="dual_root" />
+                  <JsompView entities={dualEntities} id="dual_view_b" rootId="dual_root" />
+                </div>
+              </ErrorBoundary>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={triggerDualReRender}
+                  className="flex-1 py-4 rounded-xl font-bold cursor-pointer active:scale-95 transition-all duration-500 border border-white/10 text-white"
+                  style={{backgroundColor: '#8b5cf6'}}
+                >
+                  Trigger Re-render (update entities)
+                </button>
+              </div>
+            </>
+          )}
 
           <div className="p-4 bg-zinc-900/80 rounded-2xl border border-zinc-800 h-40 overflow-y-auto">
             {log.length === 0 ? (
-              <div className="text-zinc-600 text-xs font-mono">No events yet. Click "Toggle Atom" to start.</div>
+              <div className="text-zinc-600 text-xs font-mono">No events yet.</div>
             ) : (
               log.map((entry, i) => (
                 <div key={i} className={`text-xs font-mono mb-1 ${
-                  entry.includes('DUPLICATE') ? 'text-red-400' : 'text-zinc-500'
+                  entry.includes('ERROR') ? 'text-red-400' : entry.includes('DUPLICATE') ? 'text-red-400' : 'text-zinc-500'
                 }`}>
                   {entry}
                 </div>
