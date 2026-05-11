@@ -1,13 +1,14 @@
 import React, {useState, useEffect, useRef, useCallback, Component, ErrorInfo, ReactNode} from 'react';
 import {jsompEnv, BasicRegistry} from "@jsomp/core";
-import {JsompView} from "@jsomp/core/react";
+import {JsompView, useAtom} from "@jsomp/core/react";
 
-type BugTab = 'registry-fallback' | 'dual-view' | 'inherit-sync';
+type BugTab = 'registry-fallback' | 'dual-view' | 'inherit-sync' | 'use-atom-stable';
 
 const tabs: {id: BugTab; label: string; desc: string}[] = [
   {id: 'registry-fallback', label: 'Registry Fallback', desc: 'setRegistryFallback duplicate subscription detection'},
   {id: 'dual-view', label: 'Dual JsompView', desc: 'two JsompView with same rootId hooks error'},
-  {id: 'inherit-sync', label: 'Inherit Sync', desc: 'auto-sync binding on inherited template input'}
+  {id: 'inherit-sync', label: 'Inherit Sync', desc: 'auto-sync binding on inherited template input'},
+  {id: 'use-atom-stable', label: 'useAtom Stable', desc: 'useAtom setter stability in init hooks'}
 ];
 
 class ErrorBoundary extends Component<{children: ReactNode; onError: (error: Error) => void}, {hasError: boolean}> {
@@ -20,6 +21,82 @@ class ErrorBoundary extends Component<{children: ReactNode; onError: (error: Err
       : this.props.children;
   }
 }
+
+/**
+ * useAtom stability test component
+ * Verifies that setAtom works correctly in React init hooks (useEffect [])
+ */
+const UseAtomStableTest: React.FC<{addLog: (msg: string) => void}> = ({addLog}) => {
+  const [count, setCount] = useAtom('useAtomInitTest');
+  const [initWorked, setInitWorked] = useState<boolean | null>(null);
+  const initRan = useRef(false);
+
+  useEffect(() => {
+    if (initRan.current) return;
+    initRan.current = true;
+    setCount(42);
+    requestAnimationFrame(() => {
+      const val = jsompEnv.service?.atoms?.get('useAtomInitTest');
+      setInitWorked(val === 42);
+      addLog(`useAtom init test: setCount(42) in useEffect([], ...) → ${val === 42 ? 'PASS' : 'FAIL'}`);
+    });
+  }, []);
+
+  const [refStable, setRefStable] = useState<boolean | null>(null);
+  const setCountRef = useRef(setCount);
+  useEffect(() => {
+    setRefStable(setCountRef.current === setCount);
+  }, [setCount]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 mb-2">
+        <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+          initWorked === null
+            ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+            : initWorked
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              : 'bg-red-500/20 text-red-400 border border-red-500/30'
+        }`}>
+          {initWorked === null ? 'Testing...' : initWorked ? 'Init Set PASS' : 'Init Set FAIL'}
+        </div>
+        <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+          refStable === null
+            ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+            : refStable
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              : 'bg-red-500/20 text-red-400 border border-red-500/30'
+        }`}>
+          {refStable === null ? 'Checking...' : refStable ? 'Ref Stable PASS' : 'Ref Stable FAIL'}
+        </div>
+        <div className="text-zinc-400 text-sm font-mono">
+          count = {count}
+        </div>
+      </div>
+
+      <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-400 leading-relaxed mb-3">
+        <strong className="text-zinc-300">Expected behavior:</strong> The <code className="text-amber-400">setCount</code> setter should work when called from <code className="text-amber-400">useEffect([], ...)</code> (init hook). The "Ref Stable" badge should show <strong className="text-emerald-400">PASS</strong>, confirming the setter reference never changes across re-renders.
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={() => setCount((prev: number) => prev + 1)}
+          className="flex-1 py-4 rounded-xl font-bold cursor-pointer active:scale-95 transition-all duration-500 border border-white/10 text-white"
+          style={{backgroundColor: '#3b82f6'}}
+        >
+          Increment (setCount(prev + 1))
+        </button>
+        <button
+          onClick={() => setCount(0)}
+          className="flex-1 py-4 rounded-xl font-bold cursor-pointer active:scale-95 transition-all duration-500 border border-white/10 text-white"
+          style={{backgroundColor: '#6b7280'}}
+        >
+          Reset to 0
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export const BugTest: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
@@ -78,6 +155,7 @@ export const BugTest: React.FC = () => {
       reg.set('lastFireBatch', 0);
       reg.set('dupStatus', 'none');
       reg.set('fieldValue', 'hello');
+      reg.set('useAtomInitTest', 0);
 
       // Register template for inherit-sync test
       jsomp.entities.register('tpl', [
@@ -419,6 +497,10 @@ export const BugTest: React.FC = () => {
                 </button>
               </div>
             </>
+          )}
+
+          {activeTab === 'use-atom-stable' && (
+            <UseAtomStableTest addLog={addLog} />
           )}
 
           <div className="p-4 bg-zinc-900/80 rounded-2xl border border-zinc-800 h-40 overflow-y-auto">

@@ -1,4 +1,4 @@
-import {useContext, useSyncExternalStore, useCallback, useMemo} from 'react';
+import {useContext, useSyncExternalStore, useCallback, useMemo, useRef} from 'react';
 import {JsompRenderContext} from '../ReactRenderer';
 import {jsompEnv} from '../../../JsompEnv';
 import {ReactRuntimeAdapter} from '../ReactRuntimeAdapter';
@@ -64,18 +64,25 @@ export function useAtom<T = any>(path: string): [T, (val: T | ((prev: T) => T)) 
     () => unwrapValue((source as any).get(resolvedPath))
   );
 
-  // 4. Setter implementation
+  // 4. Setter implementation (stable reference via refs)
+  const resolvedPathRef = useRef(resolvedPath);
+  resolvedPathRef.current = resolvedPath;
+  const sourceRef = useRef(source);
+  sourceRef.current = source;
+
   const setAtom = useCallback((newValue: T | ((prev: T) => T)) => {
-    const rawVal = (source as any).get(resolvedPath);
+    const currentSource = sourceRef.current;
+    const currentPath = resolvedPathRef.current;
+    const rawVal = (currentSource as any).get(currentPath);
     const current = unwrapValue(rawVal);
     const nextValue = typeof newValue === 'function' ? (newValue as Function)(current) : newValue;
 
-    if ('onUpdate' in source) {
-      (source as any).onUpdate(resolvedPath, nextValue);
+    if ('onUpdate' in currentSource) {
+      (currentSource as any).onUpdate(currentPath, nextValue);
     } else {
-      (source as any).set(resolvedPath, nextValue);
+      (currentSource as any).set(currentPath, nextValue);
     }
-  }, [resolvedPath, source]);
+  }, []);
 
   return [value, setAtom];
 }
