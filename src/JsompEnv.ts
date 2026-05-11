@@ -22,7 +22,7 @@ export class JsompEnv implements IJsompEnv {
   private _eventBus?: JsompEventBus;
   private _service?: IJsompService;
   private _config: IConfigRegistry = new ConfigRegistry();
-  private _frameworkLoader: FrameworkLoader = new FrameworkLoader();
+  private _frameworkLoader: FrameworkLoader = new FrameworkLoader(() => this.service.frameworks);
   private _setupListeners = new Set<() => void>();
 
   public isSetup = false;
@@ -225,7 +225,7 @@ export class JsompEnv implements IJsompEnv {
     this.isSetup = false;
     this._config = new ConfigRegistry();
     this._service = undefined;
-    this._frameworkLoader = new FrameworkLoader();
+    this._frameworkLoader = new FrameworkLoader(() => this.service.frameworks);
     this._setupListeners.clear();
   }
 }

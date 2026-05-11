@@ -1,17 +1,23 @@
-import {jsompEnv} from '../../JsompEnv';
-import type {FrameworkManifest, IFrameworkRegistry, IFrameworkLoader, FrameworkDetectionEnv} from '../../types';
+import type {FrameworkDetectionEnv, FrameworkManifest, IFrameworkLoader, IFrameworkRegistry} from '../../types';
 
 /**
  * Framework loader implementation that handles automatic discovery
  * and initialization of framework adapters.
  */
 export class FrameworkLoader implements IFrameworkLoader {
+
   /**
    * The framework registry instance to register discovered frameworks with.
    */
+  private readonly _registryFactory: () => IFrameworkRegistry;
+
   private get _registry(): IFrameworkRegistry {
-    return jsompEnv.service!.frameworks;
-  };
+    return this._registryFactory();
+  }
+
+  constructor(frameworkRegistryFactory: () => IFrameworkRegistry) {
+    this._registryFactory = frameworkRegistryFactory;
+  }
 
   public readonly capabilityNamespaces = ['dom', 'key'];
 
