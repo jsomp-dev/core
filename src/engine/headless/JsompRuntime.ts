@@ -83,8 +83,12 @@ export class JsompRuntime implements IJsompRuntime {
    * Also binds the registry to the runtime to trigger updates on change.
    */
   private _isSyncingExternal = false;
+  private _fallbackRegistry?: IAtomRegistry | null;
 
   public setRegistryFallback(registry: IAtomRegistry | null): void {
+    if (this._fallbackRegistry === registry) return;
+    this._fallbackRegistry = registry;
+
     if (this._pipelineContext.registry instanceof SignalRegistryAdapter) {
       this._pipelineContext.registry.setExternalFallback(registry);
     }

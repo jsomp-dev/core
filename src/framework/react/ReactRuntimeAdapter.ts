@@ -118,7 +118,6 @@ export class ReactRuntimeAdapter implements IRuntimeAdapter {
    */
   public getRootIdsSnapshot(rootId?: string): string {
     const descriptors = this.getSnapshot();
-    if (rootId) return rootId;
 
     const roots: string[] = [];
     for (let i = 0; i < descriptors.length; i++) {
@@ -126,6 +125,11 @@ export class ReactRuntimeAdapter implements IRuntimeAdapter {
         roots.push(descriptors[i].id);
       }
     }
+
+    if (rootId && !roots.includes(rootId)) {
+      roots.push(rootId);
+    }
+
     return roots.sort().join(',');
   }
 

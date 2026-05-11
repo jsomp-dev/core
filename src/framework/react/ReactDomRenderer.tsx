@@ -1,6 +1,7 @@
 import {Fragment, ReactNode} from 'react';
 import {IRenderContext, IRenderer, IRenderRoot, IRuntimeAdapter, VisualDescriptor} from "../../types";
 import {ReactRenderRoot} from "./ReactRenderRoot";
+import {ReactRuntimeAdapter} from "./ReactRuntimeAdapter";
 import {resolveComponent} from "./ReactRenderer";
 
 /**

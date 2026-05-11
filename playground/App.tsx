@@ -14,6 +14,7 @@ import {ShortcutTest} from './ShortcutTest';
 import {WindowNodeTest} from './WindowNodeTest';
 import {InstanceTest} from './InstanceTest';
 import {ReactHooksTest} from './ReactHooksTest';
+import {BugTest} from './BugTest';
 
 import {HtmlRegistry, setupJsomp} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
@@ -21,7 +22,7 @@ import {JsompView} from "@jsomp/core/react";
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool' | 'shortcuts' | 'window' | 'instances' | 'hooks'>('hooks');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool' | 'shortcuts' | 'window' | 'instances' | 'hooks' | 'bug'>('hooks');
 
   const [entities] = useState<any[]>([
     {
@@ -454,6 +455,22 @@ const App: React.FC = () => {
         >
           React Hooks Lab
         </button>
+        <button
+          onClick={() => setCurrentTab('bug')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.25rem',
+            background: currentTab === 'bug' ? '#27272a' : 'transparent',
+            border: 'none',
+            color: currentTab === 'bug' ? '#fafafa' : '#a1a1aa',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s'
+          }}
+        >
+          Bug Test
+        </button>
       </nav>
 
       {/* Main View Container */}
@@ -494,6 +511,8 @@ const App: React.FC = () => {
           <InstanceTest />
         ) : currentTab === 'hooks' ? (
           <ReactHooksTest />
+        ) : currentTab === 'bug' ? (
+          <BugTest />
         ) : (
           <StreamTest />
         )}
