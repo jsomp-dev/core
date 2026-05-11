@@ -72,10 +72,29 @@ export const autoSyncPlugin: IJsompPluginDef = {
           const actualValue = extractor(eventArgs);
           const atom = atomRegistry.get(atomKey);
 
+          // Save cursor position before atom update to prevent cursor jumping to end after React re-render
+          const target = eventArgs?.target;
+          const cursorPos = (target && typeof target.selectionStart === 'number')
+            ? { start: target.selectionStart, end: target.selectionEnd }
+            : null;
+
           if (atom && typeof (atom as any).set === 'function') {
             (atom as any).set(actualValue);
           } else {
             atomRegistry.set(atomKey, actualValue);
+          }
+
+          // Restore cursor position after React re-render completes
+          if (cursorPos && target && document.activeElement === target) {
+            requestAnimationFrame(() => {
+              try {
+                if (document.activeElement === target) {
+                  target.setSelectionRange(cursorPos.start, cursorPos.end);
+                }
+              } catch (e) {
+                // Element may no longer be in DOM, ignore
+              }
+            });
           }
         };
 
