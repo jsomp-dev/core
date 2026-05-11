@@ -158,10 +158,12 @@ export class JsompCompiler implements IJsompCompiler {
 
       // --- ROOT PULLING LOGIC ---
       // If rootId is specified but not in local entities, pull it from the pool if available
+      const explicitPoolEntities = new Set<string>();
       if (ctx.rootId && !ctx.entities.has(ctx.rootId) && ctx.entityPool?.get(ctx.rootId)) {
         if (!targetIds.includes(ctx.rootId)) {
           targetIds.push(ctx.rootId);
         }
+        explicitPoolEntities.add(ctx.rootId);
       }
 
       const processed = new Set<string>();
@@ -213,8 +215,9 @@ export class JsompCompiler implements IJsompCompiler {
             // --- POOL TEMPLATE SKIP ---
             // Skip batch plugin processing for pool-only entities (template definitions).
             // Pool templates are inherited from but should not be validated as rendered nodes.
-            // Note: isPoolOnly implies !rawEntity, so the condition is simply 'isPoolOnly'
-            if (isPoolOnly) continue;
+            // However, entities explicitly pulled for rendering (via rootId or pool child discovery)
+            // must be processed to build the renderable tree.
+            if (isPoolOnly && !explicitPoolEntities.has(id)) continue;
             // --- DELETION SAFETY CHECK ---
             if (!entity) {
               // When an entity is deleted, ONLY ReStructure stage plugins (like IncrementalDiscovery)
@@ -254,6 +257,7 @@ export class JsompCompiler implements IJsompCompiler {
           for (const childNode of pooledChildren) {
             if (!processed.has(childNode.id)) {
               queue.push(childNode.id);
+              explicitPoolEntities.add(childNode.id);
               if (isIncremental && ctx.dirtyIds) {
                 ctx.dirtyIds.add(childNode.id);
               }
