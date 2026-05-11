@@ -40,7 +40,7 @@ export const autoSyncPlugin: IJsompPluginDef = {
 
     // Helper: Find property in raw entity hierarchy (ignoring resolved values in context)
     const getUnresolvedProp = (targetId: string, propName: string): any => {
-      const e = ctx.entities.get(targetId);
+      const e = ctx.entities.get(targetId) || ctx.entityPool?.get(targetId);
       if (!e) return undefined;
       if (e.props && propName in e.props) return e.props[propName];
       if (e.inherit) return getUnresolvedProp(e.inherit, propName);

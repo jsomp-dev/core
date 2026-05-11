@@ -2,11 +2,12 @@ import React, {useState, useEffect, useRef, useCallback, Component, ErrorInfo, R
 import {jsompEnv, BasicRegistry} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
 
-type BugTab = 'registry-fallback' | 'dual-view';
+type BugTab = 'registry-fallback' | 'dual-view' | 'inherit-sync';
 
 const tabs: {id: BugTab; label: string; desc: string}[] = [
   {id: 'registry-fallback', label: 'Registry Fallback', desc: 'setRegistryFallback duplicate subscription detection'},
-  {id: 'dual-view', label: 'Dual JsompView', desc: 'two JsompView with same rootId hooks error'}
+  {id: 'dual-view', label: 'Dual JsompView', desc: 'two JsompView with same rootId hooks error'},
+  {id: 'inherit-sync', label: 'Inherit Sync', desc: 'auto-sync binding on inherited template input'}
 ];
 
 class ErrorBoundary extends Component<{children: ReactNode; onError: (error: Error) => void}, {hasError: boolean}> {
@@ -76,6 +77,17 @@ export const BugTest: React.FC = () => {
       reg.set('toggleFlag', false);
       reg.set('lastFireBatch', 0);
       reg.set('dupStatus', 'none');
+      reg.set('fieldValue', 'hello');
+
+      // Register template for inherit-sync test
+      jsomp.entities.register('tpl', [
+        {
+          id: 'my_input',
+          type: 'Input',
+          props: {value: '{{fieldValue}}', placeholder: 'Inherited placeholder...'},
+          style_tw: ['w-full']
+        }
+      ], {conflictMode: 'append'});
 
       const unsub = reg.subscribeAll((key: string) => {
         if (key === 'toggleFlag' && !suppressRef.current) {
@@ -281,6 +293,83 @@ export const BugTest: React.FC = () => {
                   style={{backgroundColor: '#3b82f6'}}
                 >
                   Toggle Atom (via reg.set)
+                </button>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'inherit-sync' && (
+            <>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                  Inherited Template Auto-Sync
+                </div>
+                <div className="text-zinc-600 text-xs">
+                  fieldValue = {`{{fieldValue}}`}
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-400 leading-relaxed mb-3">
+                <strong className="text-zinc-300">Expected behavior:</strong> The top input inherits from <code className="text-amber-400">tpl.my_input</code> (registered in entity pool with <code className="text-amber-400">{`{{fieldValue}}`}</code> binding). Typing in either input should update <code className="text-amber-400">fieldValue</code> and sync both inputs + the display below. The "Reset / Set / Clear" buttons test external atom updates propagating back to both inputs.
+              </div>
+
+              <JsompView
+                entities={[
+                  {id: 'page_root', type: 'Box', style_tw: ['space-y-4']},
+                  {
+                    id: 'inherited_input',
+                    inherit: 'tpl.my_input',
+                    parent: 'page_root',
+                  },
+                  {
+                    id: 'direct_input',
+                    type: 'Input',
+                    parent: 'page_root',
+                    props: {value: '{{fieldValue}}', placeholder: 'Direct input...'},
+                    style_tw: ['w-full']
+                  },
+                  {
+                    id: 'value_display',
+                    type: 'Text',
+                    parent: 'page_root',
+                    props: {children: 'Current value: {{fieldValue}}', as: 'div'},
+                    style_tw: ['text-sm', 'text-zinc-300', 'font-mono', 'p-3', 'rounded-lg', 'bg-zinc-900/60', 'border', 'border-zinc-800']
+                  },
+                ]}
+                id="inherit_sync_test"
+                rootId="page_root"
+              />
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    const reg = regRef.current;
+                    if (reg) reg.set('fieldValue', 'hello');
+                  }}
+                  className="flex-1 py-3 rounded-xl font-bold cursor-pointer active:scale-95 transition-all duration-500 border border-white/10 text-white text-sm"
+                  style={{backgroundColor: '#22c55e'}}
+                >
+                  Reset to "hello"
+                </button>
+                <button
+                  onClick={() => {
+                    const reg = regRef.current;
+                    if (reg) reg.set('fieldValue', 'world');
+                  }}
+                  className="flex-1 py-3 rounded-xl font-bold cursor-pointer active:scale-95 transition-all duration-500 border border-white/10 text-white text-sm"
+                  style={{backgroundColor: '#3b82f6'}}
+                >
+                  Set to "world"
+                </button>
+                <button
+                  onClick={() => {
+                    const reg = regRef.current;
+                    if (reg) reg.set('fieldValue', '');
+                  }}
+                  className="flex-1 py-3 rounded-xl font-bold cursor-pointer active:scale-95 transition-all duration-500 border border-white/10 text-white text-sm"
+                  style={{backgroundColor: '#6b7280'}}
+                >
+                  Clear
                 </button>
               </div>
             </>
