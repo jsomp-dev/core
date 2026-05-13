@@ -20,9 +20,11 @@ describe('Headless Operator Expressions', () => {
     center.onUpdate('isCollapsed', true);
 
     const entities = new Map();
+    entities.set('root', {id: 'root', type: 'container', parent: null});
     entities.set(id, {
       id,
       type: 'view',
+      parent: 'root',
       props: {
         isVisible: { opType: 'not', target: '{{isCollapsed}}' }
       }
@@ -45,9 +47,11 @@ describe('Headless Operator Expressions', () => {
     center.onUpdate('count', 10);
 
     const entities = new Map();
+    entities.set('root', {id: 'root', type: 'container', parent: null});
     entities.set(id, {
       id,
       type: 'view',
+      parent: 'root',
       props: {
         total: { opType: 'add', target: '{{count}}', value: 5 }
       }
@@ -69,9 +73,11 @@ describe('Headless Operator Expressions', () => {
     center.onUpdate('score', 85);
 
     const entities = new Map();
+    entities.set('root', {id: 'root', type: 'container', parent: null});
     entities.set(id, {
       id,
       type: 'text',
+      parent: 'root',
       props: {
         status: { 
           opType: 'if', 
@@ -99,9 +105,11 @@ describe('Headless Operator Expressions', () => {
     center.onUpdate('role', 'admin');
 
     const entities = new Map();
+    entities.set('root', {id: 'root', type: 'container', parent: null});
     entities.set(id, {
       id,
       type: 'text',
+      parent: 'root',
       props: {
         label: { 
           opType: 'match', 
@@ -135,9 +143,11 @@ describe('Headless Operator Expressions', () => {
     center.onUpdate('price', 100);
 
     const entities = new Map();
+    entities.set('root', {id: 'root', type: 'container', parent: null});
     entities.set(id, {
       id,
       type: 'text',
+      parent: 'root',
       props: {
         finalPrice: {
           opType: 'pipeline',
@@ -169,9 +179,11 @@ describe('Headless Operator Expressions', () => {
     center.onUpdate('b', 2);
 
     const entities = new Map();
+    entities.set('root', {id: 'root', type: 'container', parent: null});
     entities.set(id, {
       id,
       type: 'view',
+      parent: 'root',
       props: {
         result: {
           opType: 'add',

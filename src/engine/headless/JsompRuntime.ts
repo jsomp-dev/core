@@ -316,11 +316,26 @@ export class JsompRuntime implements IJsompRuntime {
     // 2. Update Context
     this._pipelineContext.dirtyIds = dirtyIds;
 
+    const orphanRegistry = jsompEnv.service?.orphans;
+
     // 3. Incremental Processing: Only process nodes affected by the current change
     // This reduces O(N) traversal to O(K) where K is the number of dirty nodes.
     for (const id of dirtyIds) {
       const node = this._topologyMap.get(id);
       if (node) {
+        // Skip orphan nodes that should not be rendered:
+        // 1. Nodes with no parent that are not registered as allowed orphan types
+        // 2. Nodes whose parent doesn't exist in the topology (pending nodes)
+        const isOrphanRoot = !node.parent && node.id !== this._rootId;
+        if (isOrphanRoot && (!orphanRegistry || !orphanRegistry.isAllowed(node.type))) {
+          this._descriptors.delete(id);
+          continue;
+        }
+        if (this._pendingNodes.has(node.id)) {
+          this._descriptors.delete(id);
+          continue;
+        }
+
         // Update or Create Descriptor
         const descriptor = this._pipeline.processNode(node, this._pipelineContext);
 

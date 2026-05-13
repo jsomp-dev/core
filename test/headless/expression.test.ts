@@ -32,9 +32,11 @@ describe('Headless Expression Resolution', () => {
     center.onUpdate('user.name', 'Alice');
 
     const nodes = new Map();
+    nodes.set('root', {id: 'root', type: 'container', parent: null});
     nodes.set(id, {
       id,
       type: 'text',
+      parent: 'root',
       props: {
         content: 'Hello, {{user.name}}!'
       }
