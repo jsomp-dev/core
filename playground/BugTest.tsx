@@ -2,19 +2,20 @@ import React, {useState, useEffect, useRef, useCallback, Component, ErrorInfo, R
 import {jsompEnv, BasicRegistry} from "@jsomp/core";
 import {JsompView, useAtom} from "@jsomp/core/react";
 
-type BugTab = 'registry-fallback' | 'dual-view' | 'inherit-sync' | 'use-atom-stable';
+type BugTab = 'registry-fallback' | 'dual-view' | 'inherit-sync' | 'use-atom-stable' | 'action-env-merge';
 
 const tabs: {id: BugTab; label: string; desc: string}[] = [
   {id: 'registry-fallback', label: 'Registry Fallback', desc: 'setRegistryFallback duplicate subscription detection'},
   {id: 'dual-view', label: 'Dual JsompView', desc: 'two JsompView with same rootId hooks error'},
   {id: 'inherit-sync', label: 'Inherit Sync', desc: 'auto-sync binding on inherited template input'},
-  {id: 'use-atom-stable', label: 'useAtom Stable', desc: 'useAtom setter stability in init hooks'}
+  {id: 'use-atom-stable', label: 'useAtom Stable', desc: 'useAtom setter stability in init hooks'},
+  {id: 'action-env-merge', label: 'Action Env Merge', desc: 'incremental atoms/props merge in action execution'}
 ];
 
 class ErrorBoundary extends Component<{children: ReactNode; onError: (error: Error) => void}, {hasError: boolean}> {
   state = {hasError: false};
-  static getDerivedStateFromError() { return {hasError: true}; }
-  componentDidCatch(error: Error, _info: ErrorInfo) { this.props.onError(error); }
+  static getDerivedStateFromError() {return {hasError: true};}
+  componentDidCatch(error: Error, _info: ErrorInfo) {this.props.onError(error);}
   render() {
     return this.state.hasError
       ? <div className="p-4 bg-red-900/40 border border-red-500/40 rounded-xl text-red-400 text-sm font-mono">Error caught by boundary</div>
@@ -51,22 +52,20 @@ const UseAtomStableTest: React.FC<{addLog: (msg: string) => void}> = ({addLog}) 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 mb-2">
-        <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-          initWorked === null
+        <div className={`px-3 py-1 rounded-full text-xs font-bold ${initWorked === null
             ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
             : initWorked
               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
               : 'bg-red-500/20 text-red-400 border border-red-500/30'
-        }`}>
+          }`}>
           {initWorked === null ? 'Testing...' : initWorked ? 'Init Set PASS' : 'Init Set FAIL'}
         </div>
-        <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-          refStable === null
+        <div className={`px-3 py-1 rounded-full text-xs font-bold ${refStable === null
             ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
             : refStable
               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
               : 'bg-red-500/20 text-red-400 border border-red-500/30'
-        }`}>
+          }`}>
           {refStable === null ? 'Checking...' : refStable ? 'Ref Stable PASS' : 'Ref Stable FAIL'}
         </div>
         <div className="text-zinc-400 text-sm font-mono">
@@ -93,6 +92,121 @@ const UseAtomStableTest: React.FC<{addLog: (msg: string) => void}> = ({addLog}) 
         >
           Reset to 0
         </button>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Action Env Merge test component
+ * Verifies that atoms and props are incrementally merged (not overwritten)
+ * when calling jsompService.actions.execute() with env overrides.
+ */
+const ActionEnvMergeTest: React.FC<{addLog: (msg: string) => void}> = ({addLog}) => {
+  const [lastAtoms, setLastAtoms] = useState<string>('');
+  const [lastProps, setLastProps] = useState<string>('');
+  const actionRegistered = useRef(false);
+
+  useEffect(() => {
+    if (actionRegistered.current) return;
+    actionRegistered.current = true;
+
+    const jsomp = jsompEnv.service;
+    jsomp.atoms.set('actionEnvMergeTest.label', 'default label');
+
+    jsomp.actions.register('test:env-merge', {
+      require: {
+        atoms: {count: 'actionEnvMergeTest.count', label: 'actionEnvMergeTest.label'},
+        props: {title: 'string'}
+      },
+      handler: (env: any) => {
+        const atomsSnapshot = {count: env.atoms?.count, label: env.atoms?.label};
+        const propsSnapshot = {title: env.props?.title};
+        setLastAtoms(JSON.stringify(atomsSnapshot, null, 2));
+        setLastProps(JSON.stringify(propsSnapshot, null, 2));
+        addLog(`Handler received - atoms: ${JSON.stringify(atomsSnapshot)}, props: ${JSON.stringify(propsSnapshot)}`);
+      }
+    });
+
+    jsomp.actions.register('test:env-cross', {
+      require: {
+        atoms: {x: 'actionEnvMergeTest.x'},
+        props: {y: 'string'}
+      },
+      handler: (env: any) => {
+        const atomsSnapshot = {x: env.atoms?.x};
+        const propsSnapshot = {y: env.props?.y};
+        setLastAtoms(JSON.stringify(atomsSnapshot, null, 2));
+        setLastProps(JSON.stringify(propsSnapshot, null, 2));
+        addLog(`Cross-test handler - atoms: ${JSON.stringify(atomsSnapshot)}, props: ${JSON.stringify(propsSnapshot)}`);
+      }
+    });
+
+    addLog('ActionEnvMergeTest actions registered');
+  }, [addLog]);
+
+  const runTest = useCallback(async (testLabel: string, tag: string, env: any) => {
+    const jsomp = jsompEnv.service;
+    await jsomp.actions.execute(tag, env);
+    addLog(`TEST ${testLabel}: triggered`);
+  }, [addLog]);
+
+  const testIncrementalAtoms = useCallback(async () => {
+    addLog('--- Test: Incremental Atoms Merge ---');
+    await runTest('atoms partial override', 'test:env-merge', {atoms: {count: 99}});
+  }, [runTest, addLog]);
+
+  const testIncrementalProps = useCallback(async () => {
+    addLog('--- Test: Incremental Props Merge ---');
+    await runTest('props partial override', 'test:env-merge', {props: {title: 'Hello'}});
+  }, [runTest, addLog]);
+
+  const testCrossNoOverwrite = useCallback(async () => {
+    addLog('--- Test: Cross Env No Overwrite ---');
+    await runTest('atoms+props cross', 'test:env-cross', {atoms: {x: 42}, props: {y: 'world'}});
+  }, [runTest, addLog]);
+
+  const testAtomsOnlyNoPropsLeak = useCallback(async () => {
+    addLog('--- Test: Atoms Only, No Props Leak ---');
+    await runTest('atoms only', 'test:env-cross', {atoms: {x: 100}});
+  }, [runTest, addLog]);
+
+  return (
+    <div className="space-y-4">
+      <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-400 leading-relaxed">
+        <strong className="text-zinc-300">Test scenarios:</strong>
+        <ul className="list-disc list-inside mt-1 space-y-1">
+          <li><strong className="text-zinc-300">Incremental atoms:</strong> Pass <code className="text-amber-400">{`{atoms: {count: 99}}`}</code> — should merge with base <code className="text-amber-400">require.atoms</code> keys, not replace</li>
+          <li><strong className="text-zinc-300">Incremental props:</strong> Pass <code className="text-amber-400">{`{props: {title: 'Hello'}}`}</code> — should merge with base <code className="text-amber-400">require.props</code> keys</li>
+          <li><strong className="text-zinc-300">Cross no-overwrite:</strong> Pass both <code className="text-amber-400">atoms</code> and <code className="text-amber-400">props</code> — neither should overwrite the other</li>
+          <li><strong className="text-zinc-300">Atoms only:</strong> Pass only <code className="text-amber-400">atoms</code> — <code className="text-amber-400">props</code> should still have base keys</li>
+        </ul>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button onClick={testIncrementalAtoms} className="px-4 py-2 rounded-lg text-sm font-bold cursor-pointer active:scale-95 transition-all bg-blue-600 text-white border border-blue-500/30">
+          Test: Incremental Atoms
+        </button>
+        <button onClick={testIncrementalProps} className="px-4 py-2 rounded-lg text-sm font-bold cursor-pointer active:scale-95 transition-all bg-emerald-600 text-white border border-emerald-500/30">
+          Test: Incremental Props
+        </button>
+        <button onClick={testCrossNoOverwrite} className="px-4 py-2 rounded-lg text-sm font-bold cursor-pointer active:scale-95 transition-all bg-purple-600 text-white border border-purple-500/30">
+          Test: Cross No-Overwrite
+        </button>
+        <button onClick={testAtomsOnlyNoPropsLeak} className="px-4 py-2 rounded-lg text-sm font-bold cursor-pointer active:scale-95 transition-all bg-amber-600 text-white border border-amber-500/30">
+          Test: Atoms Only
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800">
+          <div className="text-[10px] text-zinc-500 font-bold uppercase mb-1">Last atoms received</div>
+          <pre className="text-xs text-sky-300 font-mono whitespace-pre-wrap">{lastAtoms || '—'}</pre>
+        </div>
+        <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800">
+          <div className="text-[10px] text-zinc-500 font-bold uppercase mb-1">Last props received</div>
+          <pre className="text-xs text-amber-300 font-mono whitespace-pre-wrap">{lastProps || '—'}</pre>
+        </div>
       </div>
     </div>
   );
@@ -196,7 +310,7 @@ export const BugTest: React.FC = () => {
       return unsub;
     };
     const unsubPromise = init();
-    return () => { unsubPromise.then(unsub => unsub?.()); };
+    return () => {unsubPromise.then(unsub => unsub?.());};
   }, [addLog]);
 
   const toggleAtom = useCallback(() => {
@@ -330,11 +444,10 @@ export const BugTest: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  activeTab === tab.id
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                     ? 'bg-zinc-700 text-white shadow-lg'
                     : 'text-zinc-400 hover:text-zinc-200'
-                }`}
+                  }`}
               >
                 {tab.label}
               </button>
@@ -344,11 +457,10 @@ export const BugTest: React.FC = () => {
           {activeTab === 'registry-fallback' && (
             <>
               <div className="flex items-center gap-3 mb-2">
-                <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  duplicateDetected
+                <div className={`px-3 py-1 rounded-full text-xs font-bold ${duplicateDetected
                     ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                     : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                }`}>
+                  }`}>
                   {duplicateDetected ? '⚠ Duplicate Detected' : '✓ Single Fire per Toggle'}
                 </div>
                 <div className="text-zinc-600 text-xs">
@@ -456,11 +568,10 @@ export const BugTest: React.FC = () => {
           {activeTab === 'dual-view' && (
             <>
               <div className="flex items-center gap-3 mb-2">
-                <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  dualError
+                <div className={`px-3 py-1 rounded-full text-xs font-bold ${dualError
                     ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                     : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                }`}>
+                  }`}>
                   {dualError ? '⚠ Hooks Error Detected' : '✓ No Error'}
                 </div>
                 <div className="text-zinc-600 text-xs">
@@ -503,14 +614,17 @@ export const BugTest: React.FC = () => {
             <UseAtomStableTest addLog={addLog} />
           )}
 
+          {activeTab === 'action-env-merge' && (
+            <ActionEnvMergeTest addLog={addLog} />
+          )}
+
           <div className="p-4 bg-zinc-900/80 rounded-2xl border border-zinc-800 h-40 overflow-y-auto">
             {log.length === 0 ? (
               <div className="text-zinc-600 text-xs font-mono">No events yet.</div>
             ) : (
               log.map((entry, i) => (
-                <div key={i} className={`text-xs font-mono mb-1 ${
-                  entry.includes('ERROR') ? 'text-red-400' : entry.includes('DUPLICATE') ? 'text-red-400' : 'text-zinc-500'
-                }`}>
+                <div key={i} className={`text-xs font-mono mb-1 ${entry.includes('ERROR') ? 'text-red-400' : entry.includes('DUPLICATE') ? 'text-red-400' : 'text-zinc-500'
+                  }`}>
                   {entry}
                 </div>
               ))

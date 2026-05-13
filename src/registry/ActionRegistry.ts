@@ -1,8 +1,14 @@
-import {IActionDef, IActionRegistry, ITriggerSource} from '../types';
+import {IActionDef, IActionRegistry, IAtomRegistry, ITriggerSource} from '../types';
+import {createActionAtomsProxy, createMergedAtomsProxy} from '../utils/proxy';
 
 export class ActionRegistry implements IActionRegistry {
   private _actions = new Map<string, IActionDef>();
   private _triggerSources = new Map<string, ITriggerSource>();
+  private _atomRegistry?: IAtomRegistry;
+
+  public setAtomRegistry(registry: IAtomRegistry): void {
+    this._atomRegistry = registry;
+  }
 
   public register<TAtoms extends Record<string, any> = any>(
     name: string,
@@ -26,12 +32,42 @@ export class ActionRegistry implements IActionRegistry {
       ? fullTrigger.split(':') 
       : ['dom', fullTrigger];
 
+    // Build atoms: base from require mapping + incremental overrides from env.atoms
+    let atomsEnv = env.atoms;
+    if (def.require?.atoms && this._atomRegistry) {
+      const baseAtoms = createActionAtomsProxy(this._atomRegistry, def.require.atoms);
+      if (atomsEnv && typeof atomsEnv === 'object' && Object.keys(atomsEnv).length > 0) {
+        atomsEnv = createMergedAtomsProxy(baseAtoms, atomsEnv);
+      } else {
+        atomsEnv = baseAtoms;
+      }
+    }
+
+    // Build props: base from require keys + incremental overrides from env.props
+    let propsEnv = env.props;
+    if (def.require?.props) {
+      const baseProps: Record<string, any> = {};
+      for (const key of Object.keys(def.require.props)) {
+        baseProps[key] = undefined;
+      }
+      if (propsEnv && typeof propsEnv === 'object') {
+        propsEnv = {...baseProps, ...propsEnv};
+      } else {
+        propsEnv = baseProps;
+      }
+    } else if (!propsEnv || typeof propsEnv !== 'object') {
+      propsEnv = {};
+    }
+
     await def.handler({
-      ...env, 
+      atoms: atomsEnv,
+      props: propsEnv,
+      event: env.event,
+      originEvent: env.event,
       trigger: fullTrigger,
       namespace: ns,
       eventName: eName,
-      originEvent: env.event
+      contextPath: env.contextPath || tagName
     });
   }
 

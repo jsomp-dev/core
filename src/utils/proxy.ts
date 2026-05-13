@@ -71,7 +71,7 @@ export function createPathAwareProxy(
  * Maps local aliases to registry paths and wraps them in path-aware proxies.
  */
 export function createActionAtomsProxy(registry: IAtomRegistry, mapping: Record<string, string | {path: string, default?: any}>) {
-  return new Proxy({}, {
+  return new Proxy({} as Record<string, any>, {
     get(_, key) {
       if (typeof key !== 'string') return undefined;
       const entry = mapping[key];
@@ -95,6 +95,39 @@ export function createActionAtomsProxy(registry: IAtomRegistry, mapping: Record<
       
       // Direct set on the aliased path
       registry.set(realPath, val);
+      return true;
+    }
+  });
+}
+
+/**
+ * Creates a merged atoms proxy that combines a base action atoms proxy
+ * with literal override values. Override values take priority over base proxy values.
+ * 
+ * Used by ActionRegistry.execute() to support incremental atom merging.
+ */
+export function createMergedAtomsProxy(
+  baseProxy: Record<string, any>,
+  overrides: Record<string, any>
+): Record<string, any> {
+  return new Proxy({} as Record<string, any>, {
+    get(_, key) {
+      if (typeof key !== 'string') return undefined;
+      // Override takes priority
+      if (key in overrides) {
+        return overrides[key];
+      }
+      // Fall back to base proxy
+      return (baseProxy as any)[key];
+    },
+    set(_, key, val) {
+      if (typeof key !== 'string') return false;
+      // Remove from overrides if set, so subsequent reads go through base proxy
+      if (key in overrides) {
+        delete overrides[key];
+      }
+      // Delegate write to base proxy (which writes to registry)
+      (baseProxy as any)[key] = val;
       return true;
     }
   });

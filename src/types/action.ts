@@ -1,3 +1,5 @@
+import type {IAtomRegistry} from './state';
+
 /**
  * Action Requirement Type for Atoms (supports path and default value for inference)
  */
@@ -75,6 +77,9 @@ export interface IActionRegistry {
 
   /** Execute an action by tag name */
   execute(tagName: string, env: any, trigger?: string): Promise<void>;
+
+  /** Bind an atom registry for path resolution in execute() */
+  setAtomRegistry(registry: IAtomRegistry): void;
   
   /** Get a list of all registered action names */
   getNames(): string[];

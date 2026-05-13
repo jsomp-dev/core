@@ -116,6 +116,7 @@ export class JsompService implements IJsompService {
     this.traitPipeline = new TraitPipeline();
     this.schemas = SchemaRegistry.global;
     this.orphans.register('window');
+    this.actions.setAtomRegistry(this.atoms);
   }
 
   /**
