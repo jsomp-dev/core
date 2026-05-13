@@ -1,4 +1,4 @@
-import {createContext, Fragment, memo, ReactNode, useLayoutEffect, useMemo, useSyncExternalStore} from 'react';
+import {createContext, Fragment, memo, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore} from 'react';
 import {jsompEnv} from '../../JsompEnv';
 import {PerformanceMonitor} from '../../renderer';
 import {IRenderContext, IRuntimeAdapter, VisualDescriptor} from '../../types';
@@ -79,6 +79,26 @@ const JsompNodeItem = memo(({id, pathStack, ctx, adapter}: {
 
   // Hooks must be called unconditionally to avoid React "Rendered more hooks than during the previous render" error
   useJsompTriggers(descriptor);
+
+  const hasFiredOnLoad = useRef(false);
+  useEffect(() => {
+    if (!descriptor) {
+      hasFiredOnLoad.current = false;
+      return;
+    }
+    if (!hasFiredOnLoad.current) {
+      hasFiredOnLoad.current = true;
+      jsompEnv.service.actions.execute('onLoad', {
+        props: descriptor.props || {},
+        event: {},
+        originEvent: {},
+        trigger: 'onLoad',
+        namespace: 'lifecycle',
+        eventName: 'load',
+        contextPath: descriptor.path || id
+      }).catch(() => {/* onLoad action may not be registered */});
+    }
+  }, [descriptor?.id]);
 
   if (!descriptor) return null;
 

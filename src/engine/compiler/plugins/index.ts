@@ -6,6 +6,7 @@ export * from './InheritPlugin';
 export * from './PullPlugin';
 export * from './ActionTagsPlugin';
 export * from './AttributeCachePlugin';
+export * from './MountGatePlugin';
 export * from './IncrementalDiscoveryPlugin';
 export * from './RecursionGuardPlugin';
 export * from './AutoSyncPlugin';

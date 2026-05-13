@@ -86,6 +86,11 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
       pipeline.register('standard-operator', PipelineStage.PreProcess, operatorExpressionPlugin, 'StandardOperatorExpression');
     }
 
+    if (shouldRegister('standard-mount-gate', PipelineStage.PreProcess)) {
+      const {mountGatePlugin} = await import('./engine/compiler/plugins/MountGatePlugin');
+      pipeline.register('standard-mount-gate', PipelineStage.PreProcess, mountGatePlugin, 'StandardMountGate');
+    }
+
     if (shouldRegister('standard-state', PipelineStage.Hydrate)) {
       const {stateHydrationPlugin} = await import('./engine/compiler/plugins/StateHydrationPlugin');
       pipeline.register('standard-state', PipelineStage.Hydrate, stateHydrationPlugin, 'StandardStateHydration');

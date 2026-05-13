@@ -44,6 +44,14 @@ export interface IJsompNode {
    */
   pull?: string;
 
+  /**
+   * Controls whether this node is mounted into the render tree.
+   * - false: node and its children are removed from the render tree (triggers onLoad on re-mount).
+   * - true / undefined: normal render behavior.
+   * Supports reactive switching: re-feed the entity to toggle mount/unmount.
+   */
+  mounted?: boolean;
+
   /** [Runtime injection] Automatically spliced full path ID */
   _fullPath?: string;
 
