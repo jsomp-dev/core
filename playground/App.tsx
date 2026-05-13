@@ -10,6 +10,7 @@ import {UseAtomTest} from './UseAtomTest';
 import {ActionTagsTest} from './ActionTagsTest';
 import {AdapterTest} from './AdapterTest';
 import {EntityPoolTest} from './EntityPoolTest';
+import {EntityPoolPullTest} from './EntityPoolPullTest';
 import {ShortcutTest} from './ShortcutTest';
 import {WindowNodeTest} from './WindowNodeTest';
 import {InstanceTest} from './InstanceTest';
@@ -22,7 +23,7 @@ import {JsompView} from "@jsomp/core/react";
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool' | 'shortcuts' | 'window' | 'instances' | 'hooks' | 'bug'>('hooks');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool' | 'pull' | 'shortcuts' | 'window' | 'instances' | 'hooks' | 'bug'>('hooks');
 
   const [entities] = useState<any[]>([
     {
@@ -392,6 +393,22 @@ const App: React.FC = () => {
           Entity Pool Lab
         </button>
         <button
+          onClick={() => setCurrentTab('pull')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.25rem',
+            background: currentTab === 'pull' ? '#27272a' : 'transparent',
+            border: 'none',
+            color: currentTab === 'pull' ? '#fafafa' : '#a1a1aa',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s'
+          }}
+        >
+          Pull Lab
+        </button>
+        <button
           onClick={() => setCurrentTab('shortcuts')}
           style={{
             padding: '0.4rem 1rem',
@@ -503,6 +520,8 @@ const App: React.FC = () => {
           <AdapterTest />
         ) : currentTab === 'pool' ? (
           <EntityPoolTest />
+        ) : currentTab === 'pull' ? (
+          <EntityPoolPullTest />
         ) : currentTab === 'shortcuts' ? (
           <ShortcutTest />
         ) : currentTab === 'window' ? (

@@ -37,6 +37,13 @@ export interface IJsompNode {
    */
   inherit?: string | Operator;
 
+  /**
+   * Pull an entire node tree from the entity pool into the current position.
+   * pull: 'comp-profile'           → pulls all root nodes under the namespace
+   * pull: 'comp-profile.container' → pulls a specific root node
+   */
+  pull?: string;
+
   /** [Runtime injection] Automatically spliced full path ID */
   _fullPath?: string;
 
