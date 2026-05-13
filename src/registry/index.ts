@@ -4,6 +4,7 @@ export * from './SchemaRegistry';
 export * from './ConfigRegistry';
 export * from './EntityRegistry';
 export * from './InstanceRegistry';
+export * from './OrphanTypeRegistry';
 
 // Re-export FrameworkRegistry from new framework location for backward compatibility
 export {FrameworkRegistry} from '../framework/core/FrameworkRegistry';

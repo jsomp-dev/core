@@ -303,6 +303,8 @@ export class JsompCompiler implements IJsompCompiler {
       return ctx.result;
     }
 
+    const orphanRegistry = jsompEnv.service?.orphans;
+
     const result: IJsompNode[] = [];
     ctx.nodes.forEach(node => {
       // 1. Only extract UI nodes (exclude state nodes etc.)
@@ -317,6 +319,13 @@ export class JsompCompiler implements IJsompCompiler {
         node.id === ctx.rootId;
 
       if (hasRoot) {
+        // 3. Filter orphan roots: only allow registered types (e.g. 'window')
+        //    to exist as orphan roots. Template nodes without parent are excluded.
+        if (!parentVal && node.id !== ctx.rootId) {
+          if (!orphanRegistry || !orphanRegistry.isAllowed(node.type)) {
+            return;
+          }
+        }
         result.push(node);
       }
     });

@@ -20,7 +20,7 @@ import {
   ZustandAdapter
 } from './state';
 import {JsompStream} from './misc/JsompStream';
-import {ActionRegistry, ComponentRegistry, EntityRegistry, FrameworkRegistry, InstanceRegistry, SchemaRegistry} from './registry';
+import {ActionRegistry, ComponentRegistry, EntityRegistry, FrameworkRegistry, InstanceRegistry, OrphanTypeRegistry, SchemaRegistry} from './registry';
 import {CreateCompilerOptions, JsompCompiler, PipelineRegistry, TraitPipeline} from './engine';
 import {JsompLayoutManager} from './misc/JsompLayoutManager';
 import {jsompEnv} from './JsompEnv';
@@ -88,6 +88,13 @@ export class JsompService implements IJsompService {
   public readonly instances = new InstanceRegistry();
 
   /**
+   * Orphan Type Registry
+   * Controls which node types are allowed as orphan roots.
+   * Pre-registered: 'window' type.
+   */
+  public readonly orphans = new OrphanTypeRegistry();
+
+  /**
    * Compiler pipeline registry
    */
   public readonly pipeline: PipelineRegistry;
@@ -108,6 +115,7 @@ export class JsompService implements IJsompService {
     this.pipeline = PipelineRegistry.global.clone();
     this.traitPipeline = new TraitPipeline();
     this.schemas = SchemaRegistry.global;
+    this.orphans.register('window');
   }
 
   /**

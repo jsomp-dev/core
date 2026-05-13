@@ -9,6 +9,7 @@ import {IJsompNode} from './node';
 import {IEntityRegistry} from './entity';
 import {IFrameworkRegistry} from './framework';
 import {IInstanceRegistry} from './instance';
+import {IOrphanTypeRegistry} from './orphan';
 /**
  * JSOMP Service Interface
  * Central orchestration for all JSOMP capabilities.
@@ -75,6 +76,13 @@ export interface IJsompService {
    * Instance Registry for component instances
    */
   readonly instances: IInstanceRegistry;
+
+  /**
+   * Orphan Type Registry
+   * Controls which node types are allowed to exist as orphan roots
+   * (nodes without a parent reference). Only registered types pass the filter.
+   */
+  readonly orphans: IOrphanTypeRegistry;
 
   /**
    * Create a new atomic state managed by this service
