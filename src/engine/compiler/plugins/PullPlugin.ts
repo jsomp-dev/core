@@ -115,11 +115,13 @@ export const pullPlugin: IJsompPluginDef = {
           if (subtree.size === 0) continue;
 
           const prefix = isMultiParent && parentId
-            ? `${parentId}.${pullNodeId}`
+            ? `${parentId}__${pullNodeId}`
             : pullNodeId;
 
+          const toSafeId = (id: string) => id.replace(/\./g, '__');
+
           for (const [origId, entity] of subtree) {
-            const syntheticId = `${prefix}.${origId}`;
+            const syntheticId = `${prefix}__${toSafeId(origId)}`;
 
             const syntheticEntity: any = {
               ...entity,
@@ -137,11 +139,11 @@ export const pullPlugin: IJsompPluginDef = {
               if (typeof origParent === 'string') {
                 const isInternal = isPoolInternalRef(origParent, ns);
                 syntheticEntity.parent = isInternal
-                  ? `${prefix}.${origParent}`
+                  ? `${prefix}__${toSafeId(origParent)}`
                   : origParent;
               } else if (Array.isArray(origParent)) {
                 syntheticEntity.parent = origParent.map(p =>
-                  isPoolInternalRef(p, ns) ? `${prefix}.${p}` : p
+                  isPoolInternalRef(p, ns) ? `${prefix}__${toSafeId(p)}` : p
                 );
               }
             }

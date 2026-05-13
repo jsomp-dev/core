@@ -48,10 +48,10 @@ describe('PullPlugin', () => {
     const result = pullPlugin.handler!(ctx);
 
     expect(result).toBeInstanceOf(Map);
-    expect(result!.has('section.comp-profile.container')).toBe(true);
+    expect(result!.has('section__comp-profile__container')).toBe(true);
     expect(result!.get('section')).toBeNull();
 
-    const pulled = result!.get('section.comp-profile.container');
+    const pulled = result!.get('section__comp-profile__container');
     expect(pulled.parent).toBeNull();
     expect(pulled._isSynthetic).toBe(true);
     expect(pulled._originalId).toBe('comp-profile.container');
@@ -72,13 +72,13 @@ describe('PullPlugin', () => {
 
     const result = pullPlugin.handler!(ctx);
 
-    expect(result!.has('section.comp-profile.container')).toBe(true);
-    expect(result!.has('section.comp-profile.avatar')).toBe(true);
-    expect(result!.has('section.comp-profile.name')).toBe(true);
+    expect(result!.has('section__comp-profile__container')).toBe(true);
+    expect(result!.has('section__comp-profile__avatar')).toBe(true);
+    expect(result!.has('section__comp-profile__name')).toBe(true);
 
-    expect(result!.get('section.comp-profile.avatar').parent).toBe('section.comp-profile.container');
-    expect(result!.get('section.comp-profile.name').parent).toBe('section.comp-profile.container');
-    expect(result!.get('section.comp-profile.container').parent).toBeNull();
+    expect(result!.get('section__comp-profile__avatar').parent).toBe('section__comp-profile__container');
+    expect(result!.get('section__comp-profile__name').parent).toBe('section__comp-profile__container');
+    expect(result!.get('section__comp-profile__container').parent).toBeNull();
   });
 
   it('should pull a specific node by full ID', () => {
@@ -94,8 +94,8 @@ describe('PullPlugin', () => {
 
     const result = pullPlugin.handler!(ctx);
 
-    expect(result!.has('card.comp-profile.container')).toBe(true);
-    expect(result!.has('card.comp-profile.avatar')).toBe(true);
+    expect(result!.has('card__comp-profile__container')).toBe(true);
+    expect(result!.has('card__comp-profile__avatar')).toBe(true);
     expect(result!.get('card')).toBeNull();
   });
 
@@ -111,7 +111,7 @@ describe('PullPlugin', () => {
 
     const result = pullPlugin.handler!(ctx);
 
-    expect(result!.get('section.comp-profile.container').parent).toBe('page');
+    expect(result!.get('section__comp-profile__container').parent).toBe('page');
   });
 
   it('should handle multi-parent pull node (Plan A)', () => {
@@ -126,11 +126,11 @@ describe('PullPlugin', () => {
 
     const result = pullPlugin.handler!(ctx);
 
-    expect(result!.has('left.section.comp-profile.container')).toBe(true);
-    expect(result!.has('right.section.comp-profile.container')).toBe(true);
+    expect(result!.has('left__section__comp-profile__container')).toBe(true);
+    expect(result!.has('right__section__comp-profile__container')).toBe(true);
 
-    expect(result!.get('left.section.comp-profile.container').parent).toBe('left');
-    expect(result!.get('right.section.comp-profile.container').parent).toBe('right');
+    expect(result!.get('left__section__comp-profile__container').parent).toBe('left');
+    expect(result!.get('right__section__comp-profile__container').parent).toBe('right');
     expect(result!.get('section')).toBeNull();
   });
 
@@ -147,13 +147,13 @@ describe('PullPlugin', () => {
 
     const result = pullPlugin.handler!(ctx);
 
-    expect(result!.has('a.section.comp-profile.root')).toBe(true);
-    expect(result!.has('a.section.comp-profile.child')).toBe(true);
-    expect(result!.has('b.section.comp-profile.root')).toBe(true);
-    expect(result!.has('b.section.comp-profile.child')).toBe(true);
+    expect(result!.has('a__section__comp-profile__root')).toBe(true);
+    expect(result!.has('a__section__comp-profile__child')).toBe(true);
+    expect(result!.has('b__section__comp-profile__root')).toBe(true);
+    expect(result!.has('b__section__comp-profile__child')).toBe(true);
 
-    expect(result!.get('a.section.comp-profile.child').parent).toBe('a.section.comp-profile.root');
-    expect(result!.get('b.section.comp-profile.child').parent).toBe('b.section.comp-profile.root');
+    expect(result!.get('a__section__comp-profile__child').parent).toBe('a__section__comp-profile__root');
+    expect(result!.get('b__section__comp-profile__child').parent).toBe('b__section__comp-profile__root');
   });
 
   it('should pull multiple root nodes from namespace', () => {
@@ -169,10 +169,10 @@ describe('PullPlugin', () => {
 
     const result = pullPlugin.handler!(ctx);
 
-    expect(result!.has('section.multi-root.header')).toBe(true);
-    expect(result!.has('section.multi-root.footer')).toBe(true);
-    expect(result!.get('section.multi-root.header').parent).toBeNull();
-    expect(result!.get('section.multi-root.footer').parent).toBeNull();
+    expect(result!.has('section__multi-root__header')).toBe(true);
+    expect(result!.has('section__multi-root__footer')).toBe(true);
+    expect(result!.get('section__multi-root__header').parent).toBeNull();
+    expect(result!.get('section__multi-root__footer').parent).toBeNull();
   });
 
   it('should suppress the pull node itself', () => {
@@ -245,14 +245,14 @@ describe('PullPlugin', () => {
 
     const result = pullPlugin.handler!(ctx);
 
-    expect(result!.has('root.deep-tree.level1')).toBe(true);
-    expect(result!.has('root.deep-tree.level2')).toBe(true);
-    expect(result!.has('root.deep-tree.level3')).toBe(true);
-    expect(result!.has('root.deep-tree.leaf')).toBe(true);
+    expect(result!.has('root__deep-tree__level1')).toBe(true);
+    expect(result!.has('root__deep-tree__level2')).toBe(true);
+    expect(result!.has('root__deep-tree__level3')).toBe(true);
+    expect(result!.has('root__deep-tree__leaf')).toBe(true);
 
-    expect(result!.get('root.deep-tree.level2').parent).toBe('root.deep-tree.level1');
-    expect(result!.get('root.deep-tree.level3').parent).toBe('root.deep-tree.level2');
-    expect(result!.get('root.deep-tree.leaf').parent).toBe('root.deep-tree.level3');
+    expect(result!.get('root__deep-tree__level2').parent).toBe('root__deep-tree__level1');
+    expect(result!.get('root__deep-tree__level3').parent).toBe('root__deep-tree__level2');
+    expect(result!.get('root__deep-tree__leaf').parent).toBe('root__deep-tree__level3');
   });
 
   it('should detect circular references', () => {
@@ -271,8 +271,8 @@ describe('PullPlugin', () => {
     (bNode as any).parent = 'circular.a';
 
     const result = pullPlugin.handler!(ctx);
-    expect(result!.has('node.circular.a')).toBe(true);
-    expect(result!.has('node.circular.b')).toBe(true);
+    expect(result!.has('node__circular__a')).toBe(true);
+    expect(result!.has('node__circular__b')).toBe(true);
   });
 
   it('should set hasStructureChanged when pull occurs', () => {
