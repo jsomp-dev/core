@@ -1,14 +1,23 @@
-import React, {useMemo, useState, useCallback} from 'react';
-import {jsompEnv} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 export const MountedTest: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([]);
-  const [viewKey, setViewKey] = useState(0);
+  const pendingLogsRef = useRef<string[]>([]);
 
   const addLog = useCallback((msg: string) => {
     setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev.slice(0, 19)]);
   }, []);
+
+  useEffect(() => {
+    if (pendingLogsRef.current.length > 0) {
+      const msgs = pendingLogsRef.current.splice(0);
+      setLogs(prev => {
+        const entries = msgs.map(msg => `[${new Date().toLocaleTimeString()}] ${msg}`);
+        return [...entries, ...prev].slice(0, 20);
+      });
+    }
+  });
 
   const entities = useMemo(() => [
     // ===== TEMPLATES =====
@@ -84,7 +93,7 @@ export const MountedTest: React.FC = () => {
       type: 'p',
       parent: 'mounted_root',
       style_css: {margin: '0 0 '},
-      props: {children: 'Testing mounted={true|false|Mustache} with subtree cascade & onLoad lifecycle'}
+      props: {children: 'Testing mounted={true|false|Mustache} with subtree cascade & \'jsomp:mount\' lifecycle'}
     },
 
     // ===== SCENARIO 1: Static mounted:false =====
@@ -153,7 +162,7 @@ export const MountedTest: React.FC = () => {
       type: 'p',
       parent: 'sec2',
       style_css: {fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '0.75rem'},
-      props: {children: 'Toggle the atom to mount/unmount the panel below. onLoad fires on each re-mount.'}
+      props: {children: 'Toggle the atom to mount/unmount the panel below. \'jsomp:mount\' fires on each re-mount.'}
     },
     {
       id: 'toggle_row',
@@ -216,9 +225,9 @@ export const MountedTest: React.FC = () => {
         border: '1px solid #1d4ed8',
         transition: 'all 0.2s'
       },
-      actions: {
-        onLoad: ['onLoad']
-      },
+      // actions: {
+      //   execute_when_mounted: ['jsomp:mount']
+      // },
       props: {children: '🎯 Reactive Panel — I appear/disappear with mounted binding!'}
     },
     {
@@ -276,9 +285,9 @@ export const MountedTest: React.FC = () => {
         borderRadius: '0.375rem',
         border: '1px solid #7c3aed'
       },
-      actions: {
-        onLoad: ['onLoad']
-      },
+      // actions: {
+      //   execute_when_mounted: ['jsomp:mount']
+      // },
       props: {children: '📦 Cascade Parent'}
     },
     {
@@ -401,7 +410,7 @@ export const MountedTest: React.FC = () => {
       props: {children: 'Panel C — mounted: {{showC}}'}
     },
 
-    // ===== SCENARIO 5: onLoad Lifecycle Logging =====
+    // ===== SCENARIO 5: 'jsomp:mount' Lifecycle Logging =====
     {
       id: 'sec5',
       inherit: 'tpl_section',
@@ -411,14 +420,14 @@ export const MountedTest: React.FC = () => {
       id: 'sec5_title',
       inherit: 'tpl_section_title',
       parent: 'sec5',
-      props: {children: '5. onLoad Lifecycle Events'}
+      props: {children: '5. \'jsomp:mount\' Lifecycle Events'}
     },
     {
       id: 'sec5_desc',
       type: 'p',
       parent: 'sec5',
       style_css: {fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '0.75rem'},
-      props: {children: 'Each re-mount triggers onLoad. Check the log panel below.'}
+      props: {children: 'Each re-mount triggers \'jsomp:mount\'. Check the log panel below.'}
     },
     {
       id: 'lifecycle_btn',
@@ -450,10 +459,10 @@ export const MountedTest: React.FC = () => {
         fontSize: '0.8rem',
         marginTop: '0.5rem'
       },
-      actions: {
-        onLoad: ['onLoad']
-      },
-      props: {children: '🔄 Lifecycle Node — onLoad fires each mount'}
+      // actions: {
+      //   execute_when_mounted: ['jsomp:mount']
+      // },
+      props: {children: '🔄 Lifecycle Node — \'jsomp:mount\' fires each mount'}
     }
   ], []);
 
@@ -492,19 +501,20 @@ export const MountedTest: React.FC = () => {
       handler: ({atoms}: any) => {atoms.showLifecycle = !atoms.showLifecycle;}
     });
 
-    actions.register('onLoad', {
-      handler: ({event, contextPath}: any) => {
-        addLog(`onLoad fired — path: ${contextPath}`);
-      }
-    });
+    // TODO: Register 'jsomp:mount' event handler
+    // actions.register('execute_when_mounted', {
+    //   handler: ({event, contextPath}: any) => {
+    //     addLog(`'jsomp:mount' fired — path: ${contextPath}`);
+    //   }
+    // });
 
-    addLog('MountedTest initialized');
+    pendingLogsRef.current.push('MountedTest initialized');
   }, [addLog]);
 
   return (
     <div style={{width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem'}}>
       <JsompView
-        key={viewKey}
+        key={'MountedTestView'}
         entities={entities}
         rootId="mounted_root"
         id="mounted_test"
@@ -548,7 +558,7 @@ export const MountedTest: React.FC = () => {
         </div>
         {logs.map((log, i) => (
           <div key={i} style={{
-            color: log.includes('onLoad') ? '#4ade80' : '#a1a1aa',
+            color: log.includes('jsomp:mount') ? '#4ade80' : '#a1a1aa',
             marginBottom: '0.15rem',
             lineHeight: '1.4'
           }}>

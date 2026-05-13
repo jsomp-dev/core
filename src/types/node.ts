@@ -46,7 +46,7 @@ export interface IJsompNode {
 
   /**
    * Controls whether this node is mounted into the render tree.
-   * - false: node and its children are removed from the render tree (triggers onLoad on re-mount).
+   * - false: node and its children are removed from the render tree.
    * - true / undefined: normal render behavior.
    * Supports reactive switching: re-feed the entity to toggle mount/unmount.
    */
