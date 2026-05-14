@@ -76,6 +76,11 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
       pipeline.register('standard-pull', PipelineStage.PreProcess, pullPlugin, 'StandardPull');
     }
 
+    if (shouldRegister('standard-modify', PipelineStage.PreProcess)) {
+      const {modifyPlugin} = await import('./engine/compiler/plugins/ModifyPlugin');
+      pipeline.register('standard-modify', PipelineStage.PreProcess, modifyPlugin, 'StandardModify');
+    }
+
     if (shouldRegister('standard-id-validation', PipelineStage.PreProcess)) {
       const {idValidationPlugin} = await import('./engine/compiler/plugins/IdValidationPlugin');
       pipeline.register('standard-id-validation', PipelineStage.PreProcess, idValidationPlugin, 'StandardIdValidation');

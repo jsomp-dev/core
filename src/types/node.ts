@@ -45,6 +45,17 @@ export interface IJsompNode {
   pull?: string;
 
   /**
+   * Modify an existing target node's properties.
+   * Transforms the node array into a "node operation sequence":
+   * - Default (no modify): additive node creation
+   * - With modify: merge, override, or replace existing nodes
+   *
+   * Target resolution supports path backtracking
+   * 
+   */
+  modify?: IJsompModify;
+
+  /**
    * Controls whether this node is mounted into the render tree.
    * - false: node and its children are removed from the render tree.
    * - true / undefined: normal render behavior.
@@ -138,4 +149,36 @@ export interface JsompHierarchyNode {
 export interface JsompHierarchyOptions {
   /** Whether to include the full path in the output. Defaults to false. */
   includePath?: boolean;
+}
+
+/**
+ * Modify descriptor for the modify field.
+ * Allows a node to act as an "operation" that modifies an existing target node.
+ */
+export interface IJsompModify {
+  /**
+   * Target node path.
+   * Supports path backtracking
+   */
+  target: string;
+
+  /**
+   * Modification mode:
+   * - 'feed':     Deep merge. Objects are shallow-merged, arrays are unioned.
+   *               Like "feeding" data into the existing entity.
+   * - 'override': Overwrite. Same-level fields from the modify node replace
+   *               those on the target. Does NOT merge with existing data.
+   * - 'replace':  Complete replacement. The target node is fully replaced
+   *               by the modify node's data (except id).
+   */
+  mode: 'feed' | 'override' | 'replace';
+
+  /**
+   * Allow modification of dangerous (protected) fields for this operation.
+   * Dangerous fields include: 'id', 'type', 'parent', 'inherit', 'pull', 'modify'
+   * and internal runtime fields.
+   * By default, these fields cannot be modified. This array opts in specific
+   * fields for this single modify operation.
+   */
+  allowDangerousFields?: string[];
 }

@@ -4,6 +4,7 @@ export * from './PathResolutionPlugin';
 export * from './TreeAssemblyPlugin';
 export * from './InheritPlugin';
 export * from './PullPlugin';
+export * from './ModifyPlugin';
 export * from './ActionTagsPlugin';
 export * from './AttributeCachePlugin';
 export * from './MountGatePlugin';

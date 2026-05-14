@@ -17,6 +17,7 @@ import {InstanceTest} from './InstanceTest';
 import {ReactHooksTest} from './ReactHooksTest';
 import {BugTest} from './BugTest';
 import {MountedTest} from './MountedTest';
+import {ModifyTest} from './ModifyTest';
 
 import {HtmlRegistry, setupJsomp} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
@@ -24,7 +25,7 @@ import {JsompView} from "@jsomp/core/react";
 
 const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool' | 'pull' | 'shortcuts' | 'window' | 'instances' | 'hooks' | 'bug' | 'mounted'>('hooks');
+  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool' | 'pull' | 'shortcuts' | 'window' | 'instances' | 'hooks' | 'bug' | 'mounted' | 'modify'>('hooks');
 
   const [entities] = useState<any[]>([
     {
@@ -505,6 +506,22 @@ const App: React.FC = () => {
         >
           Mounted Lab
         </button>
+        <button
+          onClick={() => setCurrentTab('modify')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.25rem',
+            background: currentTab === 'modify' ? '#27272a' : 'transparent',
+            border: 'none',
+            color: currentTab === 'modify' ? '#fafafa' : '#a1a1aa',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s'
+          }}
+        >
+          Modify Lab
+        </button>
       </nav>
 
       {/* Main View Container */}
@@ -551,6 +568,8 @@ const App: React.FC = () => {
           <BugTest />
         ) : currentTab === 'mounted' ? (
           <MountedTest />
+        ) : currentTab === 'modify' ? (
+          <ModifyTest />
         ) : (
           <StreamTest />
         )}
