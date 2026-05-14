@@ -1,7 +1,7 @@
-import {describe, it, expect, beforeEach} from 'vitest';
+import {describe, expect, it} from 'vitest';
 import {pullPlugin} from '../../src/engine/compiler/plugins/PullPlugin';
 import {EntityRegistry} from '../../src/registry/EntityRegistry';
-import {ICompilerContext, IJsompNode, PipelineStage} from '../../src/types';
+import {ICompilerContext, PipelineStage} from '../../src/types';
 
 function createMockContext(entities: Record<string, any>, poolNodes?: Record<string, any[]>): ICompilerContext {
   const entityMap = new Map(Object.entries(entities));

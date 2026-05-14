@@ -1,4 +1,4 @@
-import {JsompEventBus, JsompFlattener, JsompLogger} from './service';
+import {JsompFlattener, JsompLogger} from './service';
 
 /**
  * JSOMP configuration interface.
@@ -20,11 +20,6 @@ export interface JsompConfig {
    * Flattener instance for tree manipulation
    */
   flattener?: JsompFlattener;
-
-  /**
-   * Event bus for global communication
-   */
-  eventBus?: JsompEventBus;
 
   /**
    * Custom compiler plugins to register during setup

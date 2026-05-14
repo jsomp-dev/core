@@ -1,5 +1,4 @@
-import {IJsompPluginDef, IJsompService, JsompConfig, PipelineStage} from './types';
-import {JsompService} from './JsompService';
+import {EventSignal, IJsompPluginDef, IJsompService, JsompConfig, PipelineStage, SetupEvent} from './types';
 import {jsompEnv} from './JsompEnv';
 
 /**
@@ -42,14 +41,9 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
     // 1.1 Register core feature defaults
     jsompEnv.config.registerDefaults('plugins', config.plugins ?? []);
 
-    // 2. Ensure service instance is available in the registry
-    if (!jsompEnv.service) {
-      jsompEnv.setService(new JsompService());
-    }
-
     const pipeline = jsompEnv.service!.pipeline;
 
-    // 3. Register user provided plugins (if any)
+    // 2. Register user provided plugins (if any)
     const plugins = jsompEnv.config.get('plugins', []) as IJsompPluginDef[];
     plugins.forEach(p => {
       if (p.id && p.stage && (p.handler || p.onNode)) {
@@ -57,7 +51,7 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
       }
     });
 
-    // 4. Smart Bootstrapping: Load standard plugins if not registered AND not explicitly disabled
+    // 3. Smart Bootstrapping: Load standard plugins if not registered AND not explicitly disabled
     const standardPlugins: Record<string, boolean> = jsompEnv.config.get('features.standardPlugins', {});
 
     const shouldRegister = (id: string, stage: PipelineStage) => {
@@ -153,10 +147,12 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
 
     jsompEnv.notifySetup();
 
+    (jsompEnv.service.events.setup as EventSignal<SetupEvent>).emit({});
+
     // Clear the shared promise to prevent concurrent calls
     _initPromise = null;
 
-    return jsompEnv.service!;
+    return jsompEnv.service;
   })();
 
   return _initPromise;
@@ -166,5 +162,5 @@ export function requireJsomp() {
   if (!jsompEnv.isSetup) {
     throw new Error(`[JSOMP] Jsomp is not setup. Please call setupJsomp() first.`);
   }
-  return jsompEnv.service!;
+  return jsompEnv.service;
 }

@@ -3,4 +3,3 @@
  */
 export * from './DefaultLogger';
 export * from './DefaultFlattener';
-export * from './DefaultEventBus';

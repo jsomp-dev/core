@@ -18,14 +18,15 @@ import {ReactHooksTest} from './ReactHooksTest';
 import {BugTest} from './BugTest';
 import {MountedTest} from './MountedTest';
 import {ModifyTest} from './ModifyTest';
+import {EventSystemTest} from './EventSystemTest';
 
 import {HtmlRegistry, setupJsomp} from "@jsomp/core";
-import {JsompView} from "@jsomp/core/react";
+import {JsompView, useJsomp} from "@jsomp/core/react";
 
 
 const App: React.FC = () => {
-  const [isReady, setIsReady] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool' | 'pull' | 'shortcuts' | 'window' | 'instances' | 'hooks' | 'bug' | 'mounted' | 'modify'>('hooks');
+  const {isReady} = useJsomp();
+  const [currentTab, setCurrentTab] = useState<'basic' | 'presets' | 'layout' | 'slot' | 'sync' | 'perf' | 'stream' | 'operator' | 'useatom' | 'actions' | 'adapters' | 'pool' | 'pull' | 'shortcuts' | 'window' | 'instances' | 'hooks' | 'bug' | 'mounted' | 'modify' | 'events'>('events');
 
   const [entities] = useState<any[]>([
     {
@@ -150,12 +151,11 @@ const App: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       // 1. Wait for core plugins to load
-      const jsomp = await setupJsomp();
+      const jsomp = await setupJsomp({framework: 'react'});
 
       // 2. Register native HTML elements
       HtmlRegistry.registerAll(jsomp.components);
 
-      setIsReady(true);
       console.log('JSOMP Engine Initialized');
     };
     init();
@@ -522,6 +522,22 @@ const App: React.FC = () => {
         >
           Modify Lab
         </button>
+        <button
+          onClick={() => setCurrentTab('events')}
+          style={{
+            padding: '0.4rem 1rem',
+            borderRadius: '0.25rem',
+            background: currentTab === 'events' ? '#27272a' : 'transparent',
+            border: 'none',
+            color: currentTab === 'events' ? '#fafafa' : '#a1a1aa',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s'
+          }}
+        >
+          Event Lab
+        </button>
       </nav>
 
       {/* Main View Container */}
@@ -570,6 +586,8 @@ const App: React.FC = () => {
           <MountedTest />
         ) : currentTab === 'modify' ? (
           <ModifyTest />
+        ) : currentTab === 'events' ? (
+          <EventSystemTest />
         ) : (
           <StreamTest />
         )}

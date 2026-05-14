@@ -17,6 +17,10 @@ export {JsompLayoutManager, createLayoutManager} from './misc/JsompLayoutManager
 export * from './engine/compiler/JsompCompiler';
 export * from './engine/compiler/JsompDecompiler';
 
+// Export Event System
+export {EventSignalImpl, JsompEvents} from './engine/event';
+export {EventPhase} from './types/events';
+
 // State Management Implementations (Registries & Adapters)
 export {
   StateDispatcherRegistry,
@@ -40,7 +44,6 @@ export type {
   JsompConfig,
   JsompLogger,
   JsompFlattener,
-  JsompEventBus,
   IJsompStream,
   IStreamTransformer,
   StreamOptions,
@@ -48,7 +51,16 @@ export type {
   IActionRegistry,
   IJsompLayoutManager,
   JsompHierarchyNode,
-  PathProxy
+  PathProxy,
+  SubscribeEventOptions,
+  ReadonlyEventSignal,
+  EventSignal,
+  SetupEvent,
+  InstanceReadyEvent,
+  EventTagMeta,
+  IJsompEvents,
+  IJsompEventSignals,
+  IJsompEventTagRegistry,
 } from './types';
 
 // Export renderer

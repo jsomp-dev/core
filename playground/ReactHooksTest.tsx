@@ -34,6 +34,7 @@ const HookTester: React.FC = () => {
       <div style={{marginTop: '1.5rem'}}>
         <JsompView
           id="test_view"
+          rootId={'test_node'}
           entities={[
             {
               id: 'test_node',

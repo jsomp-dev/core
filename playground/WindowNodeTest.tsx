@@ -1,9 +1,10 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {jsompEnv, BasicRegistry} from "@jsomp/core";
 import {JsompView} from "@jsomp/core/react";
+import {useJsomp} from '@jsomp/core/react';
 
 export const WindowNodeTest: React.FC = () => {
-  const [isReady, setIsReady] = useState(false);
+  const {isReady} = useJsomp();
   const [log, setLog] = useState<string[]>([]);
   const [useRootId, setUseRootId] = useState(false);
 
@@ -20,63 +21,40 @@ export const WindowNodeTest: React.FC = () => {
     return yiq >= 128 ? '#000000' : '#FFFFFF';
   };
 
-  useEffect(() => {
-    const init = async () => {
-      const jsomp = jsompEnv.service;
-      BasicRegistry.registerAll(jsomp.components);
+  const init = useCallback(async () => {
+    const jsomp = jsompEnv.service;
+    BasicRegistry.registerAll(jsomp.components);
 
-      const defaultColor = '#09090b';
-      const reg = jsomp.atoms;
-      reg.set('winTitle', 'JSOMP Window Lab');
-      reg.set('winFavicon', 'https://vitejs.dev/logo.svg');
-      reg.set('winLang', 'zh-CN');
-      reg.set('winGuard', false);
-      reg.set('winBodyColor', defaultColor);
-      reg.set('winContrastColor', getContrastColor(defaultColor));
+    const defaultColor = '#09090b';
+    const reg = jsomp.atoms;
+    reg.set('winTitle', 'JSOMP Window Lab');
+    reg.set('winFavicon', 'https://vitejs.dev/logo.svg');
+    reg.set('winLang', 'zh-CN');
+    reg.set('winGuard', false);
+    reg.set('winBodyColor', defaultColor);
+    reg.set('winContrastColor', getContrastColor(defaultColor));
 
-      jsomp.actions.register('on_shortcut_save', {handler: () => addLog('Global Action: SAVE (Ctrl+S)')});
-      jsomp.actions.register('on_shortcut_search', {handler: () => addLog('Global Action: SEARCH (Meta+K)')});
-      jsomp.actions.register('on_window_focus', {handler: () => addLog('Window: FOCUSED')});
-      jsomp.actions.register('on_window_blur', {handler: () => addLog('Window: BLURRED')});
+    jsomp.actions.register('on_shortcut_save', {handler: () => addLog('Global Action: SAVE (Ctrl+S)')});
+    jsomp.actions.register('on_shortcut_search', {handler: () => addLog('Global Action: SEARCH (Meta+K)')});
+    jsomp.actions.register('on_window_focus', {handler: () => addLog('Window: FOCUSED')});
+    jsomp.actions.register('on_window_blur', {handler: () => addLog('Window: BLURRED')});
 
-      jsomp.actions.register('lab.toggleGuard', {
-        require: {atoms: {guard: 'winGuard'}},
-        handler: ({atoms}) => {
-          atoms.guard = !atoms.guard;
-        }
-      });
+    jsomp.actions.register('lab.toggleGuard', {
+      require: {atoms: {guard: 'winGuard'}},
+      handler: ({atoms}) => {
+        atoms.guard = !atoms.guard;
+      }
+    });
 
-      jsomp.actions.register('random_color', {
-        require: {atoms: {color: 'winBodyColor', text: 'winContrastColor'}},
-        handler: ({atoms}) => {
-          const newColor = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
-          atoms.color = newColor;
-          atoms.text = getContrastColor(newColor);
-          addLog(`Style: Body color updated to ${newColor}`);
-        }
-      });
-
-      reg.set('rootIdMode', false);
-
-      const unsub = reg.subscribeAll((key: string, value: any) => {
-        if (key === 'rootIdMode') {
-          setUseRootId(value);
-          addLog(`RootId Mode: ${value ? 'ON (rootId="panel")' : 'OFF (full render)'}`);
-        }
-      });
-
-      jsomp.actions.register('lab.toggleRootId', {
-        require: {atoms: {mode: 'rootIdMode'}},
-        handler: ({atoms}) => {
-          atoms.mode = !atoms.mode;
-        }
-      });
-
-      setIsReady(true);
-      return unsub;
-    };
-    const unsubPromise = init();
-    return () => { unsubPromise.then(unsub => unsub?.()); };
+    jsomp.actions.register('random_color', {
+      require: {atoms: {color: 'winBodyColor', text: 'winContrastColor'}},
+      handler: ({atoms}) => {
+        const newColor = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
+        atoms.color = newColor;
+        atoms.text = getContrastColor(newColor);
+        addLog(`Style: Body color updated to ${newColor}`);
+      }
+    });
   }, []);
 
   const entities = [
@@ -127,8 +105,8 @@ export const WindowNodeTest: React.FC = () => {
         backgroundColor: {
           opType: 'if',
           target: '{{winGuard}}',
-          then: '#10b981', // 开启时固定为翡翠绿
-          else: '#292929ff' // 关闭时深灰色
+          then: '#10b981',
+          else: '#292929ff'
         },
         color: '#FFFFFF',
         boxShadow: {
@@ -151,58 +129,6 @@ export const WindowNodeTest: React.FC = () => {
         color: '{{winContrastColor}}'
       },
       actions: {'random_color': ['onClick']}
-    },
-    {
-      id: 'btn_rootid',
-      type: 'Button',
-      parent: 'action_stack',
-      props: {
-        children: {
-          opType: 'if',
-          target: '{{rootIdMode}}',
-          then: 'RootId Mode: ON — Switch to Full Render',
-          else: 'RootId Mode: OFF — Switch to rootId="panel"'
-        }
-      },
-      style_tw: ['w-full', 'py-4', 'rounded-xl', 'font-bold', 'cursor-pointer', 'active:scale-95', 'transition-all', 'duration-500', 'border', 'border-white/10'],
-      style_css: {
-        backgroundColor: {
-          opType: 'if',
-          target: '{{rootIdMode}}',
-          then: '#f59e0b',
-          else: '#3b82f6'
-        },
-        color: '#FFFFFF'
-      },
-      actions: {'lab.toggleRootId': ['onClick']}
-    },
-    {
-      id: 'mode_indicator',
-      type: 'Text',
-      parent: 'action_stack',
-      props: {
-        children: {
-          opType: 'if',
-          target: '{{rootIdMode}}',
-          then: '⚠️ rootId="panel" — Window node should still work (title/favicon/shortcuts)',
-          else: '✅ Full render mode — all root nodes mounted normally'
-        }
-      },
-      style_tw: ['text-xs', 'text-center', 'px-2', 'py-1', 'rounded-lg'],
-      style_css: {
-        color: {
-          opType: 'if',
-          target: '{{rootIdMode}}',
-          then: '#fbbf24',
-          else: '#22c55e'
-        },
-        backgroundColor: {
-          opType: 'if',
-          target: '{{rootIdMode}}',
-          then: 'rgba(245,158,11,0.15)',
-          else: 'rgba(34,197,94,0.1)'
-        }
-      }
     },
     {id: 'input_stack', type: 'Stack', parent: 'panel', props: {gap: '4'}},
     {id: 'g1', type: 'Stack', parent: 'input_stack', props: {gap: '1'}},
@@ -229,7 +155,7 @@ export const WindowNodeTest: React.FC = () => {
 
   return (
     <div className="w-full h-full flex items-center justify-center p-4">
-      {isReady && <JsompView entities={entities} id="window_node_test" rootId={useRootId ? 'panel' : undefined} />}
+      <JsompView entities={entities} id="window_node_test" rootId={'panel'} beforeMount={init} />
     </div>
   );
 };

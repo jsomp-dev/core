@@ -14,3 +14,4 @@ export * from './config';
 export * from './instance';
 export * from './operator';
 export * from './orphan';
+export * from './events';

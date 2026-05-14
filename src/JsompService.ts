@@ -20,11 +20,16 @@ import {
   ZustandAdapter
 } from './state';
 import {JsompStream} from './misc/JsompStream';
-import {ActionRegistry, ComponentRegistry, EntityRegistry, FrameworkRegistry, InstanceRegistry, OrphanTypeRegistry, SchemaRegistry} from './registry';
-import {CreateCompilerOptions, JsompCompiler, PipelineRegistry, TraitPipeline} from './engine';
+import {ActionRegistry, ComponentRegistry, FrameworkRegistry, InstanceRegistry, OrphanTypeRegistry, SchemaRegistry} from './registry';
+import {EntityRegistry} from './registry/EntityRegistry';
+import {CreateCompilerOptions} from './engine';
+import {JsompCompiler} from './engine/compiler/JsompCompiler';
+import {PipelineRegistry} from './engine/compiler/PipelineRegistry';
+import {TraitPipeline} from './engine/trait/TraitPipeline';
 import {JsompLayoutManager} from './misc/JsompLayoutManager';
 import {jsompEnv} from './JsompEnv';
 import type {IFrameworkRegistry} from './types';
+import {JsompEvents, EventSignalRegistry, EventTagRegistry} from './engine/event';
 
 /**
  * JSOMP Service Implementation
@@ -81,6 +86,21 @@ export class JsompService implements IJsompService {
    * Action Registry for semantic interaction
    */
   public readonly actions = new ActionRegistry();
+
+  /**
+   * Event signals management for custom event registration
+   */
+  public readonly eventSignals: EventSignalRegistry = new EventSignalRegistry();
+
+   /**
+   * Event system for lifecycle and custom events
+   */
+  public readonly events: JsompEvents = new JsompEvents(this.eventSignals);
+
+  /**
+   * Event tag registry for normalized event tag registration
+   */
+  public readonly eventTags: EventTagRegistry = new EventTagRegistry(this.eventSignals, this.actions);
 
   /**
    * Instance Registry for component instances

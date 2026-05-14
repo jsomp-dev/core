@@ -1,5 +1,5 @@
 import {IJsompRuntime} from '../../types';
-import {IRenderContext, ISignalCenter, IRuntimeAdapter, PerformanceMetrics, VisualDescriptor} from '../../types';
+import {IRenderContext, ISignalCenter, IRuntimeAdapter, PerformanceMetrics, VisualDescriptor, EventSignal, InstanceReadyEvent} from '../../types';
 import {jsompEnv} from '../../JsompEnv';
 
 /**
@@ -178,12 +178,20 @@ export class ReactRuntimeAdapter implements IRuntimeAdapter {
 
   /**
    * Report a component instance (DOM element or object) back to the runtime.
+   * Emits instanceReady event through the full lifecycle using emitLifecycle:
+   *   WillCommit → (prevent() called) → Aborted
+   *   WillCommit → (success) → Finished
+   *   Any phase → Error on exception
    */
   public reportInstance(id: string, instance: any, path?: string): void {
     const service = jsompEnv.service;
-    if (service) {
-      service.instances.set(id, instance, path);
-    }
+    if (!service) return;
+
+    (service.events.instanceReady as EventSignal<InstanceReadyEvent>).emitLifecycle({id, instance, path}, () => {
+      if (instance != null) {
+        service.instances.set(id, instance, path);
+      }
+    });
   }
 
   /**

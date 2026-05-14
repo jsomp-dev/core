@@ -19,7 +19,7 @@ export const useJsomp = (): {
   isReady: boolean 
 } => {
   const isReady = useSyncExternalStore(
-    (onStoreChange) => jsompEnv.onSetup(onStoreChange),
+    (onStoreChange) => jsompEnv.service.events.setup.subscribe(onStoreChange),
     () => jsompEnv.isSetup,
     () => jsompEnv.isSetup // SSR fallback
   );
@@ -27,7 +27,7 @@ export const useJsomp = (): {
   return {
     // We use a try-catch or direct access if isReady is true.
     // jsompEnv.service getter throws if not setup, so we only access it if isReady is true.
-    service: isReady ? jsompEnv.service : undefined,
+    service: jsompEnv.service,
     env: jsompEnv,
     isReady
   };

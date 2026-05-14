@@ -153,6 +153,7 @@ export const ShortcutTest: React.FC = () => {
       <JsompView 
         entities={entities} 
         id="shortcut_test"
+        rootId={'test_panel'}
         beforeMount={beforeMount}
       />
 

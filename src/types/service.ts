@@ -10,6 +10,7 @@ import {IEntityRegistry} from './entity';
 import {IFrameworkRegistry} from './framework';
 import {IInstanceRegistry} from './instance';
 import {IOrphanTypeRegistry} from './orphan';
+import {IJsompEvents, IJsompEventSignals, IJsompEventTagRegistry} from './events';
 /**
  * JSOMP Service Interface
  * Central orchestration for all JSOMP capabilities.
@@ -19,6 +20,21 @@ export interface IJsompService {
    * Runtime environment (Logger, EventBus, etc.)
    */
   readonly env: IJsompEnv;
+
+  /**
+   * Event system for subscribing to lifecycle and custom events.
+   */
+  readonly events: IJsompEvents;
+
+  /**
+   * Event signals management for custom event registration and query.
+   */
+  readonly eventSignals: IJsompEventSignals;
+
+  /**
+   * Event tag registry for normalized event tag registration with metadata.
+   */
+  readonly eventTags: IJsompEventTagRegistry;
 
   /**
    * Component registry
@@ -152,14 +168,6 @@ export interface JsompLogger {
 }
 
 /**
- * JSOMP Event Bus Interface
- */
-export interface JsompEventBus {
-  on(event: string, handler: (payload: any) => void): () => void;
-  emit(event: string, payload: any): void;
-}
-
-/**
  * JSOMP Flattener Interface (Core algorithm for tree manipulation)
  */
 export interface JsompFlattener {
@@ -174,7 +182,6 @@ export interface JsompFlattener {
 export interface IJsompEnv {
   readonly logger: JsompLogger;
   readonly flattener: JsompFlattener;
-  readonly eventBus?: JsompEventBus;
   readonly config: IConfigRegistry;
   /** Initialize the environment with explicit config (async) */
   init(config: JsompConfig): Promise<void>;

@@ -1,12 +1,4 @@
-import {
-  IConfigRegistry,
-  IJsompEnv,
-  IJsompService,
-  JsompConfig,
-  JsompEventBus,
-  JsompFlattener,
-  JsompLogger
-} from './types';
+import {IConfigRegistry, IJsompEnv, IJsompService, JsompConfig, JsompFlattener, JsompLogger} from './types';
 import {ConfigRegistry} from './registry';
 import {JsompService} from './JsompService';
 import {BuiltInFrameworkList, FrameworkLoader} from './framework/core';
@@ -18,8 +10,6 @@ import {BuiltInFrameworkList, FrameworkLoader} from './framework/core';
 export class JsompEnv implements IJsompEnv {
   private _logger?: JsompLogger;
   private _flattener?: JsompFlattener;
-  // TODO: Evaluate and implement event system
-  private _eventBus?: JsompEventBus;
   private _service?: IJsompService;
   private _config: IConfigRegistry = new ConfigRegistry();
   private _frameworkLoader: FrameworkLoader = new FrameworkLoader(() => this.service.frameworks);
@@ -47,12 +37,10 @@ export class JsompEnv implements IJsompEnv {
     return this._flattener;
   }
 
-  public get eventBus(): JsompEventBus | undefined {
-    return this._eventBus || undefined;
-  }
-
   public get service(): IJsompService {
-    if (!this._service) throw new Error('[JSOMP] Service not initialized. Call setupJsomp() first.');
+    if (!this._service) {
+      this._service = new JsompService();
+    }
     return this._service;
   }
 
@@ -73,16 +61,7 @@ export class JsompEnv implements IJsompEnv {
     // 0. Merge user configuration into registry
     this._config.merge(config);
 
-    // 1. Service Injection
-    // If a service instance is provided via config, use it; otherwise create a default
-    const injectedService = this._config.get('service');
-    if (injectedService) {
-      this._service = injectedService;
-    } else {
-      this._service = new JsompService();
-    }
-
-    // 2. Logger (Dynamic Load Default if missing)
+    // 1. Logger (Dynamic Load Default if missing)
     // Allow user-provided logger, otherwise fall back to default implementation
     const logger = this._config.get('logger');
     if (logger) {
@@ -92,7 +71,7 @@ export class JsompEnv implements IJsompEnv {
       this._logger = new DefaultLogger();
     }
 
-    // 3. Flattener
+    // 2. Flattener
     // Allow user-provided flattener, otherwise fall back to default
     const flattener = this._config.get('flattener');
     if (flattener) {
@@ -102,20 +81,10 @@ export class JsompEnv implements IJsompEnv {
       this._flattener = new DefaultFlattener();
     }
 
-    // 4. EventBus
-    // Allow user-provided event bus, otherwise fall back to default
-    const eventBus = this._config.get('eventBus');
-    if (eventBus) {
-      this._eventBus = eventBus;
-    } else if (!this._eventBus) {
-      const {DefaultEventBus} = await import('./uniform/DefaultEventBus');
-      this._eventBus = new DefaultEventBus();
-    }
-
-    // 5. Load frameworks
+    // 3. Load frameworks
     await this._loadFrameworks();
 
-    // 6. Activate framework based on config
+    // 4. Activate framework based on config
     await this._activateFramework(config);
   }
 
@@ -223,8 +192,8 @@ export class JsompEnv implements IJsompEnv {
    */
   public clear() {
     this.isSetup = false;
-    this._config = new ConfigRegistry();
     this._service = undefined;
+    this._config = new ConfigRegistry();
     this._frameworkLoader = new FrameworkLoader(() => this.service.frameworks);
     this._setupListeners.clear();
   }

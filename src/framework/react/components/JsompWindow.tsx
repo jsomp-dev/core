@@ -21,7 +21,7 @@ export interface JsompWindowProps {
    */
   lang?: string;
 
-  /**
+  /** 
    * document.body class name
    */
   bodyClass?: string;
@@ -77,15 +77,15 @@ export const JsompWindow: React.FC<JsompWindowProps> = (props) => {
     if (favicon) {
       let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
       const originalHref = link?.href;
-
+      
       if (!link) {
         link = document.createElement('link');
         link.rel = 'icon';
         document.head.appendChild(link);
       }
-
+      
       link.href = favicon;
-
+      
       return () => {
         if (link && originalHref !== undefined) {
           link.href = originalHref;
@@ -136,7 +136,7 @@ export const JsompWindow: React.FC<JsompWindowProps> = (props) => {
         // Convert React-style event names to native lowercase event names
         // e.g.: onKeyDown -> keydown, onClick -> click, onResize -> resize
         const nativeType = propName.slice(2).toLowerCase();
-
+        
         const wrappedHandler = (e: any) => {
           handler(e);
         };

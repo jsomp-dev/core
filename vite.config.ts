@@ -13,8 +13,7 @@ export default defineConfig({
   root: process.env.VITEST ? '.' : 'playground',
   server: {
     port: 3000,
-    open: true,
-    host: '127.0.0.1',
+    open: true
   },
   resolve: {
     alias: {
