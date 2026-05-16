@@ -1,5 +1,6 @@
-import type {EventSignal, IJsompEvents, InstanceReadyEvent, SetupEvent, } from '../../types';
-import {EventSignalRegistry} from './EventSignalRegistry';
+import {internalKey} from '../../misc';
+import type {ComponentMountEvent, EventSignal, IEventSignalRegistry, IEventTagRegistry, IJsompEvents, InstanceReadyEvent, SetupEvent, } from '../../types';
+import {jsompEventTags} from './config/JsompEventTags';
 
 /**
  * JsompEvents Implementation
@@ -17,9 +18,18 @@ export class JsompEvents implements IJsompEvents {
    */
   public readonly instanceReady: EventSignal<InstanceReadyEvent>;
 
-  constructor(eventSignals: EventSignalRegistry) {
-    this.setup = eventSignals._registerInternal<SetupEvent>('jsomp:setup');
-    this.instanceReady = eventSignals._registerInternal<InstanceReadyEvent>('jsomp:instanceReady');
+  /**
+   * Component mount event - emitted when a jsomp component is mounted (initial render or when mounted transitions from false to true).
+   */
+  public readonly componentMount: EventSignal<ComponentMountEvent>;
+
+  constructor(eventSignals: IEventSignalRegistry, eventTags: IEventTagRegistry) {
+    const options = {_internalKey: internalKey};
+    this.setup = eventSignals.register<SetupEvent>('jsomp:setup', options);
+    this.instanceReady = eventSignals.register<InstanceReadyEvent>('jsomp:instance_ready', options);
+    this.componentMount = eventSignals.register<ComponentMountEvent>('jsomp:component_mount', options);
+
+    jsompEventTags.forEach(tag => eventTags.bindTag(tag.name, {...tag, _internalKey: internalKey}));
   }
 }
 

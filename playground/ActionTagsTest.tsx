@@ -2,6 +2,8 @@ import React, {useState, useEffect} from 'react';
 import {jsompEnv, HtmlRegistry} from '../src';
 import {JsompView} from '@jsomp/core/react';
 
+const listeners = new Set<(payload: any) => void>();
+
 export const ActionTagsTest: React.FC = () => {
   const [entities] = useState<any[]>([
     // --- 1. Templates (Inheritable Base Nodes) ---
@@ -145,22 +147,6 @@ export const ActionTagsTest: React.FC = () => {
 
   // Mock Global Backend Registry for the playground
   useEffect(() => {
-    const jsomp = jsompEnv.service!;
-
-    // Simulating a backend emitter
-    const listeners = new Set<(p: any) => void>();
-
-    // Register the custom Trigger Source for 'runtime:' namespace
-    jsomp.actions.registerTriggerSource('runtime', {
-      subscribe: (eventName: string, emit: (p: any) => void) => {
-        if (eventName === 'system_notify') {
-          listeners.add(emit);
-          return () => listeners.delete(emit);
-        }
-        return () => { };
-      }
-    });
-
     // Simulate backend push every 5 seconds
     const timer = setInterval(() => {
       const msg = `Alert at ${new Date().toLocaleTimeString()}`;
@@ -202,7 +188,18 @@ export const ActionTagsTest: React.FC = () => {
             'notification_msg': 'Waiting for host signal...'
           });
 
-          // 2. Register Actions
+          // 2. Register Signal Namespace (must be before action registration
+          //    so EventBus signals are ready when subscriptions activate on mount)
+          jsomp.actions.registerSignalMapping('runtime', {
+            mapping: {
+              system_notify: (emit: (p: any) => void) => {
+                listeners.add(emit);
+                return () => listeners.delete(emit);
+              }
+            }
+          });
+
+          // 3. Register Actions
 
           // Incrementor
           jsomp.actions.register('magic_inc', {

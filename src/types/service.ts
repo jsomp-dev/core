@@ -10,7 +10,7 @@ import {IEntityRegistry} from './entity';
 import {IFrameworkRegistry} from './framework';
 import {IInstanceRegistry} from './instance';
 import {IOrphanTypeRegistry} from './orphan';
-import {IJsompEvents, IJsompEventSignals, IJsompEventTagRegistry} from './events';
+import {IEventBus, IJsompEvents, IEventSignalRegistry, IEventTagRegistry} from './events';
 /**
  * JSOMP Service Interface
  * Central orchestration for all JSOMP capabilities.
@@ -29,12 +29,19 @@ export interface IJsompService {
   /**
    * Event signals management for custom event registration and query.
    */
-  readonly eventSignals: IJsompEventSignals;
+  readonly eventSignals: IEventSignalRegistry;
 
   /**
    * Event tag registry for normalized event tag registration with metadata.
    */
-  readonly eventTags: IJsompEventTagRegistry;
+  readonly eventTags: IEventTagRegistry;
+
+  /**
+   * Event bus for unified event routing.
+   * Central routing layer that unifies EventSignal, TriggerSource,
+   * and external event sources into a single path.
+   */
+  readonly eventBus: IEventBus;
 
   /**
    * Component registry

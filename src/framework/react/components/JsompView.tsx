@@ -1,8 +1,8 @@
 import React, {useEffect, useMemo, useRef} from 'react';
 import {JsompRuntime, SignalCenter} from '../../../engine';
-import {ReactRenderer} from '../ReactRenderer';
-import {IAtomRegistry, IJsompService} from '../../../types';
 import {jsompEnv} from '../../../JsompEnv';
+import {IAtomRegistry, IJsompService} from '../../../types';
+import {ReactRenderer} from '../ReactRenderer';
 
 /**
  * JsompView Props Definition
@@ -76,7 +76,7 @@ export const JsompView: React.FC<JsompViewProps> = ({
 
   // 1. Resolve JSOMP Service & Runtime
   const adapter = useMemo(() => {
-    if (!jsompEnv.service) {
+    if (!jsompEnv.isSetup) {
       throw new Error('Render JsompView failed: Jsomp not initialized. Call setupJsomp() first.');
     }
     // Use standard runtime which leverages the now STATELESS shared compiler

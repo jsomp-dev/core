@@ -1,10 +1,9 @@
 import {createContext, Fragment, memo, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore} from 'react';
 import {jsompEnv} from '../../JsompEnv';
 import {PerformanceMonitor} from '../../renderer';
-import {IRenderContext, IRuntimeAdapter, VisualDescriptor} from '../../types';
+import {IRenderContext, IRuntimeAdapter, VisualDescriptor, EventSignal, ComponentMountEvent, EventPhase} from '../../types';
 import {ReactRuntimeAdapter} from './ReactRuntimeAdapter';
 import {JsompWindow} from './components';
-import {useJsompTriggers} from './hooks';
 
 /**
  * Single render context for hooks compatibility.
@@ -77,8 +76,70 @@ const JsompNodeItem = memo(({id, pathStack, ctx, adapter}: {
     () => adapter.getDescriptor(id)
   );
 
-  // Hooks must be called unconditionally to avoid React "Rendered more hooks than during the previous render" error
-  useJsompTriggers(descriptor);
+  const hasEmittedMount = useRef(false);
+  const mountDecision = useRef<{ id: string; prevented: boolean } | null>(null);
+
+  // Synchronously emit WillCommit during render phase for real mount gating
+  if (descriptor) {
+    if (!mountDecision.current || mountDecision.current.id !== descriptor.id) {
+      let prevented = false;
+      const preventFn = () => { prevented = true; };
+      const willPayload = {
+        id: descriptor.id,
+        entity: descriptor,
+        timestamp: Date.now(),
+        prevent: preventFn,
+      } as ComponentMountEvent;
+      (jsompEnv.service.events.componentMount as EventSignal<ComponentMountEvent>).emit(willPayload, EventPhase.WillCommit);
+
+      if (prevented) {
+        // Emit Aborted phase and skip rendering
+        (jsompEnv.service.events.componentMount as EventSignal<ComponentMountEvent>).emit({
+          id: descriptor.id,
+          entity: descriptor,
+          timestamp: Date.now(),
+        }, EventPhase.Aborted);
+      }
+
+      mountDecision.current = { id: descriptor.id, prevented };
+    }
+
+    if (mountDecision.current.prevented) {
+      return null;
+    }
+  } else {
+    mountDecision.current = null;
+  }
+
+  useLayoutEffect(() => {
+    if (!descriptor) {
+      hasEmittedMount.current = false;
+      return;
+    }
+
+    const unsubs: Array<() => void> = [];
+
+    // 1. Activate pre-compiled EventBus subscriptions before emitting mount
+    if (descriptor.subscriptions && descriptor.subscriptions.length > 0) {
+      const cleanupFns = jsompEnv.service.eventBus.activateSubscriptions(descriptor.subscriptions);
+      unsubs.push(...cleanupFns);
+    }
+
+    // 2. Emit mount finished (WillCommit already handled in render phase)
+    if (!hasEmittedMount.current) {
+      hasEmittedMount.current = true;
+      (jsompEnv.service.events.componentMount as EventSignal<ComponentMountEvent>).emit({
+        id: descriptor.id,
+        entity: descriptor,
+        timestamp: Date.now(),
+      });
+    }
+
+    // 3. Cleanup subscriptions on unmount
+    return () => {
+      unsubs.forEach(fn => fn());
+    };
+  }, [descriptor]);
 
   if (!descriptor) return null;
 

@@ -116,11 +116,9 @@ describe('Action Tag Neutrality & Mapping', () => {
 
     propsTrait(node, descriptor, context);
 
-    expect(descriptor.props.onBackendReceiveMsg).toBe(handler);
-    expect(descriptor.triggers).toContainEqual({
-      namespace: 'backend',
-      event: 'receive_msg',
-      prop: 'onBackendReceiveMsg'
-    });
+    expect(descriptor.subscriptions).toBeDefined();
+    expect(descriptor.subscriptions!.length).toBe(1);
+    expect(descriptor.subscriptions![0].channel).toBe('backend:receive_msg');
+    expect(descriptor.subscriptions![0].handler).toBe(handler);
   });
 });

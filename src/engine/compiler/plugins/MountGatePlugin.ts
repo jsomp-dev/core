@@ -1,7 +1,9 @@
-import {ICompilerContext, IJsompPluginDef, PipelineStage} from "../../../types";
+import {ComponentMountEvent, EventSignal, ICompilerContext, IJsompPluginDef, PipelineStage} from "../../../types";
 import {BindingResolver} from "../../../state";
+import {jsompEnv} from "../../../JsompEnv";
 
 const _prevAllSuppressed = new Set<string>();
+const _knownMountedNodes = new Set<string>();
 
 function buildParentIndex(entities: Map<string, any>): Map<string, string[]> {
   const idx = new Map<string, string[]>();
@@ -121,6 +123,27 @@ export const mountGatePlugin: IJsompPluginDef = {
 
     if (hasChanges) {
       ctx.hasStructureChanged = true;
+    }
+
+    const eventSignal = jsompEnv.service?.events?.componentMount as EventSignal<ComponentMountEvent> | undefined;
+    if (eventSignal) {
+      for (const id of restored) {
+        const entity = ctx.entities.get(id);
+        if (entity) {
+          eventSignal.emit({ id, entity });
+          _knownMountedNodes.add(id);
+        }
+      }
+
+      for (const id of targetIds) {
+        if (!allSuppressed.has(id) && !_knownMountedNodes.has(id)) {
+          const entity = ctx.entities.get(id);
+          if (entity) {
+            eventSignal.emit({ id, entity });
+            _knownMountedNodes.add(id);
+          }
+        }
+      }
     }
 
     return result;

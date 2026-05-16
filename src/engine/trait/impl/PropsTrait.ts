@@ -1,4 +1,4 @@
-import {IJsompNode, PipelineContext, TraitProcessor, VisualDescriptor} from "../../../types";
+import {IJsompNode, PipelineContext, TraitProcessor, VisualDescriptor, SubscriptionEntry} from "../../../types";
 import {jsompEnv} from "../../../JsompEnv";
 
 /**
@@ -11,8 +11,6 @@ export const propsTrait: TraitProcessor = (
   context: PipelineContext
 ) => {
   if (node.props) {
-    // Copy all props as base. 
-    // Higher priority specific traits (like contentTrait) will override these if needed.
     descriptor.props = {
       ...descriptor.props,
       ...node.props
@@ -22,6 +20,7 @@ export const propsTrait: TraitProcessor = (
   // Pass generated event handlers to the renderer
   if (node.onEvent) {
     const mappedEvents: Record<string, Function> = {};
+    const subscriptions: SubscriptionEntry[] = [];
 
     Object.entries(node.onEvent).forEach(([trigger, handler]) => {
       let propName = trigger;
@@ -34,7 +33,6 @@ export const propsTrait: TraitProcessor = (
       let isOwner = false;
 
       if (knownNamespaces.includes(ns)) {
-        // Check if the framework supports the namespace
         const framework = jsompEnv.service.frameworks.getActive();
         isOwner = framework.isOwner(ns);
         if (isOwner) {
@@ -43,17 +41,15 @@ export const propsTrait: TraitProcessor = (
       }
 
       if (!isOwner) {
-        // Default Rule for Custom Namespaces: on + Namespace + EventName (PascalCase)
-        const pascalNS = ns.charAt(0).toUpperCase() + ns.slice(1);
-        const pascalEvent = name.split('_').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('');
-        propName = `on${pascalNS}${pascalEvent}`;
-
-        // Store pre-processed trigger metadata for framework renderer to wire up lifecycle
-        if (!descriptor.triggers) descriptor.triggers = [];
-        descriptor.triggers.push({namespace: ns, event: name, prop: propName});
+        // Custom namespace: write to subscriptions for EventBus activation
+        subscriptions.push({
+          channel: trigger,
+          handler: handler as (payload: any) => void,
+        });
+        return;
       }
 
-      // Merge handlers if multiple neutral triggers map to the same framework prop (e.g., key:* -> onKeyDown)
+      // Merge handlers if multiple neutral triggers map to the same framework prop
       const existing = mappedEvents[propName];
       if (existing) {
         mappedEvents[propName] = async (payload: any) => {
@@ -69,5 +65,12 @@ export const propsTrait: TraitProcessor = (
       ...descriptor.props,
       ...mappedEvents
     };
+
+    if (subscriptions.length > 0) {
+      descriptor.subscriptions = [
+        ...(descriptor.subscriptions || []),
+        ...subscriptions
+      ];
+    }
   }
 };

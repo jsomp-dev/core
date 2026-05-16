@@ -1,4 +1,4 @@
-import {EventPhase, ITriggerSource} from "../../types";
+import {EventPhase, IActionSourceMeta, ITriggerSource} from "../../types";
 import {EventSignalImpl} from "./EventSignal";
 
 interface SignalEntry {
@@ -8,6 +8,11 @@ interface SignalEntry {
 
 /**
  * Event Trigger Source
+ *
+ * @deprecated Use EventBus instead. EventBus provides unified event routing
+ *             with registerChannel/subscribe/emit/bindSignal APIs.
+ *             This class is kept for backward compatibility and will be removed in a future version.
+ *
  * Manages multiple EventSignals under a single namespace, bridging them to the action tags system.
  * One EventTriggerSource instance per namespace, routing by eventName internally.
  * Each signal can be bound to a specific EventPhase (defaults to Finished).
@@ -40,8 +45,9 @@ export class EventTriggerSource implements ITriggerSource {
    * @param emit - Callback invoked when the action fires
    * @returns Unsubscribe function
    */
-  subscribe(eventName: string, emit: (payload: any) => void): () => void {
-    const entry = this._signals.get(eventName);
+  subscribe(eventName: string, emit: (payload: any) => void, sourceMeta: IActionSourceMeta): () => void {
+    const tagName = `${sourceMeta.namespace}:${sourceMeta.name}`;
+    const entry = this._signals.get(tagName);
     if (!entry) {
       console.warn(`[EventTriggerSource] No signal found for event "${eventName}" in this namespace`);
       return () => {};

@@ -109,27 +109,16 @@ export interface VisualDescriptor {
   slots: Record<string, string[]>;
   /** Parent ID to identify roots. Supports multiple parents for Multi-Mount. */
   parentId?: string | string[] | null;
-  /** 
-   * Pre-processed custom namespace triggers (V1.2+)
-   * Used by host renderer to establish external subscriptions
+  /**
+   * Pre-compiled EventBus subscriptions.
+   * Populated by PropsTrait for custom namespace events.
+   * Activated by the renderer when the component mounts.
    */
-  triggers?: IVisualTrigger[];
+  subscriptions?: import('./events').SubscriptionEntry[];
   /**
    * Whether this node needs its physical instance to be reported back.
    */
   trackInstance?: boolean;
-}
-
-/**
- * Pre-processed Trigger Descriptor
- */
-export interface IVisualTrigger {
-  /** Namespace (e.g., 'backend') */
-  namespace: string;
-  /** Neutral event name (e.g., 'receive_msg') */
-  event: string;
-  /** Framework-specific property name (e.g., 'onBackendReceiveMsg') */
-  prop: string;
 }
 
 /**

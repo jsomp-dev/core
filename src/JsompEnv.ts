@@ -1,7 +1,7 @@
-import {IConfigRegistry, IJsompEnv, IJsompService, JsompConfig, JsompFlattener, JsompLogger} from './types';
-import {ConfigRegistry} from './registry';
 import {JsompService} from './JsompService';
 import {BuiltInFrameworkList, FrameworkLoader} from './framework/core';
+import {ConfigRegistry} from './registry';
+import {IConfigRegistry, IJsompEnv, IJsompService, JsompConfig, JsompFlattener, JsompLogger} from './types';
 
 /**
  * JSOMP Environment Container (Global Registry)
@@ -58,6 +58,7 @@ export class JsompEnv implements IJsompEnv {
    * @param config - Optional configuration object for JSOMP initialization
    */
   public async init(config: JsompConfig = {}): Promise<void> {
+
     // 0. Merge user configuration into registry
     this._config.merge(config);
 

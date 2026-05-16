@@ -1,4 +1,5 @@
-import type {EventSignal, IJsompEventSignals} from "../../types";
+import {checkIsInternal} from "../../misc";
+import type {EventSignal, IEventSignalRegistry, RegisterEventSignalOptions} from "../../types";
 import {RESERVED_NAMESPACES} from "../../types";
 import {EventSignalImpl} from "./EventSignal";
 
@@ -8,7 +9,7 @@ import {EventSignalImpl} from "./EventSignal";
  * For action-tag-integrated event registration, use `service.eventTags.bindTag()` instead.
  * Accessible via `service.eventSignals`.
  */
-export class EventSignalRegistry implements IJsompEventSignals {
+export class EventSignalRegistry implements IEventSignalRegistry {
   private _signals = new Map<string, EventSignalImpl>();
 
   /**
@@ -18,23 +19,11 @@ export class EventSignalRegistry implements IJsompEventSignals {
    * @param name - Event name (e.g., 'myapp:userLogin')
    * @returns The EventSignal for the registered event
    */
-  public register<TEvent = any>(name: string): EventSignal<TEvent> {
-    this._validateNamespace(name);
-
-    const existing = this._signals.get(name);
-    if (existing) {
-      return existing as EventSignal<TEvent>;
+  public register<TEvent = any>(name: string, options: RegisterEventSignalOptions = {}): EventSignal<TEvent> {
+    if (!checkIsInternal(options)) {
+      this._validateNamespace(name);
     }
 
-    const signal = this._createSignal<TEvent>(name);
-    return signal;
-  }
-
-  /**
-   * Internal registration — skips namespace validation.
-   * Used by JsompEvents to register built-in preset events under the jsomp namespace.
-   */
-  public _registerInternal<TEvent = any>(name: string): EventSignal<TEvent> {
     const existing = this._signals.get(name);
     if (existing) {
       return existing as EventSignal<TEvent>;

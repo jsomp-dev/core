@@ -28,8 +28,8 @@ import {PipelineRegistry} from './engine/compiler/PipelineRegistry';
 import {TraitPipeline} from './engine/trait/TraitPipeline';
 import {JsompLayoutManager} from './misc/JsompLayoutManager';
 import {jsompEnv} from './JsompEnv';
-import type {IFrameworkRegistry} from './types';
-import {JsompEvents, EventSignalRegistry, EventTagRegistry} from './engine/event';
+import type {IEventBus, IEventTagRegistry, IFrameworkRegistry} from './types';
+import {JsompEvents, EventSignalRegistry, EventTagRegistry, EventBus} from './engine/event';
 
 /**
  * JSOMP Service Implementation
@@ -92,15 +92,22 @@ export class JsompService implements IJsompService {
    */
   public readonly eventSignals: EventSignalRegistry = new EventSignalRegistry();
 
-   /**
-   * Event system for lifecycle and custom events
+  /**
+   * Event bus for unified event routing.
+   * Central routing layer that unifies EventSignal, TriggerSource,
+   * and external event sources into a single path.
    */
-  public readonly events: JsompEvents = new JsompEvents(this.eventSignals);
+  public readonly eventBus: IEventBus = new EventBus(this.eventSignals);
 
   /**
    * Event tag registry for normalized event tag registration
    */
-  public readonly eventTags: EventTagRegistry = new EventTagRegistry(this.eventSignals, this.actions);
+  public readonly eventTags: IEventTagRegistry = new EventTagRegistry(this.eventSignals, this.eventBus);
+
+  /**
+   * Event system for lifecycle and custom events
+   */
+  public readonly events: JsompEvents = new JsompEvents(this.eventSignals, this.eventTags);
 
   /**
    * Instance Registry for component instances

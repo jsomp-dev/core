@@ -59,8 +59,8 @@ export type {
   InstanceReadyEvent,
   EventTagMeta,
   IJsompEvents,
-  IJsompEventSignals,
-  IJsompEventTagRegistry,
+  IEventSignalRegistry as IJsompEventSignals,
+  IEventTagRegistry as IJsompEventTagRegistry,
 } from './types';
 
 // Export renderer

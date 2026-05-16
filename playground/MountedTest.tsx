@@ -225,9 +225,9 @@ export const MountedTest: React.FC = () => {
         border: '1px solid #1d4ed8',
         transition: 'all 0.2s'
       },
-      // actions: {
-      //   execute_when_mounted: ['jsomp:mount']
-      // },
+      actions: {
+        "mounted.panelMount": ['jsomp:mount']
+      },
       props: {children: '🎯 Reactive Panel — I appear/disappear with mounted binding!'}
     },
     {
@@ -285,9 +285,9 @@ export const MountedTest: React.FC = () => {
         borderRadius: '0.375rem',
         border: '1px solid #7c3aed'
       },
-      // actions: {
-      //   execute_when_mounted: ['jsomp:mount']
-      // },
+      actions: {
+        "mounted.cascadeMount": ['jsomp:mount']
+      },
       props: {children: '📦 Cascade Parent'}
     },
     {
@@ -391,7 +391,10 @@ export const MountedTest: React.FC = () => {
       parent: 'sec4',
       mounted: '{{showA}}',
       style_css: {padding: '0.75rem', background: '#166534', borderRadius: '0.25rem', color: '#86efac', fontSize: '0.8rem', marginTop: '0.5rem'},
-      props: {children: 'Panel A — mounted: {{showA}}'}
+      props: {children: 'Panel A — mounted: {{showA}}'},
+      actions: {
+        "mounted.aMount": ['jsomp:mount']
+      },
     },
     {
       id: 'panel_b',
@@ -399,7 +402,10 @@ export const MountedTest: React.FC = () => {
       parent: 'sec4',
       mounted: '{{showB}}',
       style_css: {padding: '0.75rem', background: '#1e40af', borderRadius: '0.25rem', color: '#93c5fd', fontSize: '0.8rem', marginTop: '0.5rem'},
-      props: {children: 'Panel B — mounted: {{showB}}'}
+      props: {children: 'Panel B — mounted: {{showB}}'},
+      actions: {
+        "mounted.bMount": ['jsomp:mount']
+      },
     },
     {
       id: 'panel_c',
@@ -407,7 +413,10 @@ export const MountedTest: React.FC = () => {
       parent: 'sec4',
       mounted: '{{showC}}',
       style_css: {padding: '0.75rem', background: '#6b21a8', borderRadius: '0.25rem', color: '#c4b5fd', fontSize: '0.8rem', marginTop: '0.5rem'},
-      props: {children: 'Panel C — mounted: {{showC}}'}
+      props: {children: 'Panel C — mounted: {{showC}}'},
+      actions: {
+        "mounted.cMount": ['jsomp:mount']
+      },
     },
 
     // ===== SCENARIO 5: 'jsomp:mount' Lifecycle Logging =====
@@ -442,7 +451,7 @@ export const MountedTest: React.FC = () => {
         cursor: 'pointer',
         fontSize: '0.8rem'
       },
-      actions: {'mounted.toggleLifecycle': ['onClick']},
+      actions: {'mounted.toggleLifecycle': ['dom:click']},
       props: {children: 'Toggle Lifecycle Node (mounted: {{showLifecycle}})'}
     },
     {
@@ -459,9 +468,9 @@ export const MountedTest: React.FC = () => {
         fontSize: '0.8rem',
         marginTop: '0.5rem'
       },
-      // actions: {
-      //   execute_when_mounted: ['jsomp:mount']
-      // },
+      actions: {
+        "mounted.lifecycleMount": ['jsomp:mount']
+      },
       props: {children: '🔄 Lifecycle Node — \'jsomp:mount\' fires each mount'}
     }
   ], []);
@@ -499,6 +508,25 @@ export const MountedTest: React.FC = () => {
     actions.register('mounted.toggleLifecycle', {
       require: {atoms: {showLifecycle: 'showLifecycle'}},
       handler: ({atoms}: any) => {atoms.showLifecycle = !atoms.showLifecycle;}
+    });
+
+    actions.register('mounted.panelMount', {
+      handler: () => {addLog('MountedTest panel mounted');}
+    });
+    actions.register('mounted.cascadeMount', {
+      handler: () => {addLog('MountedTest cascade mounted');}
+    });
+    actions.register('mounted.aMount', {
+      handler: () => {addLog('MountedTest A mounted');}
+    });
+    actions.register('mounted.bMount', {
+      handler: () => {addLog('MountedTest B mounted');}
+    });
+    actions.register('mounted.cMount', {
+      handler: () => {addLog('MountedTest C mounted');}
+    });
+    actions.register('mounted.lifecycleMount', {
+      handler: () => {addLog('MountedTest lifecycle mounted');}
     });
 
     // TODO: Register 'jsomp:mount' event handler

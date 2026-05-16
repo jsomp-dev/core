@@ -29,7 +29,10 @@ describe('TraitPipeline & StandardTraits', () => {
         execute: vi.fn(),
         getNames: vi.fn(() => []),
         registerTriggerSource: vi.fn(),
-        getTriggerSource: vi.fn(() => undefined)
+        getTriggerSource: vi.fn(() => undefined),
+        registerSignalMapping: vi.fn(),
+        getSignalMapping: vi.fn(() => undefined),
+        setAtomRegistry: vi.fn(() => undefined)
       },
       components: {
         register: () => { },

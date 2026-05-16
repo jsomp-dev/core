@@ -174,7 +174,7 @@ export const EventSystemTest: React.FC = () => {
   // ========== 5. Instance Ready ==========
   const handleInstanceReady = () => {
     const jsomp = jsompEnv.service!;
-    const s = jsomp.eventSignals.getSignal('jsomp:instanceReady')!;
+    const s = jsomp.eventSignals.getSignal('jsomp:instance_ready')!;
 
     const w = s.subscribe((ev) => {
       setInstanceMsg(`WillCommit: id=${ev.id}`);
@@ -205,7 +205,7 @@ export const EventSystemTest: React.FC = () => {
 
   const handleInstanceReadyAborted = () => {
     const jsomp = jsompEnv.service!;
-    const s = jsomp.eventSignals.getSignal('jsomp:instanceReady')!;
+    const s = jsomp.eventSignals.getSignal('jsomp:instance_ready')!;
     s.emit({id: 'btn-demo', instance: null, path: 'root.form.btn-demo'}, EventPhase.WillCommit);
     s.emit({id: 'btn-demo', instance: null, path: 'root.form.btn-demo'}, EventPhase.Aborted);
     addLog('[InstanceReady] Emitted WillCommit → Aborted');
@@ -213,7 +213,7 @@ export const EventSystemTest: React.FC = () => {
 
   const handleInstanceReadyError = () => {
     const jsomp = jsompEnv.service!;
-    const s = jsomp.eventSignals.getSignal('jsomp:instanceReady')!;
+    const s = jsomp.eventSignals.getSignal('jsomp:instance_ready')!;
     s.emit({id: 'btn-demo', instance: {type: 'button'}, path: 'root.form.btn-demo'}, EventPhase.WillCommit);
     s.emit({id: 'btn-demo', instance: {type: 'button'}, path: 'root.form.btn-demo', error: new Error('Simulated instance registration failure')}, EventPhase.Error);
     addLog('[InstanceReady] Emitted WillCommit → Error');

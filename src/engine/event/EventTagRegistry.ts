@@ -1,32 +1,32 @@
+import {jsompEnv} from '../../JsompEnv';
+import {checkIsInternal} from '../../misc';
+import type {EventSignal, IEventBus} from '../../types';
 import {
   BindTagOptions,
   EVENT_NAME_REGEX,
   EventPhase,
   EventTagMeta,
-  IJsompEventTagRegistry,
+  IEventTagRegistry,
   NAMESPACE_REGEX,
   RESERVED_NAMESPACES
 } from '../../types';
-import type {EventSignal, IActionRegistry} from '../../types';
-import {EventSignalRegistry} from './EventSignalRegistry';
-import {EventTriggerSource} from './EventTriggerSource';
 import type {EventSignalImpl} from './EventSignal';
+import {EventSignalRegistry} from './EventSignalRegistry';
 
 /**
  * EventTagRegistry Implementation
- * Binds pre-registered EventSignals to the action tags system via TriggerSource.
+ * Binds pre-registered EventSignals to the action tags system and EventBus.
  * Signals must be registered via `service.eventSignals.register()` first,
  * then bound as tags here for action-tag integration and metadata management.
  */
-export class EventTagRegistry implements IJsompEventTagRegistry {
+export class EventTagRegistry implements IEventTagRegistry {
   private _tags = new Map<string, EventTagMeta>();
-  private _triggerSources = new Map<string, EventTriggerSource>();
   private _eventSignals: EventSignalRegistry;
-  private _actionRegistry: IActionRegistry;
+  private _eventBus: IEventBus;
 
-  constructor(eventSignals: EventSignalRegistry, actionRegistry: IActionRegistry) {
+  constructor(eventSignals: EventSignalRegistry, eventBus: IEventBus) {
     this._eventSignals = eventSignals;
-    this._actionRegistry = actionRegistry;
+    this._eventBus = eventBus;
   }
 
   /**
@@ -36,7 +36,9 @@ export class EventTagRegistry implements IJsompEventTagRegistry {
    * @param options - Required metadata, eventName locates the pre-registered signal
    */
   public bindTag(tagName: string, options: BindTagOptions): void {
-    const validation = this.validate(tagName);
+    const isInternal = checkIsInternal(options);
+
+    const validation = this.validate(tagName, isInternal);
     if (!validation.valid) {
       throw new Error(`[EventTagRegistry] Invalid tag name "${tagName}": ${validation.error}`);
     }
@@ -72,14 +74,8 @@ export class EventTagRegistry implements IJsompEventTagRegistry {
       }
     }
 
-    let triggerSource = this._triggerSources.get(namespace);
-    if (!triggerSource) {
-      triggerSource = new EventTriggerSource();
-      this._triggerSources.set(namespace, triggerSource);
-      this._actionRegistry.registerTriggerSource(namespace, triggerSource);
-    }
-
-    triggerSource.addSignal(eventName, signal, targetPhase);
+    // Bridge tag to EventBus so SubscriptionEntry can subscribe via tag name
+    this._eventBus.bindSignal(tagName, signal);
 
     const tagMeta: EventTagMeta = {
       name: tagName,
@@ -147,7 +143,7 @@ export class EventTagRegistry implements IJsompEventTagRegistry {
    * and event_name is snake_case.
    * @param name - Full event tag name to validate
    */
-  public validate(name: string): { valid: boolean; error?: string } {
+  public validate(name: string, skipReservedCheck = false): { valid: boolean; error?: string } {
     if (!name || typeof name !== 'string') {
       return {valid: false, error: 'Name must be a non-empty string'};
     }
@@ -170,7 +166,7 @@ export class EventTagRegistry implements IJsompEventTagRegistry {
       return {valid: false, error: `Namespace "${namespace}" must be lowercase alphanumeric (e.g., "myapp")`};
     }
 
-    if (this.isReserved(namespace)) {
+    if (!skipReservedCheck && this.isReserved(namespace)) {
       return {valid: false, error: `Namespace "${namespace}" is reserved and cannot be used for custom events`};
     }
 

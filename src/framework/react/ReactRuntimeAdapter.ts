@@ -1,5 +1,5 @@
 import {IJsompRuntime} from '../../types';
-import {IRenderContext, ISignalCenter, IRuntimeAdapter, PerformanceMetrics, VisualDescriptor, EventSignal, InstanceReadyEvent} from '../../types';
+import {IRenderContext, ISignalCenter, IRuntimeAdapter, PerformanceMetrics, VisualDescriptor, EventSignal, InstanceReadyEvent, ComponentMountEvent} from '../../types';
 import {jsompEnv} from '../../JsompEnv';
 
 /**

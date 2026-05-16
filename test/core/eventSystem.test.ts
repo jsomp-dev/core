@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {EventSignalRegistry, EventTagRegistry, JsompEvents} from '../../src/engine/event';
+import {EventBus, EventSignalRegistry, EventTagRegistry, JsompEvents} from '../../src/engine/event';
 import {EventSignalImpl} from '../../src/engine/event/EventSignal';
 import {ActionRegistry} from '../../src/registry/ActionRegistry';
 import {EventPhase} from '../../src/types/events';
@@ -194,10 +194,14 @@ describe('EventSignalImpl', () => {
 describe('JsompEvents (built-in events only)', () => {
   let jsompEvents: JsompEvents;
   let eventSignals: EventSignalRegistry;
+  let eventBus: EventBus;
+  let eventTags: EventTagRegistry;
 
   beforeEach(() => {
     eventSignals = new EventSignalRegistry();
-    jsompEvents = new JsompEvents(eventSignals);
+    eventBus = new EventBus(eventSignals);
+    eventTags = new EventTagRegistry(eventSignals, eventBus);
+    jsompEvents = new JsompEvents(eventSignals, eventTags);
   });
 
   describe('built-in events', () => {
@@ -208,7 +212,7 @@ describe('JsompEvents (built-in events only)', () => {
 
     it('should have instanceReady event', () => {
       expect(jsompEvents.instanceReady).toBeDefined();
-      expect(jsompEvents.instanceReady.name).toBe('jsomp:instanceReady');
+      expect(jsompEvents.instanceReady.name).toBe('jsomp:instance_ready');
     });
   });
 
@@ -308,12 +312,12 @@ describe('EventSignals', () => {
 describe('EventTagRegistry', () => {
   let registry: EventTagRegistry;
   let eventSignals: EventSignalRegistry;
-  let actionRegistry: ActionRegistry;
+  let eventBus: EventBus;
 
   beforeEach(() => {
     eventSignals = new EventSignalRegistry();
-    actionRegistry = new ActionRegistry();
-    registry = new EventTagRegistry(eventSignals, actionRegistry);
+    eventBus = new EventBus(eventSignals);
+    registry = new EventTagRegistry(eventSignals, eventBus);
   });
 
   describe('validate', () => {
@@ -410,21 +414,11 @@ describe('EventTagRegistry', () => {
       expect(signal!.name).toBe('myapp:test_signal');
     });
 
-    it('should register a trigger source for the namespace', () => {
-      eventSignals.register('myapp:user_login');
-      registry.bindTag('myapp:user_login', { eventName: 'user_login' });
-      const source = actionRegistry.getTriggerSource('myapp');
-      expect(source).toBeDefined();
-    });
-
     it('should support multiple events under the same namespace', () => {
       eventSignals.register('myapp:event_a');
       eventSignals.register('myapp:event_b');
       registry.bindTag('myapp:event_a', { eventName: 'event_a' });
       registry.bindTag('myapp:event_b', { eventName: 'event_b' });
-
-      const source = actionRegistry.getTriggerSource('myapp');
-      expect(source).toBeDefined();
 
       const signalA = registry.getSignal('myapp:event_a');
       const signalB = registry.getSignal('myapp:event_b');
