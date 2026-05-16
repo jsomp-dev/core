@@ -72,7 +72,7 @@ describe('Action Tag Neutrality & Mapping', () => {
     expect(handler2).toHaveBeenCalled();
   });
 
-  it('should support custom namespaces via default rule (onEvent)', () => {
+  it('should route custom namespace events to subscriptions', () => {
     const handler = () => { };
     const node: IJsompNode = {
       id: 'n3',
@@ -92,8 +92,10 @@ describe('Action Tag Neutrality & Mapping', () => {
 
     propsTrait(node, descriptor, context);
 
-    expect(descriptor.props.onBusMessage).toBe(handler);
-    expect(descriptor.props['bus:message']).toBeUndefined();
+    expect(descriptor.subscriptions).toBeDefined();
+    expect(descriptor.subscriptions!.length).toBe(1);
+    expect(descriptor.subscriptions![0].channel).toBe('bus:message');
+    expect(descriptor.subscriptions![0].handler).toBe(handler);
   });
 
   it('should support custom namespaces via default rule (onNamespaceEvent)', () => {
