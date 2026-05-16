@@ -96,6 +96,7 @@ export class TraitPipeline implements ITraitPipeline {
     if (a.componentType !== b.componentType) return false;
     if (a.path !== b.path) return false;
     if (a.trackInstance !== b.trackInstance) return false;
+    if (a._suppressed !== b._suppressed) return false;
 
     // Props check (Shallow enough for most cases, but JSOMP props can be nested)
     if (!this.isDeepEqual(a.props, b.props)) return false;

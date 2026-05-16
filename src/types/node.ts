@@ -61,10 +61,16 @@ export interface IJsompNode {
    * - true / undefined: normal render behavior.
    * Supports reactive switching: re-feed the entity to toggle mount/unmount.
    */
-  mounted?: boolean;
+  mounted?: boolean | string | Operator;
 
   /** [Runtime injection] Automatically spliced full path ID */
   _fullPath?: string;
+
+  /**
+   * [Runtime injection] Whether this node is suppressed by the mount gate.
+   * Set by MountGatePlugin during compilation, propagated to descriptor by mustacheTrait.
+   */
+  _suppressed?: boolean;
 
   /**
    * Semantic action tags (mapping tag name to event names)
@@ -119,6 +125,13 @@ export interface VisualDescriptor {
    * Whether this node needs its physical instance to be reported back.
    */
   trackInstance?: boolean;
+
+  /**
+   * Whether this node is suppressed by the mount gate (mounted: false or ancestor suppressed).
+   * Set by MountGatePlugin during compilation, propagated to descriptor by mustacheTrait,
+   * used by the renderer to decide whether to render this node.
+   */
+  _suppressed?: boolean;
 }
 
 /**

@@ -76,6 +76,7 @@ export const pathResolutionPlugin: IJsompPluginDef = {
     node.style_css = entity.style_css;
     node.actions = entity.actions;
     node._fullPath = path;
+    if (entity.mounted !== undefined) node.mounted = entity.mounted;
 
     // Normalize parent ID
     if (typeof parentVal === 'string') {

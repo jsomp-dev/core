@@ -80,7 +80,7 @@ const JsompNodeItem = memo(({id, pathStack, ctx, adapter}: {
   const mountDecision = useRef<{ id: string; prevented: boolean } | null>(null);
 
   // Synchronously emit WillCommit during render phase for real mount gating
-  if (descriptor) {
+  if (descriptor && !descriptor._suppressed) {
     if (!mountDecision.current || mountDecision.current.id !== descriptor.id) {
       let prevented = false;
       const preventFn = () => { prevented = true; };
@@ -112,7 +112,7 @@ const JsompNodeItem = memo(({id, pathStack, ctx, adapter}: {
   }
 
   useLayoutEffect(() => {
-    if (!descriptor) {
+    if (!descriptor || descriptor._suppressed) {
       hasEmittedMount.current = false;
       return;
     }
@@ -139,9 +139,14 @@ const JsompNodeItem = memo(({id, pathStack, ctx, adapter}: {
     return () => {
       unsubs.forEach(fn => fn());
     };
-  }, [descriptor]);
+  }, [descriptor, descriptor?._suppressed]);
 
   if (!descriptor) return null;
+
+  // Skip rendering if suppressed
+  if (descriptor._suppressed) {
+    return null;
+  }
 
   // Resolve component using current context and descriptor
   const resolved = resolveComponent(descriptor, ctx, pathStack);

@@ -187,6 +187,12 @@ export class ReactRuntimeAdapter implements IRuntimeAdapter {
     const service = jsompEnv.service;
     if (!service) return;
 
+    // Skip if the same instance is already registered to avoid redundant events
+    if (instance != null) {
+      const existing = service.instances.getRaw(id);
+      if (existing === instance) return;
+    }
+
     (service.events.instanceReady as EventSignal<InstanceReadyEvent>).emitLifecycle({id, instance, path}, () => {
       if (instance != null) {
         service.instances.set(id, instance, path);

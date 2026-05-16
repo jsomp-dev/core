@@ -13,6 +13,12 @@ export const mustacheTrait: TraitProcessor = (
 ) => {
   const {registry} = context;
 
+  // 0. Propagate _suppressed flag (set by MountGatePlugin during compilation)
+  // Must be propagated before mustache resolution so the renderer can correctly determine visibility
+  if (node._suppressed !== undefined) {
+    descriptor._suppressed = node._suppressed;
+  }
+
   // 1. Recursive Resolution of all props
   // We resolve the descriptor.props which already contains base props from PropsTrait
   // V1.1: Use pathStack from context for backtracking resolution

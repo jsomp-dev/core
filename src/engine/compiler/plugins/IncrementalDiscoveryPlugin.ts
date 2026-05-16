@@ -64,6 +64,7 @@ export const incrementalDiscoveryPlugin: IJsompPluginDef = {
       if (entity.style_presets) node.style_presets = entity.style_presets;
       if (entity.style_tw) node.style_tw = entity.style_tw;
       if (entity.style_css) node.style_css = entity.style_css;
+      if (entity.mounted !== undefined) node.mounted = entity.mounted;
 
       return;
     }
@@ -91,6 +92,7 @@ export const incrementalDiscoveryPlugin: IJsompPluginDef = {
     node.props = entity.props ? {...entity.props} : (node.props || {});
     node.actions = entity.actions ? {...entity.actions} : (node.actions || {});
     node.parent = newParent;
+    if (entity.mounted !== undefined) node.mounted = entity.mounted;
 
     // Sync styles
     if (entity.style_presets) node.style_presets = entity.style_presets;

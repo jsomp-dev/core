@@ -85,11 +85,6 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
       pipeline.register('standard-operator', PipelineStage.PreProcess, operatorExpressionPlugin, 'StandardOperatorExpression');
     }
 
-    if (shouldRegister('standard-mount-gate', PipelineStage.PreProcess)) {
-      const {mountGatePlugin} = await import('./engine/compiler/plugins/MountGatePlugin');
-      pipeline.register('standard-mount-gate', PipelineStage.PreProcess, mountGatePlugin, 'StandardMountGate');
-    }
-
     if (shouldRegister('standard-state', PipelineStage.Hydrate)) {
       const {stateHydrationPlugin} = await import('./engine/compiler/plugins/StateHydrationPlugin');
       pipeline.register('standard-state', PipelineStage.Hydrate, stateHydrationPlugin, 'StandardStateHydration');
@@ -133,6 +128,11 @@ export const setupJsomp = async (config: JsompConfig = {}): Promise<IJsompServic
     if (shouldRegister('standard-window', PipelineStage.Hydrate)) {
       const {windowPlugin} = await import('./engine/compiler/plugins/WindowPlugin');
       pipeline.register('standard-window', PipelineStage.Hydrate, windowPlugin, 'StandardWindow');
+    }
+
+    if (shouldRegister('standard-mount-gate', PipelineStage.Hydrate)) {
+      const {mountGatePlugin} = await import('./engine/compiler/plugins/MountGatePlugin');
+      pipeline.register('standard-mount-gate', PipelineStage.Hydrate, mountGatePlugin, 'StandardMountGate');
     }
 
     if (shouldRegister('standard-dependency', PipelineStage.PostAssemble)) {
